@@ -3,23 +3,21 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePackages } from '@/hooks/usePackages';
 import { useUploadInvoice, useDownloadInvoice } from '@/hooks/useInvoices';
-import PackageCard from './PackageCard';
+import PackageList from './PackageList';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Package, Search, Clock, Truck, CheckCircle, AlertCircle, DollarSign } from 'lucide-react';
 
 const CustomerDashboard: React.FC = () => {
   const { profile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [viewMode, setViewMode] = useState<'tiles' | 'table'>('tiles');
   
   const { data: packages, isLoading, error } = usePackages({ searchTerm, statusFilter });
-  const uploadInvoiceMutation = useUploadInvoice();
-  const downloadInvoiceMutation = useDownloadInvoice();
 
   // Calculate statistics
   const totalPackages = packages?.length || 0;
@@ -27,34 +25,6 @@ const CustomerDashboard: React.FC = () => {
   const readyForPickup = packages?.filter(p => p.status === 'ready_for_pickup').length || 0;
   const pendingInvoices = packages?.filter(p => !p.invoices || p.invoices.length === 0).length || 0;
   const totalDue = packages?.reduce((sum, p) => sum + (p.total_due || 0), 0) || 0;
-
-  const handleUploadInvoice = async (packageId: string) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.pdf,.jpg,.jpeg,.png';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        try {
-          await uploadInvoiceMutation.mutateAsync({ packageId, file });
-        } catch (error) {
-          console.error('Error uploading invoice:', error);
-        }
-      }
-    };
-    input.click();
-  };
-
-  const handleViewInvoice = async (packageId: string) => {
-    const pkg = packages?.find(p => p.id === packageId);
-    if (pkg && pkg.invoices && pkg.invoices.length > 0) {
-      try {
-        await downloadInvoiceMutation.mutateAsync(pkg.invoices[0].file_path);
-      } catch (error) {
-        console.error('Error downloading invoice:', error);
-      }
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -177,7 +147,7 @@ const CustomerDashboard: React.FC = () => {
                 <SelectItem value="in_transit">In Transit</SelectItem>
                 <SelectItem value="arrived">Arrived in Jamaica</SelectItem>
                 <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="picked_up">Picked Up</SelectItem>
               </SelectContent>
             </Select>
             {(searchTerm || statusFilter !== 'all') && (
@@ -206,76 +176,12 @@ const CustomerDashboard: React.FC = () => {
           )}
         </div>
 
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="p-6 border rounded-lg">
-                <Skeleton className="h-6 w-3/4 mb-4" />
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-2/3 mb-4" />
-                <Skeleton className="h-8 w-1/2" />
-              </div>
-            ))}
-          </div>
-        ) : error ? (
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="p-6 text-center">
-              <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-              <p className="text-red-600 font-medium">Unable to load packages</p>
-              <p className="text-red-500 text-sm">Please try again later or contact support</p>
-            </CardContent>
-          </Card>
-        ) : !packages || packages.length === 0 ? (
-          <Card className="border-gray-200">
-            <CardContent className="p-12 text-center">
-              <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm || statusFilter !== 'all' 
-                  ? 'No packages found' 
-                  : 'No packages yet'}
-              </h3>
-              <p className="text-gray-500 mb-4">
-                {searchTerm || statusFilter !== 'all'
-                  ? 'Try adjusting your search or filter criteria.'
-                  : 'Contact YardPack to send your first package from Miami to Jamaica.'}
-              </p>
-              {(searchTerm || statusFilter !== 'all') && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setStatusFilter('all');
-                  }}
-                >
-                  View All Packages
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {packages.map((pkg) => (
-              <PackageCard
-                key={pkg.id}
-                package={{
-                  id: pkg.id,
-                  trackingNumber: pkg.tracking_number,
-                  description: pkg.description,
-                  status: pkg.status as any,
-                  dateReceived: pkg.date_received,
-                  estimatedDelivery: pkg.estimated_delivery || undefined,
-                  invoiceUploaded: pkg.invoices && pkg.invoices.length > 0,
-                  dutyAssessed: pkg.duty_amount !== null,
-                  totalDue: pkg.total_due || undefined,
-                  customerName: pkg.profiles?.full_name || 'Unknown Customer',
-                }}
-                userRole="customer"
-                onUploadInvoice={handleUploadInvoice}
-                onViewInvoice={handleViewInvoice}
-              />
-            ))}
-          </div>
-        )}
+        <PackageList
+          searchTerm={searchTerm}
+          statusFilter={statusFilter}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
       </div>
 
       {/* Help Section */}
@@ -292,6 +198,7 @@ const CustomerDashboard: React.FC = () => {
                 <li>• <strong>In Transit:</strong> Package is on its way to Jamaica</li>
                 <li>• <strong>Arrived:</strong> Package reached Jamaica facility</li>
                 <li>• <strong>Ready:</strong> Package is ready for pickup</li>
+                <li>• <strong>Picked Up:</strong> Package has been collected</li>
               </ul>
             </div>
             <div>

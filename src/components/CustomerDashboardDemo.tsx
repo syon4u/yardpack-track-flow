@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import PackageCard from './PackageCard';
+import PackageTable from './PackageTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Package, Search, Truck, CheckCircle, AlertCircle, DollarSign } from 'lucide-react';
+import { Package, Search, Truck, CheckCircle, AlertCircle, DollarSign, LayoutGrid, LayoutList } from 'lucide-react';
 
 // Sample data for demo purposes
 const samplePackages = [
@@ -77,6 +77,7 @@ const CustomerDashboardDemo: React.FC = () => {
   const { profile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [viewMode, setViewMode] = useState<'tiles' | 'table'>('tiles');
   
   // Filter packages based on search and status
   const filteredPackages = samplePackages.filter(pkg => {
@@ -249,33 +250,65 @@ const CustomerDashboardDemo: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-semibold text-gray-900">Your Packages</h2>
-          <Badge variant="secondary">
-            {filteredPackages.length} package{filteredPackages.length > 1 ? 's' : ''}
-          </Badge>
+          <div className="flex items-center gap-4">
+            <Badge variant="secondary">
+              {filteredPackages.length} package{filteredPackages.length > 1 ? 's' : ''}
+            </Badge>
+            
+            {/* View Mode Toggle */}
+            <div className="flex border rounded-lg">
+              <Button
+                variant={viewMode === 'tiles' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('tiles')}
+                className="rounded-r-none"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+                className="rounded-l-none"
+              >
+                <LayoutList className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPackages.map((pkg) => (
-            <PackageCard
-              key={pkg.id}
-              package={{
-                id: pkg.id,
-                trackingNumber: pkg.tracking_number,
-                description: pkg.description,
-                status: pkg.status,
-                dateReceived: pkg.date_received,
-                estimatedDelivery: pkg.estimated_delivery || undefined,
-                invoiceUploaded: pkg.invoices && pkg.invoices.length > 0,
-                dutyAssessed: pkg.duty_amount !== null,
-                totalDue: pkg.total_due || undefined,
-                customerName: pkg.profiles?.full_name || 'Unknown Customer',
-              }}
-              userRole="customer"
-              onUploadInvoice={handleUploadInvoice}
-              onViewInvoice={handleViewInvoice}
-            />
-          ))}
-        </div>
+        {/* Package Content */}
+        {viewMode === 'tiles' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPackages.map((pkg) => (
+              <PackageCard
+                key={pkg.id}
+                package={{
+                  id: pkg.id,
+                  trackingNumber: pkg.tracking_number,
+                  description: pkg.description,
+                  status: pkg.status,
+                  dateReceived: pkg.date_received,
+                  estimatedDelivery: pkg.estimated_delivery || undefined,
+                  invoiceUploaded: pkg.invoices && pkg.invoices.length > 0,
+                  dutyAssessed: pkg.duty_amount !== null,
+                  totalDue: pkg.total_due || undefined,
+                  customerName: pkg.profiles?.full_name || 'Unknown Customer',
+                }}
+                userRole="customer"
+                onUploadInvoice={handleUploadInvoice}
+                onViewInvoice={handleViewInvoice}
+              />
+            ))}
+          </div>
+        ) : (
+          <PackageTable
+            packages={filteredPackages}
+            userRole="customer"
+            onUploadInvoice={handleUploadInvoice}
+            onViewInvoice={handleViewInvoice}
+          />
+        )}
       </div>
 
       {/* Help Section */}
