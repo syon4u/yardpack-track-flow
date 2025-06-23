@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Package, LogOut, User, Bell } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Package, LogOut, User, Bell, Search } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import TrackingResults from './TrackingResults';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,6 +13,26 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { profile, signOut } = useAuth();
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [showTrackingResults, setShowTrackingResults] = useState(false);
+
+  const handleTrack = () => {
+    if (trackingNumber.trim()) {
+      setShowTrackingResults(true);
+    }
+  };
+
+  if (showTrackingResults) {
+    return (
+      <TrackingResults 
+        trackingNumber={trackingNumber} 
+        onBack={() => {
+          setShowTrackingResults(false);
+          setTrackingNumber('');
+        }} 
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -24,6 +47,32 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             
             {profile && (
               <div className="flex items-center space-x-4">
+                {/* Track Package Popover */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <Search className="h-4 w-4 mr-2" />
+                      Track
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-3">
+                      <h4 className="font-medium">Track Package</h4>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter tracking number"
+                          value={trackingNumber}
+                          onChange={(e) => setTrackingNumber(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleTrack()}
+                        />
+                        <Button onClick={handleTrack} size="sm">
+                          <Search className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
                 <Button variant="ghost" size="sm">
                   <Bell className="h-4 w-4" />
                 </Button>
