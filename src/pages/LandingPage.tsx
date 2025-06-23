@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Search, Truck, CheckCircle, Star, ArrowRight, Users, Shield, Clock } from 'lucide-react';
@@ -86,10 +85,25 @@ const LandingPage: React.FC = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section with Background Video */}
       <section className="relative overflow-hidden pt-20 pb-32">
-        <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-yellow-500/10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Background Video */}
+        <div className="absolute inset-0 z-0">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover opacity-20"
+          >
+            <source src="/videos/shipping-hero-bg.mp4" type="video/mp4" />
+          </video>
+          {/* Video overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-gray-900/60 to-green-900/70"></div>
+        </div>
+        
+        {/* Content overlay */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 animate-fade-in">
               Ship to
