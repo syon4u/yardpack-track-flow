@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Package, AlertCircle } from 'lucide-react';
+import { Package, AlertCircle, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const LoginForm: React.FC = () => {
@@ -24,6 +24,16 @@ const LoginForm: React.FC = () => {
       setError('Invalid email or password');
     }
     setIsLoading(false);
+  };
+
+  const fillDemoAccount = (type: 'admin' | 'customer') => {
+    if (type === 'admin') {
+      setEmail('admin@yardpack.com');
+      setPassword('admin123');
+    } else {
+      setEmail('customer@example.com');
+      setPassword('customer123');
+    }
   };
 
   return (
@@ -73,11 +83,34 @@ const LoginForm: React.FC = () => {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 mb-2">Demo Accounts:</p>
-            <div className="text-xs space-y-1">
-              <p><strong>Admin:</strong> admin@yardpack.com / admin123</p>
-              <p><strong>Customer:</strong> customer@example.com / customer123</p>
+          <div className="mt-6 space-y-4">
+            <div className="flex items-start space-x-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+              <div className="text-sm text-blue-800">
+                <p className="font-medium mb-2">Demo Accounts Available:</p>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fillDemoAccount('admin')}
+                    className="w-full text-left justify-start border-blue-300 text-blue-700"
+                  >
+                    <strong>Admin:</strong> admin@yardpack.com / admin123
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fillDemoAccount('customer')}
+                    className="w-full text-left justify-start border-blue-300 text-blue-700"
+                  >
+                    <strong>Customer:</strong> customer@example.com / customer123
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="text-center text-xs text-gray-500">
+              <p>Click the buttons above to auto-fill demo credentials</p>
+              <p>Note: You'll need to create these accounts first by signing up</p>
             </div>
           </div>
         </CardContent>
