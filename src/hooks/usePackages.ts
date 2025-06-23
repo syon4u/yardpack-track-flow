@@ -9,6 +9,8 @@ type Package = Database['public']['Tables']['packages']['Row'] & {
   invoices: Database['public']['Tables']['invoices']['Row'][];
 };
 
+type PackageStatus = Database['public']['Enums']['package_status'];
+
 interface UsePackagesOptions {
   searchTerm?: string;
   statusFilter?: string;
@@ -44,9 +46,12 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
         query = query.or(`tracking_number.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
       }
       
-      // Apply status filter
+      // Apply status filter - only if it's a valid status and not 'all'
       if (statusFilter && statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+        const validStatuses: PackageStatus[] = ['received', 'in_transit', 'arrived', 'ready_for_pickup', 'completed'];
+        if (validStatuses.includes(statusFilter as PackageStatus)) {
+          query = query.eq('status', statusFilter as PackageStatus);
+        }
       }
       
       const { data, error } = await query;
