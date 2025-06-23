@@ -2,13 +2,14 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import CustomerDashboard from './CustomerDashboard';
+import CustomerDashboardDemo from './CustomerDashboardDemo';
 
 const Dashboard: React.FC = () => {
   const { profile } = useAuth();
 
-  // For customers, show the enhanced customer dashboard
+  // For customers, show the demo dashboard with sample data
   if (profile?.role === 'customer') {
-    return <CustomerDashboard />;
+    return <CustomerDashboardDemo />;
   }
 
   // Fallback for any other roles (shouldn't happen with current setup)
