@@ -9,7 +9,7 @@ export interface Package {
   id: string;
   trackingNumber: string;
   description: string;
-  status: 'received' | 'in_transit' | 'arrived' | 'ready_for_pickup' | 'completed';
+  status: 'received' | 'in_transit' | 'arrived' | 'ready_for_pickup' | 'picked_up';
   dateReceived: string;
   estimatedDelivery?: string;
   invoiceUploaded: boolean;
@@ -31,7 +31,7 @@ const statusColors = {
   in_transit: 'bg-yellow-100 text-yellow-800',
   arrived: 'bg-orange-100 text-orange-800',
   ready_for_pickup: 'bg-green-100 text-green-800',
-  completed: 'bg-gray-100 text-gray-800'
+  picked_up: 'bg-gray-100 text-gray-800'
 };
 
 const statusLabels = {
@@ -39,7 +39,7 @@ const statusLabels = {
   in_transit: 'In Transit',
   arrived: 'Arrived in Jamaica',
   ready_for_pickup: 'Ready for Pickup',
-  completed: 'Completed'
+  picked_up: 'Picked Up'
 };
 
 const PackageCard: React.FC<PackageCardProps> = ({
@@ -50,7 +50,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
   onViewInvoice
 }) => {
   const getNextStatus = (currentStatus: Package['status']): Package['status'] | null => {
-    const statusFlow: Package['status'][] = ['received', 'in_transit', 'arrived', 'ready_for_pickup', 'completed'];
+    const statusFlow: Package['status'][] = ['received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'];
     const currentIndex = statusFlow.indexOf(currentStatus);
     return currentIndex < statusFlow.length - 1 ? statusFlow[currentIndex + 1] : null;
   };

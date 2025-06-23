@@ -51,7 +51,7 @@ const samplePackages = [
     id: '4',
     tracking_number: 'YP2024011',
     description: 'iPhone 15 Pro Case and Screen Protector',
-    status: 'completed' as const,
+    status: 'picked_up' as const,
     date_received: '2024-06-18T11:30:00-05:00',
     estimated_delivery: '2024-06-22T10:00:00-05:00',
     invoices: [{ id: '3', file_path: '/invoices/invoice3.pdf' }],
@@ -227,7 +227,7 @@ const CustomerDashboardDemo: React.FC = () => {
                 <SelectItem value="in_transit">In Transit</SelectItem>
                 <SelectItem value="arrived">Arrived in Jamaica</SelectItem>
                 <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="picked_up">Picked Up</SelectItem>
               </SelectContent>
             </Select>
             {(searchTerm || statusFilter !== 'all') && (
@@ -292,6 +292,7 @@ const CustomerDashboardDemo: React.FC = () => {
                 <li>• <strong>In Transit:</strong> Package is on its way to Jamaica</li>
                 <li>• <strong>Arrived:</strong> Package reached Jamaica facility</li>
                 <li>• <strong>Ready:</strong> Package is ready for pickup</li>
+                <li>• <strong>Picked Up:</strong> Package has been collected</li>
               </ul>
             </div>
             <div>

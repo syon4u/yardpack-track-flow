@@ -119,7 +119,7 @@ const AdminDashboard: React.FC = () => {
                 <SelectItem value="in_transit">In Transit</SelectItem>
                 <SelectItem value="arrived">Arrived</SelectItem>
                 <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="picked_up">Picked Up</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" className="flex items-center gap-2">
