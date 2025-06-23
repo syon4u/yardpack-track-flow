@@ -9,7 +9,215 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      invoices: {
+        Row: {
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string
+          id: string
+          package_id: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          package_id: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          package_id?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          package_id: string | null
+          recipient: string
+          sent_at: string | null
+          subject: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          package_id?: string | null
+          recipient: string
+          sent_at?: string | null
+          subject?: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          package_id?: string | null
+          recipient?: string
+          sent_at?: string | null
+          subject?: string | null
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packages: {
+        Row: {
+          actual_delivery: string | null
+          created_at: string
+          customer_id: string
+          date_received: string
+          delivery_address: string
+          description: string
+          dimensions: string | null
+          duty_amount: number | null
+          duty_rate: number | null
+          estimated_delivery: string | null
+          id: string
+          notes: string | null
+          package_value: number | null
+          sender_address: string | null
+          sender_name: string | null
+          status: Database["public"]["Enums"]["package_status"]
+          total_due: number | null
+          tracking_number: string
+          updated_at: string
+          weight: number | null
+        }
+        Insert: {
+          actual_delivery?: string | null
+          created_at?: string
+          customer_id: string
+          date_received?: string
+          delivery_address: string
+          description: string
+          dimensions?: string | null
+          duty_amount?: number | null
+          duty_rate?: number | null
+          estimated_delivery?: string | null
+          id?: string
+          notes?: string | null
+          package_value?: number | null
+          sender_address?: string | null
+          sender_name?: string | null
+          status?: Database["public"]["Enums"]["package_status"]
+          total_due?: number | null
+          tracking_number: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Update: {
+          actual_delivery?: string | null
+          created_at?: string
+          customer_id?: string
+          date_received?: string
+          delivery_address?: string
+          description?: string
+          dimensions?: string | null
+          duty_amount?: number | null
+          duty_rate?: number | null
+          estimated_delivery?: string | null
+          id?: string
+          notes?: string | null
+          package_value?: number | null
+          sender_address?: string | null
+          sender_name?: string | null
+          status?: Database["public"]["Enums"]["package_status"]
+          total_due?: number | null
+          tracking_number?: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packages_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone_number: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          phone_number?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone_number?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +226,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "customer" | "admin"
+      notification_type: "email" | "sms"
+      package_status:
+        | "received"
+        | "in_transit"
+        | "arrived"
+        | "ready_for_pickup"
+        | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +348,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["customer", "admin"],
+      notification_type: ["email", "sms"],
+      package_status: [
+        "received",
+        "in_transit",
+        "arrived",
+        "ready_for_pickup",
+        "completed",
+      ],
+    },
   },
 } as const

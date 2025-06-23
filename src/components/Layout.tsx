@@ -9,7 +9,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { profile, signOut } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -22,19 +22,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <h1 className="text-2xl font-bold text-gray-900">YardPack</h1>
             </div>
             
-            {user && (
+            {profile && (
               <div className="flex items-center space-x-4">
                 <Button variant="ghost" size="sm">
                   <Bell className="h-4 w-4" />
                 </Button>
                 <div className="flex items-center space-x-2">
                   <User className="h-4 w-4" />
-                  <span className="text-sm font-medium">{user.name}</span>
+                  <span className="text-sm font-medium">{profile.full_name}</span>
                   <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                    {user.role}
+                    {profile.role}
                   </span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={logout}>
+                <Button variant="ghost" size="sm" onClick={signOut}>
                   <LogOut className="h-4 w-4" />
                 </Button>
               </div>

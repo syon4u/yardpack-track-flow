@@ -1,17 +1,18 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'customer' | 'admin';
-}
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  profile: Profile | null;
+  session: Session | null;
+  signUp: (email: string, password: string, fullName: string, phoneNumber?: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -31,56 +32,107 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem('yardpack_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+      
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
     }
-    setIsLoading(false);
-  }, []);
-
-  const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
-    
-    // Demo login logic - replace with actual authentication
-    if (email === 'admin@yardpack.com' && password === 'admin123') {
-      const adminUser: User = {
-        id: '1',
-        email: 'admin@yardpack.com',
-        name: 'Admin User',
-        role: 'admin'
-      };
-      setUser(adminUser);
-      localStorage.setItem('yardpack_user', JSON.stringify(adminUser));
-      setIsLoading(false);
-      return true;
-    } else if (email === 'customer@example.com' && password === 'customer123') {
-      const customerUser: User = {
-        id: '2',
-        email: 'customer@example.com',
-        name: 'John Doe',
-        role: 'customer'
-      };
-      setUser(customerUser);
-      localStorage.setItem('yardpack_user', JSON.stringify(customerUser));
-      setIsLoading(false);
-      return true;
-    }
-    
-    setIsLoading(false);
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('yardpack_user');
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Fetch profile after auth state changes
+          setTimeout(() => {
+            fetchProfile(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      }
+      
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signUp = async (email: string, password: string, fullName: string, phoneNumber?: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName,
+          phone_number: phoneNumber || ''
+        }
+      }
+    });
+    
+    return { error };
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    return { error };
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setProfile(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      profile, 
+      session, 
+      signUp, 
+      signIn, 
+      signOut, 
+      isLoading 
+    }}>
       {children}
     </AuthContext.Provider>
   );

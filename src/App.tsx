@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
-import LoginForm from "@/components/LoginForm";
+import AuthForm from "@/components/AuthForm";
 import Dashboard from "@/components/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -24,7 +24,7 @@ const AppContent = () => {
   }
 
   if (!user) {
-    return <LoginForm />;
+    return <AuthForm />;
   }
 
   return (
