@@ -3,10 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
 import Dashboard from "@/components/Dashboard";
+import AdminDashboard from "@/components/AdminDashboard";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import NotFound from "./pages/NotFound";
@@ -14,7 +15,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const { user, isLoading } = useAuth();
+  const { user, profile, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -29,12 +30,29 @@ const AppContent = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/auth" element={user ? <Layout><Dashboard /></Layout> : <AuthPage />} />
+        <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <AuthPage />} />
         
         {/* Protected routes */}
         {user && (
           <>
-            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <Layout>
+                  {profile?.role === 'admin' ? <AdminDashboard /> : <Dashboard />}
+                </Layout>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                profile?.role === 'admin' ? (
+                  <Layout><AdminDashboard /></Layout>
+                ) : (
+                  <Navigate to="/dashboard" replace />
+                )
+              } 
+            />
           </>
         )}
         

@@ -7,9 +7,14 @@ import PackageCard from './PackageCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Package } from './PackageCard';
 
-const PackageList: React.FC = () => {
+interface PackageListProps {
+  searchTerm?: string;
+  statusFilter?: string;
+}
+
+const PackageList: React.FC<PackageListProps> = ({ searchTerm, statusFilter }) => {
   const { profile } = useAuth();
-  const { data: packages, isLoading, error } = usePackages();
+  const { data: packages, isLoading, error } = usePackages({ searchTerm, statusFilter });
   const updateStatusMutation = useUpdatePackageStatus();
   const uploadInvoiceMutation = useUploadInvoice();
   const downloadInvoiceMutation = useDownloadInvoice();
@@ -74,10 +79,14 @@ const PackageList: React.FC = () => {
   }
 
   if (!packages || packages.length === 0) {
+    const message = searchTerm || statusFilter !== 'all' 
+      ? 'No packages found matching your filters.' 
+      : 'No packages found.';
+    
     return (
       <div className="text-center py-8">
-        <p className="text-gray-600">No packages found.</p>
-        {profile?.role === 'customer' && (
+        <p className="text-gray-600">{message}</p>
+        {profile?.role === 'customer' && !searchTerm && statusFilter === 'all' && (
           <p className="text-sm text-gray-500 mt-2">
             Contact YardPack to add your first package.
           </p>

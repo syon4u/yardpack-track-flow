@@ -9,11 +9,17 @@ type Package = Database['public']['Tables']['packages']['Row'] & {
   invoices: Database['public']['Tables']['invoices']['Row'][];
 };
 
-export const usePackages = () => {
+interface UsePackagesOptions {
+  searchTerm?: string;
+  statusFilter?: string;
+}
+
+export const usePackages = (options: UsePackagesOptions = {}) => {
   const { user, profile } = useAuth();
+  const { searchTerm, statusFilter } = options;
   
   return useQuery({
-    queryKey: ['packages', user?.id, profile?.role],
+    queryKey: ['packages', user?.id, profile?.role, searchTerm, statusFilter],
     queryFn: async () => {
       if (!user) return [];
       
@@ -32,7 +38,16 @@ export const usePackages = () => {
       if (profile?.role === 'customer') {
         query = query.eq('customer_id', user.id);
       }
-      // If admin or no profile yet, show all packages
+      
+      // Apply search filter
+      if (searchTerm && searchTerm.trim()) {
+        query = query.or(`tracking_number.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+      }
+      
+      // Apply status filter
+      if (statusFilter && statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
       
       const { data, error } = await query;
       

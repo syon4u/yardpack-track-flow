@@ -128,8 +128,8 @@ const AdminDashboard: React.FC = () => {
             </Button>
           </div>
 
-          {/* Package List */}
-          <PackageList />
+          {/* Package List with filters */}
+          <PackageList searchTerm={searchTerm} statusFilter={statusFilter} />
         </TabsContent>
 
         <TabsContent value="users">

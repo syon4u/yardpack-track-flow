@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Package, LogOut, User, Bell, Search } from 'lucide-react';
+import { Package, LogOut, User, Bell, Search, Settings } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useNavigate, useLocation } from 'react-router-dom';
 import TrackingResults from './TrackingResults';
 
 interface LayoutProps {
@@ -13,6 +14,8 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [trackingNumber, setTrackingNumber] = useState('');
   const [showTrackingResults, setShowTrackingResults] = useState(false);
 
@@ -47,6 +50,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             
             {profile && (
               <div className="flex items-center space-x-4">
+                {/* Navigation for admin users */}
+                {profile.role === 'admin' && (
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      variant={location.pathname === '/dashboard' ? 'default' : 'ghost'} 
+                      size="sm"
+                      onClick={() => navigate('/dashboard')}
+                    >
+                      Dashboard
+                    </Button>
+                    <Button 
+                      variant={location.pathname === '/admin' ? 'default' : 'ghost'} 
+                      size="sm"
+                      onClick={() => navigate('/admin')}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Admin
+                    </Button>
+                  </div>
+                )}
+
                 {/* Track Package Popover */}
                 <Popover>
                   <PopoverTrigger asChild>
