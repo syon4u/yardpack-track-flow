@@ -44,7 +44,7 @@ export const useUpdatePackageStatus = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ packageId, status }: { packageId: string; status: string }) => {
+    mutationFn: async ({ packageId, status }: { packageId: string; status: Database['public']['Enums']['package_status'] }) => {
       const { error } = await supabase
         .from('packages')
         .update({ status })
