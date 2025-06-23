@@ -48,7 +48,7 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
       
       // Apply status filter - only if it's a valid status and not 'all'
       if (statusFilter && statusFilter !== 'all') {
-        const validStatuses: PackageStatus[] = ['received', 'in_transit', 'arrived', 'ready_for_pickup', 'completed'];
+        const validStatuses: PackageStatus[] = ['received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'];
         if (validStatuses.includes(statusFilter as PackageStatus)) {
           query = query.eq('status', statusFilter as PackageStatus);
         }
