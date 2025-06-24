@@ -197,7 +197,7 @@ const LandingPage: React.FC = () => {
                   <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform duration-300" />
                 </Button>
               </Link>
-              <Button variant="outline" className="border-white/30 hover:bg-white/10 px-10 py-4 text-lg backdrop-blur-md text-white rounded-2xl transition-all duration-300 transform hover:scale-105">
+              <Button variant="outline" className="border-white/30 px-10 py-4 text-lg backdrop-blur-md text-white rounded-2xl transition-all duration-300 transform hover:scale-105 bg-amber-400 hover:bg-amber-300">
                 Discover More
               </Button>
             </div>
