@@ -15,7 +15,7 @@ type DatabasePackage = Database['public']['Tables']['packages']['Row'] & {
   invoices: Database['public']['Tables']['invoices']['Row'][];
 };
 
-// Sample data for demo purposes - now matching the full Package database structure
+// Sample data for demo purposes - now matching the full Package database structure with new tracking fields
 const samplePackages: DatabasePackage[] = [
   {
     id: '1',
@@ -39,6 +39,11 @@ const samplePackages: DatabasePackage[] = [
     notes: null,
     created_at: '2024-06-23T10:30:00-05:00',
     updated_at: '2024-06-23T10:30:00-05:00',
+    carrier: 'USPS',
+    external_tracking_number: '9405536896846285432100',
+    last_api_sync: '2024-06-23T11:00:00-05:00',
+    api_sync_status: 'synced',
+    delivery_estimate: '2024-06-28T14:00:00-05:00',
     profiles: { 
       id: 'sample-customer-id',
       full_name: 'Adam Grant', 
@@ -81,6 +86,11 @@ const samplePackages: DatabasePackage[] = [
     notes: null,
     created_at: '2024-06-22T09:15:00-05:00',
     updated_at: '2024-06-22T09:15:00-05:00',
+    carrier: 'FEDEX',
+    external_tracking_number: '773875842019',
+    last_api_sync: '2024-06-22T15:30:00-05:00',
+    api_sync_status: 'synced',
+    delivery_estimate: '2024-06-27T16:00:00-05:00',
     profiles: { 
       id: 'sample-customer-id',
       full_name: 'Adam Grant', 
@@ -123,6 +133,11 @@ const samplePackages: DatabasePackage[] = [
     notes: null,
     created_at: '2024-06-20T14:45:00-05:00',
     updated_at: '2024-06-20T14:45:00-05:00',
+    carrier: 'UPS',
+    external_tracking_number: '1Z999AA1234567890',
+    last_api_sync: '2024-06-20T16:15:00-05:00',
+    api_sync_status: 'synced',
+    delivery_estimate: '2024-06-24T12:00:00-05:00',
     profiles: { 
       id: 'sample-customer-id',
       full_name: 'Adam Grant', 
@@ -165,6 +180,11 @@ const samplePackages: DatabasePackage[] = [
     notes: null,
     created_at: '2024-06-18T11:30:00-05:00',
     updated_at: '2024-06-22T14:30:00-05:00',
+    carrier: 'USPS',
+    external_tracking_number: '9405536896846285432101',
+    last_api_sync: '2024-06-22T14:30:00-05:00',
+    api_sync_status: 'synced',
+    delivery_estimate: null,
     profiles: { 
       id: 'sample-customer-id',
       full_name: 'Adam Grant', 
@@ -207,6 +227,11 @@ const samplePackages: DatabasePackage[] = [
     notes: null,
     created_at: '2024-06-21T16:20:00-05:00',
     updated_at: '2024-06-21T16:20:00-05:00',
+    carrier: 'DHL',
+    external_tracking_number: '1234567890',
+    last_api_sync: '2024-06-21T18:00:00-05:00',
+    api_sync_status: 'pending',
+    delivery_estimate: '2024-06-25T11:00:00-05:00',
     profiles: { 
       id: 'sample-customer-id',
       full_name: 'Adam Grant', 
