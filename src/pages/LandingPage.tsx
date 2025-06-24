@@ -1,28 +1,23 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Search, Truck, CheckCircle, Star, ArrowRight, Users, Shield, Clock, MapPin, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import TrackingResults from '@/components/TrackingResults';
-
 const LandingPage: React.FC = () => {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [scrollY, setScrollY] = useState(0);
-
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
   const handleTrack = () => {
     if (trackingNumber.trim()) {
       setShowResults(true);
     }
   };
-
   const features = [{
     icon: <Package className="h-12 w-12 text-teal-400" />,
     title: "Secure Packaging",
@@ -40,7 +35,6 @@ const LandingPage: React.FC = () => {
     title: "Real-time Tracking",
     description: "Know exactly where your package is at all times"
   }];
-
   const testimonials = [{
     name: "Marcus Johnson",
     role: "Software Engineer",
@@ -57,13 +51,10 @@ const LandingPage: React.FC = () => {
     content: "I ship products regularly and JIL International always delivers on time. Highly recommended!",
     rating: 5
   }];
-
   if (showResults) {
     return <TrackingResults trackingNumber={trackingNumber} onBack={() => setShowResults(false)} />;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-teal-900 relative overflow-hidden">
+  return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-teal-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-teal-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
@@ -73,10 +64,18 @@ const LandingPage: React.FC = () => {
 
       {/* Floating Geometric Shapes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-6 h-6 border-2 border-teal-400/30 rotate-45 animate-bounce" style={{ animationDelay: '0.5s' }}></div>
-        <div className="absolute top-40 right-32 w-4 h-4 bg-coral-400/40 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-60 left-40 w-8 h-8 border-2 border-purple-400/30 rounded-full animate-spin" style={{ animationDuration: '8s' }}></div>
-        <div className="absolute bottom-32 right-60 w-5 h-5 bg-amber-400/40 transform rotate-45 animate-pulse" style={{ animationDelay: '1.5s' }}></div>
+        <div className="absolute top-20 left-20 w-6 h-6 border-2 border-teal-400/30 rotate-45 animate-bounce" style={{
+        animationDelay: '0.5s'
+      }}></div>
+        <div className="absolute top-40 right-32 w-4 h-4 bg-coral-400/40 rounded-full animate-ping" style={{
+        animationDelay: '1s'
+      }}></div>
+        <div className="absolute bottom-60 left-40 w-8 h-8 border-2 border-purple-400/30 rounded-full animate-spin" style={{
+        animationDuration: '8s'
+      }}></div>
+        <div className="absolute bottom-32 right-60 w-5 h-5 bg-amber-400/40 transform rotate-45 animate-pulse" style={{
+        animationDelay: '1.5s'
+      }}></div>
       </div>
 
       {/* Navigation */}
@@ -119,7 +118,9 @@ const LandingPage: React.FC = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-20 pb-32" style={{ transform: `translateY(${scrollY * 0.1}px)` }}>
+      <section className="relative overflow-hidden pt-20 pb-32" style={{
+      transform: `translateY(${scrollY * 0.1}px)`
+    }}>
         {/* Artistic Background */}
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-purple-900/80 to-teal-900/90"></div>
@@ -136,7 +137,9 @@ const LandingPage: React.FC = () => {
                 </linearGradient>
               </defs>
               <path d="M0,400 C300,200 600,600 1200,300 L1200,800 L0,800 Z" fill="url(#wave1)" className="animate-pulse" />
-              <path d="M0,500 C400,300 800,700 1200,400 L1200,800 L0,800 Z" fill="url(#wave2)" className="animate-pulse" style={{ animationDelay: '1s' }} />
+              <path d="M0,500 C400,300 800,700 1200,400 L1200,800 L0,800 Z" fill="url(#wave2)" className="animate-pulse" style={{
+              animationDelay: '1s'
+            }} />
             </svg>
           </div>
         </div>
@@ -160,36 +163,34 @@ const LandingPage: React.FC = () => {
                 Solutions
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-4xl mx-auto animate-fade-in leading-relaxed" style={{ animationDelay: '0.2s' }}>
+            <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-4xl mx-auto animate-fade-in leading-relaxed" style={{
+            animationDelay: '0.2s'
+          }}>
               Premium shipping solutions that connect hearts across the Caribbean. 
               <span className="text-teal-300 font-medium"> Track with confidence, ship with care.</span>
             </p>
             
             {/* Enhanced Tracking Input */}
-            <div className="max-w-lg mx-auto mb-16 animate-scale-in" style={{ animationDelay: '0.4s' }}>
+            <div className="max-w-lg mx-auto mb-16 animate-scale-in" style={{
+            animationDelay: '0.4s'
+          }}>
               <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105">
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="w-3 h-3 bg-teal-400 rounded-full animate-pulse"></div>
                   <h3 className="text-xl font-semibold text-white">Track Your Journey</h3>
                 </div>
                 <div className="flex gap-3">
-                  <Input 
-                    placeholder="Enter tracking number" 
-                    value={trackingNumber} 
-                    onChange={e => setTrackingNumber(e.target.value)} 
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-2xl backdrop-blur-md focus:bg-white/30 transition-all duration-300" 
-                  />
-                  <Button 
-                    onClick={handleTrack} 
-                    className="bg-gradient-to-r from-teal-500 to-purple-600 text-white hover:from-teal-400 hover:to-purple-500 transition-all duration-300 transform hover:scale-110 rounded-2xl px-6 shadow-lg hover:shadow-xl"
-                  >
+                  <Input placeholder="Enter tracking number" value={trackingNumber} onChange={e => setTrackingNumber(e.target.value)} className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-2xl backdrop-blur-md focus:bg-white/30 transition-all duration-300" />
+                  <Button onClick={handleTrack} className="bg-gradient-to-r from-teal-500 to-purple-600 text-white hover:from-teal-400 hover:to-purple-500 transition-all duration-300 transform hover:scale-110 rounded-2xl px-6 shadow-lg hover:shadow-xl">
                     <Search className="h-5 w-5" />
                   </Button>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in" style={{ animationDelay: '0.6s' }}>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in" style={{
+            animationDelay: '0.6s'
+          }}>
               <Link to="/auth">
                 <Button className="bg-gradient-to-r from-teal-500 to-purple-600 text-white px-10 py-4 text-lg font-semibold hover:from-teal-400 hover:to-purple-500 transition-all duration-300 transform hover:scale-110 rounded-2xl shadow-xl hover:shadow-2xl group">
                   Start Your Journey 
@@ -222,24 +223,31 @@ const LandingPage: React.FC = () => {
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">Three simple steps to connect your world</p>
           </div>
           <div className="grid md:grid-cols-3 gap-12">
-            {[
-              { step: "1", title: "Create Account", desc: "Join our family and create your shipping profile in minutes", color: "teal" },
-              { step: "2", title: "Ship Package", desc: "Send your package to our Miami facility with your unique details", color: "purple" },
-              { step: "3", title: "Track & Receive", desc: "Monitor your shipment's journey and celebrate its arrival in Kingston", color: "coral" }
-            ].map((item, index) => (
-              <div key={index} className="text-center group animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
-                <div className={`bg-gradient-to-br ${
-                  item.color === 'teal' ? 'from-teal-400 to-teal-600' :
-                  item.color === 'purple' ? 'from-purple-400 to-purple-600' :
-                  'from-coral-400 to-coral-600'
-                } rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-8 shadow-xl group-hover:scale-110 transition-all duration-500 relative overflow-hidden`}>
+            {[{
+            step: "1",
+            title: "Create Account",
+            desc: "Join our family and create your shipping profile in minutes",
+            color: "teal"
+          }, {
+            step: "2",
+            title: "Ship Package",
+            desc: "Send your package to our Miami facility with your unique details",
+            color: "purple"
+          }, {
+            step: "3",
+            title: "Track & Receive",
+            desc: "Monitor your shipment's journey and celebrate its arrival in Kingston",
+            color: "coral"
+          }].map((item, index) => <div key={index} className="text-center group animate-fade-in" style={{
+            animationDelay: `${index * 0.2}s`
+          }}>
+                <div className={`bg-gradient-to-br ${item.color === 'teal' ? 'from-teal-400 to-teal-600' : item.color === 'purple' ? 'from-purple-400 to-purple-600' : 'from-coral-400 to-coral-600'} rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-8 shadow-xl group-hover:scale-110 transition-all duration-500 relative overflow-hidden`}>
                   <span className="text-3xl font-bold text-white relative z-10">{item.step}</span>
-                  <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-amber-400"></div>
                 </div>
                 <h3 className="text-2xl font-bold text-slate-800 mb-4 group-hover:text-purple-600 transition-colors duration-300">{item.title}</h3>
                 <p className="text-slate-600 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -261,16 +269,16 @@ const LandingPage: React.FC = () => {
             <p className="text-xl text-white/70 max-w-2xl mx-auto">Every detail designed for your peace of mind</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-white/20 transition-all duration-500 group hover:scale-105 transform shadow-2xl hover:shadow-3xl animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+            {features.map((feature, index) => <div key={index} className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-white/20 transition-all duration-500 group hover:scale-105 transform shadow-2xl hover:shadow-3xl animate-fade-in" style={{
+            animationDelay: `${index * 0.1}s`
+          }}>
                 <div className="mb-6 group-hover:scale-110 transition-transform duration-300 relative">
                   {feature.icon}
                   <div className="absolute inset-0 bg-current opacity-20 rounded-full blur-xl scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-4 group-hover:text-teal-300 transition-colors duration-300">{feature.title}</h3>
                 <p className="text-white/70 leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -297,20 +305,18 @@ const LandingPage: React.FC = () => {
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">Real experiences from our shipping family</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white/80 backdrop-blur-md rounded-3xl p-8 border border-white/50 hover:scale-105 transition-all duration-500 shadow-xl hover:shadow-2xl animate-fade-in group" style={{ animationDelay: `${index * 0.2}s` }}>
+            {testimonials.map((testimonial, index) => <div key={index} className="bg-white/80 backdrop-blur-md rounded-3xl p-8 border border-white/50 hover:scale-105 transition-all duration-500 shadow-xl hover:shadow-2xl animate-fade-in group" style={{
+            animationDelay: `${index * 0.2}s`
+          }}>
                 <div className="flex mb-6">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-amber-400 fill-current" />
-                  ))}
+                  {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="h-5 w-5 text-amber-400 fill-current" />)}
                 </div>
                 <p className="text-slate-700 mb-6 italic text-lg leading-relaxed">"{testimonial.content}"</p>
                 <div className="border-t border-slate-200 pt-6 group-hover:border-teal-200 transition-colors duration-300">
                   <p className="text-slate-800 font-bold text-lg">{testimonial.name}</p>
                   <p className="text-slate-600">{testimonial.role}</p>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -332,21 +338,28 @@ const LandingPage: React.FC = () => {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {[
-              { icon: Phone, title: "Phone", info: "+1 (305) 555-0123", color: "teal" },
-              { icon: Mail, title: "Email", info: "info@jilinternational.com", color: "purple" },
-              { icon: MapPin, title: "Miami Office", info: "123 Shipping Lane\nMiami, FL 33101", color: "coral" }
-            ].map((contact, index) => (
-              <div key={index} className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-white/20 transition-all duration-500 group hover:scale-105 transform shadow-2xl animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                <contact.icon className={`h-10 w-10 mx-auto mb-4 ${
-                  contact.color === 'teal' ? 'text-teal-400' :
-                  contact.color === 'purple' ? 'text-purple-400' :
-                  'text-coral-400'
-                } group-hover:scale-110 transition-transform duration-300`} />
+            {[{
+            icon: Phone,
+            title: "Phone",
+            info: "+1 (305) 555-0123",
+            color: "teal"
+          }, {
+            icon: Mail,
+            title: "Email",
+            info: "info@jilinternational.com",
+            color: "purple"
+          }, {
+            icon: MapPin,
+            title: "Miami Office",
+            info: "123 Shipping Lane\nMiami, FL 33101",
+            color: "coral"
+          }].map((contact, index) => <div key={index} className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-white/20 transition-all duration-500 group hover:scale-105 transform shadow-2xl animate-fade-in" style={{
+            animationDelay: `${index * 0.1}s`
+          }}>
+                <contact.icon className={`h-10 w-10 mx-auto mb-4 ${contact.color === 'teal' ? 'text-teal-400' : contact.color === 'purple' ? 'text-purple-400' : 'text-coral-400'} group-hover:scale-110 transition-transform duration-300`} />
                 <h3 className="font-bold text-white mb-3 text-lg">{contact.title}</h3>
                 <p className="text-white/70 whitespace-pre-line">{contact.info}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
           
           <Link to="/auth">
@@ -372,33 +385,32 @@ const LandingPage: React.FC = () => {
               </div>
               <p className="text-slate-300 leading-relaxed">Connecting hearts across the Caribbean with premium shipping solutions that you can trust.</p>
             </div>
-            {[
-              { title: "Services", items: ["Package Shipping", "Real-time Tracking", "Duty Calculation", "Insurance"] },
-              { title: "Support", items: ["Track Package", "Help Center", "Contact Us", "Shipping Guide"] },
-              { title: "Company", items: ["About JIL International", "Careers", "Privacy Policy", "Terms of Service"] }
-            ].map((section, index) => (
-              <div key={index}>
+            {[{
+            title: "Services",
+            items: ["Package Shipping", "Real-time Tracking", "Duty Calculation", "Insurance"]
+          }, {
+            title: "Support",
+            items: ["Track Package", "Help Center", "Contact Us", "Shipping Guide"]
+          }, {
+            title: "Company",
+            items: ["About JIL International", "Careers", "Privacy Policy", "Terms of Service"]
+          }].map((section, index) => <div key={index}>
                 <h4 className="text-white font-bold mb-6 text-lg">{section.title}</h4>
                 <ul className="space-y-3">
-                  {section.items.map((item, i) => (
-                    <li key={i}>
+                  {section.items.map((item, i) => <li key={i}>
                       <a href="#" className="text-slate-300 hover:text-teal-400 transition-colors duration-300 relative group">
                         {item}
                         <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-400 group-hover:w-full transition-all duration-300"></span>
                       </a>
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
-              </div>
-            ))}
+              </div>)}
           </div>
           <div className="border-t border-white/10 mt-12 pt-8 text-center">
             <p className="text-slate-400">&copy; 2024 JIL International Solutions. Crafted with ❤️ for the Caribbean community.</p>
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default LandingPage;
