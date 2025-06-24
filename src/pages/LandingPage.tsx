@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Search, Truck, CheckCircle, Star, ArrowRight, Users, Shield, Clock, MapPin, Phone, Mail } from 'lucide-react';
@@ -101,7 +100,7 @@ const LandingPage: React.FC = () => {
             playsInline
             className="w-full h-full object-cover opacity-50"
           >
-            <source src="/videos/shipping-logistics-hero.mp4" type="video/mp4" />
+            <source src="/videos/shipping-hero-bg.mp4" type="video/mp4" />
             {/* Fallback for browsers that don't support video */}
             <div className="w-full h-full bg-gradient-to-br from-blue-900 to-slate-800"></div>
           </video>
