@@ -5,23 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, MapPin, Calendar } from 'lucide-react';
-
-interface CustomerData {
-  id: string;
-  type: 'registered' | 'package_only';
-  full_name: string;
-  email: string | null;
-  phone_number: string | null;
-  address: string | null;
-  created_at: string;
-  total_packages: number;
-  active_packages: number;
-  completed_packages: number;
-  total_spent: number;
-  outstanding_balance: number;
-  last_activity: string | null;
-  registration_status: 'registered' | 'guest';
-}
+import { CustomerData } from '@/hooks/useAdminCustomers';
 
 interface AdminCustomerTableProps {
   customers: CustomerData[];
