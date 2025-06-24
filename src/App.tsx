@@ -10,6 +10,7 @@ import Dashboard from "@/components/Dashboard";
 import AdminDashboard from "@/components/AdminDashboard";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
+import WarehousePage from "@/pages/WarehousePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

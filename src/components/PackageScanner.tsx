@@ -1,0 +1,191 @@
+
+import React, { useState, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Scan, Package, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
+import { useToast } from '@/hooks/use-toast';
+
+const PackageScanner: React.FC = () => {
+  const [scannedCode, setScannedCode] = useState('');
+  const [scanResult, setScanResult] = useState<{
+    status: 'success' | 'error' | 'not_found';
+    message: string;
+    package?: any;
+  } | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  const { data: packages } = usePackages();
+  const updateStatusMutation = useUpdatePackageStatus();
+  const { toast } = useToast();
+
+  const handleScan = async () => {
+    if (!scannedCode.trim()) return;
+    
+    setIsScanning(true);
+    
+    try {
+      // Find package by tracking number
+      const foundPackage = packages?.find(
+        pkg => pkg.tracking_number.toLowerCase() === scannedCode.toLowerCase()
+      );
+      
+      if (!foundPackage) {
+        setScanResult({
+          status: 'not_found',
+          message: `Package with tracking number "${scannedCode}" not found`,
+        });
+        setIsScanning(false);
+        return;
+      }
+      
+      // Update package status to 'arrived'
+      await updateStatusMutation.mutateAsync({
+        packageId: foundPackage.id,
+        status: 'arrived'
+      });
+      
+      setScanResult({
+        status: 'success',
+        message: `Package "${scannedCode}" successfully marked as arrived`,
+        package: foundPackage
+      });
+      
+      toast({
+        title: "Package Scanned Successfully",
+        description: `${foundPackage.tracking_number} has been marked as arrived at Miami warehouse`,
+      });
+      
+    } catch (error) {
+      setScanResult({
+        status: 'error',
+        message: 'Failed to update package status',
+      });
+      
+      toast({
+        title: "Scan Failed",
+        description: "There was an error updating the package status",
+        variant: "destructive",
+      });
+    }
+    
+    setIsScanning(false);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleScan();
+    }
+  };
+
+  const clearScan = () => {
+    setScannedCode('');
+    setScanResult(null);
+    inputRef.current?.focus();
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Scan className="h-6 w-6" />
+            Package Scanner - Miami Warehouse
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              ref={inputRef}
+              type="text"
+              placeholder="Scan or enter tracking number..."
+              value={scannedCode}
+              onChange={(e) => setScannedCode(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="flex-1"
+              autoFocus
+            />
+            <Button 
+              onClick={handleScan} 
+              disabled={!scannedCode.trim() || isScanning}
+              className="flex items-center gap-2"
+            >
+              {isScanning ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Package className="h-4 w-4" />
+              )}
+              {isScanning ? 'Processing...' : 'Scan'}
+            </Button>
+          </div>
+          
+          {scanResult && (
+            <Card className={`${
+              scanResult.status === 'success' ? 'border-green-200 bg-green-50' :
+              scanResult.status === 'error' ? 'border-red-200 bg-red-50' :
+              'border-yellow-200 bg-yellow-50'
+            }`}>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  {scanResult.status === 'success' && (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  )}
+                  {scanResult.status === 'error' && (
+                    <AlertCircle className="h-5 w-5 text-red-600" />
+                  )}
+                  {scanResult.status === 'not_found' && (
+                    <AlertCircle className="h-5 w-5 text-yellow-600" />
+                  )}
+                  <Badge variant={
+                    scanResult.status === 'success' ? 'default' :
+                    scanResult.status === 'error' ? 'destructive' :
+                    'secondary'
+                  }>
+                    {scanResult.status === 'success' ? 'Success' :
+                     scanResult.status === 'error' ? 'Error' :
+                     'Not Found'}
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-700 mb-2">{scanResult.message}</p>
+                
+                {scanResult.package && (
+                  <div className="text-sm space-y-1">
+                    <p><strong>Customer:</strong> {scanResult.package.profiles?.full_name || 'Unknown'}</p>
+                    <p><strong>Description:</strong> {scanResult.package.description}</p>
+                    <p><strong>Status:</strong> <Badge variant="outline">Arrived</Badge></p>
+                  </div>
+                )}
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={clearScan}
+                  className="mt-3"
+                >
+                  Scan Next Package
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Scanning Instructions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-gray-600">
+          <p>1. Use a barcode scanner or manually enter the tracking number</p>
+          <p>2. Press Enter or click the Scan button</p>
+          <p>3. The system will automatically mark the package as "Arrived"</p>
+          <p>4. Package status will be updated in real-time for customers</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default PackageScanner;
