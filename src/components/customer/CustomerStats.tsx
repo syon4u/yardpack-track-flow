@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Truck, CheckCircle, DollarSign } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CustomerStatsProps {
   totalPackages: number;
@@ -16,49 +17,67 @@ const CustomerStats: React.FC<CustomerStatsProps> = ({
   readyForPickup,
   totalDue
 }) => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Packages</CardTitle>
-          <Package className="h-4 w-4 text-muted-foreground" />
+    <div className={`grid gap-3 sm:gap-4 md:gap-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-4'}`}>
+      <Card className={isMobile ? 'p-3' : ''}>
+        <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
+          <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
+            {isMobile ? 'Total' : 'Total Packages'}
+          </CardTitle>
+          <Package className={`text-muted-foreground ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{totalPackages}</div>
-          <p className="text-xs text-muted-foreground">All time shipments</p>
+        <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
+          <div className={`font-bold ${isMobile ? 'text-lg' : 'text-2xl'}`}>{totalPackages}</div>
+          <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
+            {isMobile ? 'All shipments' : 'All time shipments'}
+          </p>
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">In Transit</CardTitle>
-          <Truck className="h-4 w-4 text-blue-500" />
+      <Card className={isMobile ? 'p-3' : ''}>
+        <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
+          <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
+            {isMobile ? 'Transit' : 'In Transit'}
+          </CardTitle>
+          <Truck className={`text-blue-500 ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-blue-600">{inTransitPackages}</div>
-          <p className="text-xs text-muted-foreground">On the way to Jamaica</p>
+        <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
+          <div className={`font-bold text-blue-600 ${isMobile ? 'text-lg' : 'text-2xl'}`}>{inTransitPackages}</div>
+          <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
+            {isMobile ? 'To Jamaica' : 'On the way to Jamaica'}
+          </p>
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Ready for Pickup</CardTitle>
-          <CheckCircle className="h-4 w-4 text-green-500" />
+      <Card className={isMobile ? 'p-3' : ''}>
+        <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
+          <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
+            {isMobile ? 'Ready' : 'Ready for Pickup'}
+          </CardTitle>
+          <CheckCircle className={`text-green-500 ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-green-600">{readyForPickup}</div>
-          <p className="text-xs text-muted-foreground">Available for collection</p>
+        <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
+          <div className={`font-bold text-green-600 ${isMobile ? 'text-lg' : 'text-2xl'}`}>{readyForPickup}</div>
+          <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
+            {isMobile ? 'For collection' : 'Available for collection'}
+          </p>
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Due</CardTitle>
-          <DollarSign className="h-4 w-4 text-orange-500" />
+      <Card className={isMobile ? 'p-3' : ''}>
+        <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
+          <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
+            {isMobile ? 'Due' : 'Total Due'}
+          </CardTitle>
+          <DollarSign className={`text-orange-500 ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-orange-600">${totalDue.toFixed(2)}</div>
-          <p className="text-xs text-muted-foreground">Outstanding balance</p>
+        <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
+          <div className={`font-bold text-orange-600 ${isMobile ? 'text-lg' : 'text-2xl'}`}>${totalDue.toFixed(2)}</div>
+          <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
+            {isMobile ? 'Outstanding' : 'Outstanding balance'}
+          </p>
         </CardContent>
       </Card>
     </div>

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CustomerStatusBreakdownProps {
   receivedPackages: number;
@@ -18,31 +19,51 @@ const CustomerStatusBreakdown: React.FC<CustomerStatusBreakdownProps> = ({
   readyForPickup,
   pickedUpPackages
 }) => {
+  const isMobile = useIsMobile();
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Package Status Breakdown</CardTitle>
+      <CardHeader className={isMobile ? 'pb-3' : ''}>
+        <CardTitle className={isMobile ? 'text-base' : ''}>
+          {isMobile ? 'Package Status' : 'Package Status Breakdown'}
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={`space-y-3 ${isMobile ? 'space-y-4' : 'space-y-4'}`}>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Received at Miami</span>
-          <Badge variant="secondary">{receivedPackages}</Badge>
+          <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
+            {isMobile ? 'At Miami' : 'Received at Miami'}
+          </span>
+          <Badge variant="secondary" className={isMobile ? 'text-xs px-2 py-1' : ''}>
+            {receivedPackages}
+          </Badge>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">In Transit</span>
-          <Badge className="bg-yellow-100 text-yellow-800">{inTransitPackages}</Badge>
+          <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>In Transit</span>
+          <Badge className={`bg-yellow-100 text-yellow-800 ${isMobile ? 'text-xs px-2 py-1' : ''}`}>
+            {inTransitPackages}
+          </Badge>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Arrived in Jamaica</span>
-          <Badge className="bg-purple-100 text-purple-800">{arrivedPackages}</Badge>
+          <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
+            {isMobile ? 'In Jamaica' : 'Arrived in Jamaica'}
+          </span>
+          <Badge className={`bg-purple-100 text-purple-800 ${isMobile ? 'text-xs px-2 py-1' : ''}`}>
+            {arrivedPackages}
+          </Badge>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Ready for Pickup</span>
-          <Badge className="bg-green-100 text-green-800">{readyForPickup}</Badge>
+          <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
+            {isMobile ? 'Ready' : 'Ready for Pickup'}
+          </span>
+          <Badge className={`bg-green-100 text-green-800 ${isMobile ? 'text-xs px-2 py-1' : ''}`}>
+            {readyForPickup}
+          </Badge>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Picked Up</span>
-          <Badge variant="outline">{pickedUpPackages}</Badge>
+          <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Picked Up</span>
+          <Badge variant="outline" className={isMobile ? 'text-xs px-2 py-1' : ''}>
+            {pickedUpPackages}
+          </Badge>
         </div>
       </CardContent>
     </Card>
