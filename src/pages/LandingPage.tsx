@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Search, Truck, CheckCircle, Star, ArrowRight, Users, Shield, Clock, MapPin, Phone, Mail } from 'lucide-react';
@@ -140,6 +141,7 @@ const LandingPage: React.FC = () => {
             poster="/videos/jlvid.mp4"
           >
             <source src="/videos/jlvid.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
           </video>
           
           {/* Video Overlay */}
