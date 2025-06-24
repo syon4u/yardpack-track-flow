@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import PackageCard from './PackageCard';
@@ -9,9 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Package, Search, Truck, CheckCircle, AlertCircle, DollarSign, LayoutGrid, LayoutList } from 'lucide-react';
+import { Database } from '@/integrations/supabase/types';
+
+type DatabasePackage = Database['public']['Tables']['packages']['Row'] & {
+  profiles?: Database['public']['Tables']['profiles']['Row'] | null;
+  invoices: Database['public']['Tables']['invoices']['Row'][];
+};
 
 // Sample data for demo purposes - now matching the full Package database structure
-const samplePackages = [
+const samplePackages: DatabasePackage[] = [
   {
     id: '1',
     tracking_number: 'YP2024008',
@@ -34,7 +39,16 @@ const samplePackages = [
     notes: null,
     created_at: '2024-06-23T10:30:00-05:00',
     updated_at: '2024-06-23T10:30:00-05:00',
-    profiles: { full_name: 'Adam Grant', email: 'adam.grant@example.com' }
+    profiles: { 
+      id: 'sample-customer-id',
+      full_name: 'Adam Grant', 
+      email: 'adam.grant@example.com',
+      address: '123 Main St, Kingston, Jamaica',
+      phone_number: '+1-876-555-0123',
+      role: 'customer' as const,
+      created_at: '2024-06-20T10:00:00-05:00',
+      updated_at: '2024-06-20T10:00:00-05:00'
+    }
   },
   {
     id: '2',
@@ -44,7 +58,16 @@ const samplePackages = [
     date_received: '2024-06-22T09:15:00-05:00',
     estimated_delivery: '2024-06-27T16:00:00-05:00',
     actual_delivery: null,
-    invoices: [{ id: '1', file_path: '/invoices/invoice1.pdf', file_name: 'invoice1.pdf', file_type: 'pdf', file_size: 1024, uploaded_at: '2024-06-22T10:00:00-05:00', uploaded_by: 'sample-customer-id', package_id: '2' }],
+    invoices: [{ 
+      id: '1', 
+      file_path: '/invoices/invoice1.pdf', 
+      file_name: 'invoice1.pdf', 
+      file_type: 'pdf', 
+      file_size: 1024, 
+      uploaded_at: '2024-06-22T10:00:00-05:00', 
+      uploaded_by: 'sample-customer-id', 
+      package_id: '2' 
+    }],
     duty_amount: 48.00,
     duty_rate: 0.15,
     total_due: 48.00,
@@ -58,7 +81,16 @@ const samplePackages = [
     notes: null,
     created_at: '2024-06-22T09:15:00-05:00',
     updated_at: '2024-06-22T09:15:00-05:00',
-    profiles: { full_name: 'Adam Grant', email: 'adam.grant@example.com' }
+    profiles: { 
+      id: 'sample-customer-id',
+      full_name: 'Adam Grant', 
+      email: 'adam.grant@example.com',
+      address: '123 Main St, Kingston, Jamaica',
+      phone_number: '+1-876-555-0123',
+      role: 'customer' as const,
+      created_at: '2024-06-20T10:00:00-05:00',
+      updated_at: '2024-06-20T10:00:00-05:00'
+    }
   },
   {
     id: '3',
@@ -68,7 +100,16 @@ const samplePackages = [
     date_received: '2024-06-20T14:45:00-05:00',
     estimated_delivery: '2024-06-24T12:00:00-05:00',
     actual_delivery: null,
-    invoices: [{ id: '2', file_path: '/invoices/invoice2.pdf', file_name: 'invoice2.pdf', file_type: 'pdf', file_size: 512, uploaded_at: '2024-06-20T15:00:00-05:00', uploaded_by: 'sample-customer-id', package_id: '3' }],
+    invoices: [{ 
+      id: '2', 
+      file_path: '/invoices/invoice2.pdf', 
+      file_name: 'invoice2.pdf', 
+      file_type: 'pdf', 
+      file_size: 512, 
+      uploaded_at: '2024-06-20T15:00:00-05:00', 
+      uploaded_by: 'sample-customer-id', 
+      package_id: '3' 
+    }],
     duty_amount: 12.75,
     duty_rate: 0.15,
     total_due: 12.75,
@@ -82,7 +123,16 @@ const samplePackages = [
     notes: null,
     created_at: '2024-06-20T14:45:00-05:00',
     updated_at: '2024-06-20T14:45:00-05:00',
-    profiles: { full_name: 'Adam Grant', email: 'adam.grant@example.com' }
+    profiles: { 
+      id: 'sample-customer-id',
+      full_name: 'Adam Grant', 
+      email: 'adam.grant@example.com',
+      address: '123 Main St, Kingston, Jamaica',
+      phone_number: '+1-876-555-0123',
+      role: 'customer' as const,
+      created_at: '2024-06-20T10:00:00-05:00',
+      updated_at: '2024-06-20T10:00:00-05:00'
+    }
   },
   {
     id: '4',
@@ -92,7 +142,16 @@ const samplePackages = [
     date_received: '2024-06-18T11:30:00-05:00',
     estimated_delivery: '2024-06-22T10:00:00-05:00',
     actual_delivery: '2024-06-22T14:30:00-05:00',
-    invoices: [{ id: '3', file_path: '/invoices/invoice3.pdf', file_name: 'invoice3.pdf', file_type: 'pdf', file_size: 256, uploaded_at: '2024-06-18T12:00:00-05:00', uploaded_by: 'sample-customer-id', package_id: '4' }],
+    invoices: [{ 
+      id: '3', 
+      file_path: '/invoices/invoice3.pdf', 
+      file_name: 'invoice3.pdf', 
+      file_type: 'pdf', 
+      file_size: 256, 
+      uploaded_at: '2024-06-18T12:00:00-05:00', 
+      uploaded_by: 'sample-customer-id', 
+      package_id: '4' 
+    }],
     duty_amount: 11.25,
     duty_rate: 0.15,
     total_due: 11.25,
@@ -106,7 +165,16 @@ const samplePackages = [
     notes: null,
     created_at: '2024-06-18T11:30:00-05:00',
     updated_at: '2024-06-22T14:30:00-05:00',
-    profiles: { full_name: 'Adam Grant', email: 'adam.grant@example.com' }
+    profiles: { 
+      id: 'sample-customer-id',
+      full_name: 'Adam Grant', 
+      email: 'adam.grant@example.com',
+      address: '123 Main St, Kingston, Jamaica',
+      phone_number: '+1-876-555-0123',
+      role: 'customer' as const,
+      created_at: '2024-06-20T10:00:00-05:00',
+      updated_at: '2024-06-20T10:00:00-05:00'
+    }
   },
   {
     id: '5',
@@ -116,7 +184,16 @@ const samplePackages = [
     date_received: '2024-06-21T16:20:00-05:00',
     estimated_delivery: '2024-06-25T11:00:00-05:00',
     actual_delivery: null,
-    invoices: [{ id: '4', file_path: '/invoices/invoice4.pdf', file_name: 'invoice4.pdf', file_type: 'pdf', file_size: 768, uploaded_at: '2024-06-21T17:00:00-05:00', uploaded_by: 'sample-customer-id', package_id: '5' }],
+    invoices: [{ 
+      id: '4', 
+      file_path: '/invoices/invoice4.pdf', 
+      file_name: 'invoice4.pdf', 
+      file_type: 'pdf', 
+      file_size: 768, 
+      uploaded_at: '2024-06-21T17:00:00-05:00', 
+      uploaded_by: 'sample-customer-id', 
+      package_id: '5' 
+    }],
     duty_amount: 67.50,
     duty_rate: 0.15,
     total_due: 67.50,
@@ -130,7 +207,16 @@ const samplePackages = [
     notes: null,
     created_at: '2024-06-21T16:20:00-05:00',
     updated_at: '2024-06-21T16:20:00-05:00',
-    profiles: { full_name: 'Adam Grant', email: 'adam.grant@example.com' }
+    profiles: { 
+      id: 'sample-customer-id',
+      full_name: 'Adam Grant', 
+      email: 'adam.grant@example.com',
+      address: '123 Main St, Kingston, Jamaica',
+      phone_number: '+1-876-555-0123',
+      role: 'customer' as const,
+      created_at: '2024-06-20T10:00:00-05:00',
+      updated_at: '2024-06-20T10:00:00-05:00'
+    }
   }
 ];
 
