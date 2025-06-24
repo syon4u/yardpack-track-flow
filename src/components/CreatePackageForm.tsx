@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { useCreatePackage } from '@/hooks/usePackages';
 import { useCarrierDetection } from '@/hooks/useTrackingAPI';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useUnifiedCustomers } from '@/hooks/usePackages';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,19 +35,11 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
     external_tracking_number: ''
   });
 
-  // Fetch customers for dropdown
-  const { data: customers } = useQuery({
-    queryKey: ['customers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .eq('role', 'customer');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+  // Use unified customers dataset that includes both registered and package-only customers
+  const { data: customers } = useUnifiedCustomers();
+
+  // Filter to only show registered customers for the dropdown (package-only customers can't be assigned packages directly)
+  const registeredCustomers = customers?.filter(customer => customer.type === 'registered') || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +107,7 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
                 <SelectContent>
-                  {customers?.map((customer) => (
+                  {registeredCustomers.map((customer) => (
                     <SelectItem key={customer.id} value={customer.id}>
                       {customer.full_name} ({customer.email})
                     </SelectItem>

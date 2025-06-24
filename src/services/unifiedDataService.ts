@@ -138,7 +138,7 @@ export class UnifiedDataService {
         ];
         
         if (validStatuses.includes(options.statusFilter as Database['public']['Enums']['package_status'])) {
-          query = query.eq('status', options.statusFilter);
+          query = query.eq('status', options.statusFilter as Database['public']['Enums']['package_status']);
         }
       }
 
