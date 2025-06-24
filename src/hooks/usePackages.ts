@@ -26,7 +26,8 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
         .from('packages')
         .select(`
           *,
-          profiles:customer_id(*)
+          profiles:customer_id(*),
+          invoices(*)
         `)
         .order('created_at', { ascending: false });
 
@@ -56,7 +57,18 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
       if (error) throw error;
       
       console.log('Fetched packages:', data);
-      return data || [];
+      
+      // Transform data to include computed properties that PackageList expects
+      const transformedData = (data || []).map(pkg => ({
+        ...pkg,
+        customer_name: pkg.profiles?.full_name || 'Unknown Customer',
+        customer_email: pkg.profiles?.email || null,
+        invoices: pkg.invoices || [],
+        invoice_uploaded: pkg.invoices && pkg.invoices.length > 0,
+        duty_assessed: pkg.duty_amount !== null,
+      }));
+      
+      return transformedData;
     },
     enabled: !!user,
   });
