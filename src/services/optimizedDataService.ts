@@ -5,6 +5,7 @@ import {
   UnifiedPackage, 
   UnifiedStats 
 } from '@/types/unified';
+import { Database } from '@/integrations/supabase/types';
 
 export interface PaginationOptions {
   page: number;
@@ -34,6 +35,8 @@ export interface PaginatedResponse<T> {
     hasPrev: boolean;
   };
 }
+
+type PackageStatus = Database['public']['Enums']['package_status'];
 
 export class OptimizedDataService {
   // Optimized package fetching with pagination
@@ -72,7 +75,8 @@ export class OptimizedDataService {
       }
 
       if (filters.statusFilter && filters.statusFilter !== 'all') {
-        query = query.eq('status', filters.statusFilter);
+        // Cast to the correct enum type
+        query = query.eq('status', filters.statusFilter as PackageStatus);
       }
 
       const { data, error, count } = await query;
@@ -92,7 +96,8 @@ export class OptimizedDataService {
       }
 
       if (filters.statusFilter && filters.statusFilter !== 'all') {
-        countQuery = countQuery.eq('status', filters.statusFilter);
+        // Cast to the correct enum type
+        countQuery = countQuery.eq('status', filters.statusFilter as PackageStatus);
       }
 
       const { count: totalCount, error: countError } = await countQuery;
