@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CreateCustomerFormProps {
   onClose: () => void;
@@ -16,6 +16,7 @@ interface CreateCustomerFormProps {
 const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   
   const [formData, setFormData] = useState({
     full_name: '',
@@ -100,25 +101,26 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[90vh] overflow-y-auto' : 'max-w-md'}`}>
         <DialogHeader>
-          <DialogTitle>Create New Customer</DialogTitle>
+          <DialogTitle className={isMobile ? 'text-lg' : ''}>Create New Customer</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className={`space-y-4 ${isMobile ? 'px-1' : ''}`}>
           <div>
-            <Label htmlFor="full_name">Full Name *</Label>
+            <Label htmlFor="full_name" className={isMobile ? 'text-sm' : ''}>Full Name *</Label>
             <Input
               id="full_name"
               value={formData.full_name}
               onChange={(e) => handleInputChange('full_name', e.target.value)}
               placeholder="Enter customer's full name"
               required
+              className={isMobile ? 'h-12 text-base' : ''}
             />
           </div>
 
           <div>
-            <Label htmlFor="email">Email *</Label>
+            <Label htmlFor="email" className={isMobile ? 'text-sm' : ''}>Email *</Label>
             <Input
               id="email"
               type="email"
@@ -126,11 +128,12 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
               onChange={(e) => handleInputChange('email', e.target.value)}
               placeholder="Enter customer's email"
               required
+              className={isMobile ? 'h-12 text-base' : ''}
             />
           </div>
 
           <div>
-            <Label htmlFor="password">Password *</Label>
+            <Label htmlFor="password" className={isMobile ? 'text-sm' : ''}>Password *</Label>
             <Input
               id="password"
               type="password"
@@ -139,41 +142,50 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
               placeholder="Enter temporary password"
               required
               minLength={6}
+              className={isMobile ? 'h-12 text-base' : ''}
             />
           </div>
 
           <div>
-            <Label htmlFor="phone_number">Phone Number</Label>
+            <Label htmlFor="phone_number" className={isMobile ? 'text-sm' : ''}>Phone Number</Label>
             <Input
               id="phone_number"
               type="tel"
               value={formData.phone_number}
               onChange={(e) => handleInputChange('phone_number', e.target.value)}
               placeholder="Enter phone number"
+              className={isMobile ? 'h-12 text-base' : ''}
             />
           </div>
 
           <div>
-            <Label htmlFor="address">Address</Label>
+            <Label htmlFor="address" className={isMobile ? 'text-sm' : ''}>Address</Label>
             <Textarea
               id="address"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
               placeholder="Enter customer's address"
+              className={isMobile ? 'min-h-[100px] text-base' : ''}
             />
           </div>
 
-          <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+          <div className={`text-sm text-gray-600 bg-blue-50 p-3 rounded ${isMobile ? 'text-xs' : ''}`}>
             <p><strong>Note:</strong> The customer will receive a confirmation email and will need to verify their email address before they can log in.</p>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'justify-end space-x-2'} pt-4`}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              className={isMobile ? 'w-full h-12' : ''}
+            >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={createCustomerMutation.isPending}
+              className={isMobile ? 'w-full h-12' : ''}
             >
               {createCustomerMutation.isPending ? 'Creating...' : 'Create Customer'}
             </Button>

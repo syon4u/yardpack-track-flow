@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useIsMobile } from '@/hooks/use-mobile';
 import PackageList from './PackageList';
 import CreatePackageForm from './CreatePackageForm';
 import AdminUserManagement from './AdminUserManagement';
@@ -18,6 +19,7 @@ const AdminDashboard: React.FC = () => {
   const [showCreatePackage, setShowCreatePackage] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const isMobile = useIsMobile();
 
   if (profile?.role !== 'admin') {
     return (
@@ -28,21 +30,34 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <AdminDashboardHeader onCreatePackage={() => setShowCreatePackage(true)} />
 
       <AdminDashboardStats />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="packages">Packages</TabsTrigger>
-          <TabsTrigger value="customers">Customers</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+        {/* Mobile: Horizontal scrolling tabs */}
+        {isMobile ? (
+          <div className="overflow-x-auto">
+            <TabsList className="inline-flex min-w-max space-x-1 bg-muted p-1 rounded-md">
+              <TabsTrigger value="packages" className="whitespace-nowrap text-xs px-3">Packages</TabsTrigger>
+              <TabsTrigger value="customers" className="whitespace-nowrap text-xs px-3">Customers</TabsTrigger>
+              <TabsTrigger value="users" className="whitespace-nowrap text-xs px-3">Users</TabsTrigger>
+              <TabsTrigger value="analytics" className="whitespace-nowrap text-xs px-3">Analytics</TabsTrigger>
+              <TabsTrigger value="settings" className="whitespace-nowrap text-xs px-3">Settings</TabsTrigger>
+            </TabsList>
+          </div>
+        ) : (
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="packages">Packages</TabsTrigger>
+            <TabsTrigger value="customers">Customers</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+        )}
 
-        <TabsContent value="packages" className="space-y-6">
+        <TabsContent value="packages" className="space-y-4 sm:space-y-6">
           <AdminPackageFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
