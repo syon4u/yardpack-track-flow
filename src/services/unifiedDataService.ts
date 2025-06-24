@@ -26,7 +26,25 @@ export class UnifiedDataService {
             package_value,
             duty_amount,
             total_due,
-            created_at
+            created_at,
+            updated_at,
+            date_received,
+            delivery_address,
+            description,
+            tracking_number,
+            external_tracking_number,
+            estimated_delivery,
+            delivery_estimate,
+            actual_delivery,
+            sender_name,
+            sender_address,
+            carrier,
+            weight,
+            dimensions,
+            duty_rate,
+            notes,
+            api_sync_status,
+            last_api_sync
           )
         `);
 
@@ -35,7 +53,10 @@ export class UnifiedDataService {
       // Get all packages to find non-registered customers
       const { data: allPackages, error: packagesError } = await supabase
         .from('packages')
-        .select('*');
+        .select(`
+          *,
+          invoices(*)
+        `);
 
       if (packagesError) throw packagesError;
 
@@ -43,7 +64,18 @@ export class UnifiedDataService {
 
       // Process registered users
       registeredUsers?.forEach(user => {
-        const unifiedCustomer = transformProfileToUnifiedCustomer(user);
+        // Add invoices to packages for registered users
+        const packagesWithInvoices = (user.packages || []).map(pkg => ({
+          ...pkg,
+          invoices: []
+        }));
+        
+        const userWithPackages = {
+          ...user,
+          packages: packagesWithInvoices
+        };
+        
+        const unifiedCustomer = transformProfileToUnifiedCustomer(userWithPackages);
         customerMap.set(user.id, unifiedCustomer);
       });
 
@@ -73,11 +105,16 @@ export class UnifiedDataService {
 
       // Convert package-only customers to unified format
       packageOnlyCustomers.forEach((customerInfo, customerKey) => {
+        const packagesWithInvoices = customerInfo.packages.map(pkg => ({
+          ...pkg,
+          invoices: pkg.invoices || []
+        }));
+        
         const unifiedCustomer = createPackageOnlyCustomer(
           customerKey,
           customerInfo.name,
           customerInfo.address,
-          customerInfo.packages
+          packagesWithInvoices
         );
         customerMap.set(customerKey, unifiedCustomer);
       });
@@ -127,7 +164,10 @@ export class UnifiedDataService {
 
       if (error) throw error;
 
-      return (data || []).map(transformPackageToUnified);
+      return (data || []).map(pkg => transformPackageToUnified({
+        ...pkg,
+        invoices: pkg.invoices || []
+      }));
     } catch (error) {
       console.error('Error fetching packages:', error);
       throw error;

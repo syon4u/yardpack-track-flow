@@ -4,7 +4,7 @@ import { UnifiedCustomer, UnifiedPackage, StatusConfig } from '@/types/unified';
 
 type DatabasePackage = Database['public']['Tables']['packages']['Row'] & {
   profiles?: Database['public']['Tables']['profiles']['Row'] | null;
-  invoices: Database['public']['Tables']['invoices']['Row'][];
+  invoices?: Database['public']['Tables']['invoices']['Row'][];
 };
 
 type DatabaseProfile = Database['public']['Tables']['profiles']['Row'] & {
@@ -21,8 +21,10 @@ export const transformPackageToUnified = (pkg: DatabasePackage): UnifiedPackage 
     status: pkg.status,
     
     created_at: pkg.created_at,
+    updated_at: pkg.updated_at,
     date_received: pkg.date_received,
     estimated_delivery: pkg.estimated_delivery,
+    delivery_estimate: pkg.delivery_estimate, // Map delivery_estimate
     actual_delivery: pkg.actual_delivery,
     
     customer_id: pkg.customer_id,
@@ -49,6 +51,12 @@ export const transformPackageToUnified = (pkg: DatabasePackage): UnifiedPackage 
     notes: pkg.notes,
     api_sync_status: pkg.api_sync_status,
     last_api_sync: pkg.last_api_sync,
+    
+    // Add compatibility property
+    profiles: pkg.profiles ? {
+      full_name: pkg.profiles.full_name,
+      email: pkg.profiles.email
+    } : null,
   };
 };
 

@@ -4,22 +4,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Upload, Eye, Package as PackageIcon } from 'lucide-react';
-import { Database } from '@/integrations/supabase/types';
-
-type Package = Database['public']['Tables']['packages']['Row'] & {
-  profiles?: Database['public']['Tables']['profiles']['Row'] | null;
-  invoices: Database['public']['Tables']['invoices']['Row'][];
-};
+import { UnifiedPackage } from '@/types/unified';
 
 interface PackageTableProps {
-  packages: Package[];
+  packages: UnifiedPackage[];
   userRole: string;
-  onStatusUpdate?: (packageId: string, status: Package['status']) => void;
+  onStatusUpdate?: (packageId: string, status: UnifiedPackage['status']) => void;
   onUploadInvoice?: (packageId: string) => void;
   onViewInvoice?: (packageId: string) => void;
 }
 
-const getStatusColor = (status: Package['status']) => {
+const getStatusColor = (status: UnifiedPackage['status']) => {
   switch (status) {
     case 'received':
       return 'bg-blue-100 text-blue-800';
@@ -36,7 +31,7 @@ const getStatusColor = (status: Package['status']) => {
   }
 };
 
-const getStatusLabel = (status: Package['status']) => {
+const getStatusLabel = (status: UnifiedPackage['status']) => {
   switch (status) {
     case 'received':
       return 'Received';

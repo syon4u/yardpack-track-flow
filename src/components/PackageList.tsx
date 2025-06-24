@@ -161,7 +161,7 @@ const PackageList: React.FC<PackageListProps> = ({
                 invoiceUploaded: pkg.invoices && pkg.invoices.length > 0,
                 dutyAssessed: pkg.duty_amount !== null,
                 totalDue: pkg.total_due || undefined,
-                customerName: pkg.profiles?.full_name || 'Unknown Customer',
+                customerName: pkg.customer_name,
               }}
               userRole={profile?.role || 'customer'}
               onStatusUpdate={handleStatusUpdate}

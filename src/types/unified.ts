@@ -35,8 +35,10 @@ export interface UnifiedPackage {
   
   // Dates
   created_at: string;
+  updated_at: string;
   date_received: string;
   estimated_delivery: string | null;
+  delivery_estimate: string | null; // Added for compatibility
   actual_delivery: string | null;
   
   // Customer information
@@ -76,6 +78,12 @@ export interface UnifiedPackage {
   notes: string | null;
   api_sync_status: string | null;
   last_api_sync: string | null;
+  
+  // Compatibility properties for existing components
+  profiles?: {
+    full_name: string;
+    email: string;
+  } | null;
 }
 
 // Unified filter interface for consistent filtering across components
