@@ -13,7 +13,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 
 interface OptimizedPackageTableProps {
   customerId?: string;
-  onPackageClick?: (package: UnifiedPackage) => void;
+  onPackageClick?: (packageItem: UnifiedPackage) => void;
 }
 
 export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
