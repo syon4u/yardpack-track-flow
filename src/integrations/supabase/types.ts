@@ -42,6 +42,59 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          customer_number: string
+          customer_type: Database["public"]["Enums"]["customer_type"]
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          phone_number: string | null
+          preferred_contact_method: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          customer_number?: string
+          customer_type?: Database["public"]["Enums"]["customer_type"]
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone_number?: string | null
+          preferred_contact_method?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          customer_number?: string
+          customer_type?: Database["public"]["Enums"]["customer_type"]
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone_number?: string | null
+          preferred_contact_method?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           file_name: string
@@ -322,6 +375,7 @@ export type Database = {
     }
     Enums: {
       app_role: "customer" | "admin"
+      customer_type: "registered" | "guest" | "package_only"
       notification_type: "email" | "sms"
       package_status:
         | "received"
@@ -445,6 +499,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["customer", "admin"],
+      customer_type: ["registered", "guest", "package_only"],
       notification_type: ["email", "sms"],
       package_status: [
         "received",

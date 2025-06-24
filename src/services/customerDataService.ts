@@ -38,14 +38,14 @@ export class CustomerDataService {
     try {
       // Get customer counts by type
       const { data: customers, error: customersError } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .select('id, customer_type');
 
       if (customersError) throw customersError;
 
       // Get customers with active packages
       const { data: activeCustomers, error: activeError } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .select(`
           id,
           packages!packages_customer_id_fkey(status)
@@ -98,7 +98,7 @@ export class CustomerDataService {
   static async fetchCustomerWithPackages(customerId: string): Promise<Customer & { packages: Package[] } | null> {
     try {
       const { data: customer, error: customerError } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .select('*')
         .eq('id', customerId)
         .single();
@@ -135,7 +135,7 @@ export class CustomerDataService {
 
       // Create customer record
       const { data: customer, error: customerError } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .insert([{
           full_name: profile.full_name,
           email: profile.email,
