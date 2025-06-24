@@ -7,9 +7,12 @@ import CustomerDashboardDemo from './CustomerDashboardDemo';
 const Dashboard: React.FC = () => {
   const { profile } = useAuth();
 
-  // For customers, show the demo dashboard with sample data
+  // Debug log to check profile data
+  console.log('Main Dashboard - Profile data:', profile);
+
+  // For customers, show the real dashboard with actual data
   if (profile?.role === 'customer') {
-    return <CustomerDashboardDemo />;
+    return <CustomerDashboard />;
   }
 
   // Fallback for any other roles (shouldn't happen with current setup)

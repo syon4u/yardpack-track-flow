@@ -35,6 +35,9 @@ const CustomerDashboard: React.FC = () => {
   const totalValue = packages?.reduce((sum, p) => sum + (p.package_value || 0), 0) || 0;
   const totalDue = packages?.reduce((sum, p) => sum + (p.total_due || 0), 0) || 0;
 
+  // Debug log to check profile data
+  console.log('Customer Dashboard - Profile data:', profile);
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <CustomerHeader fullName={profile?.full_name} />
