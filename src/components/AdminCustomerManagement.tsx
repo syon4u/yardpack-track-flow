@@ -2,13 +2,9 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Mail, Phone, MapPin, Calendar, Package, DollarSign, Users, UserCheck } from 'lucide-react';
+import AdminCustomerStats from './admin/AdminCustomerStats';
+import AdminCustomerFilters from './admin/AdminCustomerFilters';
+import AdminCustomerTable from './admin/AdminCustomerTable';
 
 interface CustomerData {
   id: string;
@@ -182,191 +178,23 @@ const AdminCustomerManagement: React.FC = () => {
         <h2 className="text-2xl font-semibold">Customer Management</h2>
       </div>
 
-      {/* Customer Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalCustomers}</div>
-            <p className="text-xs text-muted-foreground">All customer records</p>
-          </CardContent>
-        </Card>
+      <AdminCustomerStats
+        totalCustomers={totalCustomers}
+        registeredCustomers={registeredCustomers}
+        packageOnlyCustomers={packageOnlyCustomers}
+        activeCustomers={activeCustomers}
+      />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Registered Users</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{registeredCustomers}</div>
-            <p className="text-xs text-muted-foreground">Have user accounts</p>
-          </CardContent>
-        </Card>
+      <AdminCustomerFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        customerTypeFilter={customerTypeFilter}
+        setCustomerTypeFilter={setCustomerTypeFilter}
+        activityFilter={activityFilter}
+        setActivityFilter={setActivityFilter}
+      />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Package-Only</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{packageOnlyCustomers}</div>
-            <p className="text-xs text-muted-foreground">From scanned packages</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Customers</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeCustomers}</div>
-            <p className="text-xs text-muted-foreground">With pending packages</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search customers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-        <Select value={customerTypeFilter} onValueChange={setCustomerTypeFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="registered">Registered Users</SelectItem>
-            <SelectItem value="package_only">Package-Only</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={activityFilter} onValueChange={setActivityFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by activity" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Activity</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Customer Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Customer Directory</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Package Stats</TableHead>
-                <TableHead>Financial</TableHead>
-                <TableHead>Last Activity</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCustomers?.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{customer.full_name}</div>
-                      <div className="text-sm text-gray-600">
-                        ID: {customer.id.length > 20 ? `${customer.id.substring(0, 8)}...` : customer.id}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={customer.type === 'registered' ? 'default' : 'secondary'}>
-                      {customer.type === 'registered' ? 'Registered' : 'Package-Only'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      {customer.email && (
-                        <div className="text-sm flex items-center">
-                          <Mail className="h-3 w-3 mr-1" />
-                          {customer.email}
-                        </div>
-                      )}
-                      {customer.phone_number && (
-                        <div className="text-sm flex items-center">
-                          <Phone className="h-3 w-3 mr-1" />
-                          {customer.phone_number}
-                        </div>
-                      )}
-                      {customer.address && (
-                        <div className="text-sm flex items-center">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          {customer.address.length > 30 ? `${customer.address.substring(0, 30)}...` : customer.address}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm space-y-1">
-                      <div>{customer.total_packages} total packages</div>
-                      <div className="text-green-600">{customer.active_packages} active</div>
-                      <div className="text-gray-600">{customer.completed_packages} completed</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm space-y-1">
-                      <div className="font-medium">${customer.total_spent.toFixed(2)} spent</div>
-                      {customer.outstanding_balance > 0 && (
-                        <div className="text-red-600">${customer.outstanding_balance.toFixed(2)} due</div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {customer.last_activity 
-                        ? new Date(customer.last_activity).toLocaleDateString()
-                        : new Date(customer.created_at).toLocaleDateString()
-                      }
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
-                        View Packages
-                      </Button>
-                      {customer.email && (
-                        <Button variant="outline" size="sm">
-                          Contact
-                        </Button>
-                      )}
-                      {customer.type === 'package_only' && (
-                        <Button variant="outline" size="sm">
-                          Convert
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <AdminCustomerTable customers={filteredCustomers || []} />
     </div>
   );
 };
