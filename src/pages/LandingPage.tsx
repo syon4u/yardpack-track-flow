@@ -95,10 +95,7 @@ const LandingPage: React.FC = () => {
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 animate-fade-in drop-shadow-xl">
-              Ship to
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 drop-shadow-none"> Jamaica</span>
-              <br />
-              Made Simple
+              J|L International Solutions
             </h1>
             <p className="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto animate-fade-in drop-shadow-lg">
               Professional shipping solutions from Miami to Kingston. Track your packages in real-time and keep your family connected.
