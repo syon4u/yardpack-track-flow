@@ -34,7 +34,7 @@ const AppContent = () => {
         <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <AuthPage />} />
         
         {/* Protected routes */}
-        {user && (
+        {user ? (
           <>
             <Route 
               path="/dashboard" 
@@ -64,10 +64,13 @@ const AppContent = () => {
                 )
               } 
             />
+            {/* Catch-all for authenticated users - redirect to dashboard */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </>
+        ) : (
+          /* Unauthenticated users get redirected to auth */
+          <Route path="*" element={<Navigate to="/auth" replace />} />
         )}
-        
-        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

@@ -3,11 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
-
-type Package = Database['public']['Tables']['packages']['Row'] & {
-  profiles?: Database['public']['Tables']['profiles']['Row'] | null;
-  invoices: Database['public']['Tables']['invoices']['Row'][];
-};
+import { UnifiedDataService } from '@/services/unifiedDataService';
+import { UnifiedPackage } from '@/types/unified';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
 
@@ -21,48 +18,22 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
   const { searchTerm, statusFilter } = options;
   
   return useQuery({
-    queryKey: ['packages', user?.id, profile?.role, searchTerm, statusFilter],
-    queryFn: async () => {
+    queryKey: ['unified-packages', user?.id, profile?.role, searchTerm, statusFilter],
+    queryFn: async (): Promise<UnifiedPackage[]> => {
       if (!user) return [];
       
-      console.log('Fetching packages for user:', user.id, 'with role:', profile?.role);
+      console.log('Fetching unified packages for user:', user.id, 'with role:', profile?.role);
       
-      let query = supabase
-        .from('packages')
-        .select(`
-          *,
-          profiles:customer_id(full_name, email),
-          invoices(*)
-        `)
-        .order('created_at', { ascending: false });
+      const fetchOptions: any = { searchTerm, statusFilter };
       
       // If customer, only show their packages
       if (profile?.role === 'customer') {
-        query = query.eq('customer_id', user.id);
+        fetchOptions.customerId = user.id;
       }
       
-      // Apply search filter
-      if (searchTerm && searchTerm.trim()) {
-        query = query.or(`tracking_number.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,external_tracking_number.ilike.%${searchTerm}%`);
-      }
-      
-      // Apply status filter - only if it's a valid status and not 'all'
-      if (statusFilter && statusFilter !== 'all') {
-        const validStatuses: PackageStatus[] = ['received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'];
-        if (validStatuses.includes(statusFilter as PackageStatus)) {
-          query = query.eq('status', statusFilter as PackageStatus);
-        }
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Error fetching packages:', error);
-        throw error;
-      }
-      
-      console.log('Fetched packages:', data);
-      return (data as Package[]) || [];
+      const packages = await UnifiedDataService.fetchAllPackages(fetchOptions);
+      console.log('Fetched unified packages:', packages);
+      return packages;
     },
     enabled: !!user,
   });
@@ -72,7 +43,7 @@ export const useUpdatePackageStatus = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ packageId, status }: { packageId: string; status: Database['public']['Enums']['package_status'] }) => {
+    mutationFn: async ({ packageId, status }: { packageId: string; status: PackageStatus }) => {
       console.log('Updating package status:', packageId, status);
       
       const { error } = await supabase
@@ -83,6 +54,7 @@ export const useUpdatePackageStatus = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unified-packages'] });
       queryClient.invalidateQueries({ queryKey: ['packages'] });
     },
   });
@@ -118,7 +90,26 @@ export const useCreatePackage = () => {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unified-packages'] });
       queryClient.invalidateQueries({ queryKey: ['packages'] });
     },
+  });
+};
+
+// Hook for unified statistics
+export const useUnifiedStats = () => {
+  return useQuery({
+    queryKey: ['unified-stats'],
+    queryFn: () => UnifiedDataService.fetchUnifiedStats(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Hook for unified customers
+export const useUnifiedCustomers = () => {
+  return useQuery({
+    queryKey: ['unified-customers'],
+    queryFn: () => UnifiedDataService.fetchAllCustomers(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
