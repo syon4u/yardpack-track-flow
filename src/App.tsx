@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -13,6 +12,8 @@ import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import WarehousePage from "@/pages/WarehousePage";
 import NotFound from "./pages/NotFound";
+import ErrorBoundary from "@/components/error/ErrorBoundary";
+import RouteErrorBoundary from "@/components/error/RouteErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,16 +48,20 @@ const AppContent: React.FC = () => {
             <Route 
               path="/dashboard" 
               element={
-                <Layout>
-                  {profile?.role === 'admin' ? <AdminDashboard /> : <Dashboard />}
-                </Layout>
+                <RouteErrorBoundary>
+                  <Layout>
+                    {profile?.role === 'admin' ? <AdminDashboard /> : <Dashboard />}
+                  </Layout>
+                </RouteErrorBoundary>
               } 
             />
             <Route 
               path="/admin" 
               element={
                 profile?.role === 'admin' ? (
-                  <Layout><AdminDashboard /></Layout>
+                  <RouteErrorBoundary>
+                    <Layout><AdminDashboard /></Layout>
+                  </RouteErrorBoundary>
                 ) : (
                   <Navigate to="/dashboard" replace />
                 )
@@ -66,7 +71,9 @@ const AppContent: React.FC = () => {
               path="/warehouse" 
               element={
                 profile?.role === 'admin' ? (
-                  <Layout><WarehousePage /></Layout>
+                  <RouteErrorBoundary>
+                    <Layout><WarehousePage /></Layout>
+                  </RouteErrorBoundary>
                 ) : (
                   <Navigate to="/dashboard" replace />
                 )
@@ -86,15 +93,17 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <AppContent />
-          <Toaster />
-          <Sonner />
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AuthProvider>
+            <AppContent />
+            <Toaster />
+            <Sonner />
+          </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

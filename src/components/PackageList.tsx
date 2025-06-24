@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
 import { useUploadInvoice, useDownloadInvoice } from '@/hooks/useInvoices';
@@ -9,6 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, LayoutList } from 'lucide-react';
 import { Package } from './PackageCard';
+import CardSkeleton from './loading/CardSkeleton';
+import TableSkeleton from './loading/TableSkeleton';
+import ErrorBoundary from './error/ErrorBoundary';
 
 interface PackageListProps {
   searchTerm?: string;
@@ -77,18 +79,9 @@ const PackageList: React.FC<PackageListProps> = ({
           </div>
         )}
         {viewMode === 'tiles' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="p-6 border rounded-lg">
-                <Skeleton className="h-6 w-3/4 mb-4" />
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-2/3 mb-4" />
-                <Skeleton className="h-8 w-1/2" />
-              </div>
-            ))}
-          </div>
+          <CardSkeleton count={6} variant="package" />
         ) : (
-          <Skeleton className="h-64 w-full" />
+          <TableSkeleton rows={6} columns={5} />
         )}
       </div>
     );
@@ -120,65 +113,67 @@ const PackageList: React.FC<PackageListProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      {/* View Mode Toggle */}
-      {onViewModeChange && (
-        <div className="flex justify-end">
-          <div className="flex border rounded-lg">
-            <Button
-              variant={viewMode === 'tiles' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onViewModeChange('tiles')}
-              className="rounded-r-none"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onViewModeChange('table')}
-              className="rounded-l-none"
-            >
-              <LayoutList className="h-4 w-4" />
-            </Button>
+    <ErrorBoundary>
+      <div className="space-y-4">
+        {/* View Mode Toggle */}
+        {onViewModeChange && (
+          <div className="flex justify-end">
+            <div className="flex border rounded-lg">
+              <Button
+                variant={viewMode === 'tiles' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onViewModeChange('tiles')}
+                className="rounded-r-none"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onViewModeChange('table')}
+                className="rounded-l-none"
+              >
+                <LayoutList className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Package Content */}
-      {viewMode === 'tiles' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {packages.map((pkg) => (
-            <PackageCard
-              key={pkg.id}
-              package={{
-                id: pkg.id,
-                trackingNumber: pkg.tracking_number,
-                description: pkg.description,
-                status: pkg.status as Package['status'],
-                dateReceived: pkg.date_received,
-                estimatedDelivery: pkg.estimated_delivery || undefined,
-                invoiceUploaded: pkg.invoices && pkg.invoices.length > 0,
-                dutyAssessed: pkg.duty_amount !== null,
-                totalDue: pkg.total_due || undefined,
-                customerName: pkg.customer_name,
-              }}
-              userRole={profile?.role || 'customer'}
-              onStatusUpdate={handleStatusUpdate}
-              onUploadInvoice={handleUploadInvoice}
-              onViewInvoice={handleViewInvoice}
-            />
-          ))}
-        </div>
-      ) : (
-        <PackageTable
-          packages={packages}
-          userRole={profile?.role || 'customer'}
-          onUploadInvoice={handleUploadInvoice}
-          onViewInvoice={handleViewInvoice}
-        />
-      )}
-    </div>
+        {/* Package Content */}
+        {viewMode === 'tiles' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {packages.map((pkg) => (
+              <PackageCard
+                key={pkg.id}
+                package={{
+                  id: pkg.id,
+                  trackingNumber: pkg.tracking_number,
+                  description: pkg.description,
+                  status: pkg.status as Package['status'],
+                  dateReceived: pkg.date_received,
+                  estimatedDelivery: pkg.estimated_delivery || undefined,
+                  invoiceUploaded: pkg.invoices && pkg.invoices.length > 0,
+                  dutyAssessed: pkg.duty_amount !== null,
+                  totalDue: pkg.total_due || undefined,
+                  customerName: pkg.customer_name,
+                }}
+                userRole={profile?.role || 'customer'}
+                onStatusUpdate={handleStatusUpdate}
+                onUploadInvoice={handleUploadInvoice}
+                onViewInvoice={handleViewInvoice}
+              />
+            ))}
+          </div>
+        ) : (
+          <PackageTable
+            packages={packages}
+            userRole={profile?.role || 'customer'}
+            onUploadInvoice={handleUploadInvoice}
+            onViewInvoice={handleViewInvoice}
+          />
+        )}
+      </div>
+    </ErrorBoundary>
   );
 };
 
