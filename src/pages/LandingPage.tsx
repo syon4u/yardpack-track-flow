@@ -99,12 +99,14 @@ const LandingPage: React.FC = () => {
             muted
             loop
             playsInline
-            className="w-full h-full object-cover opacity-30"
+            className="w-full h-full object-cover opacity-50"
           >
-            <source src="/videos/shipping-hero-bg.mp4" type="video/mp4" />
+            <source src="/videos/shipping-logistics-hero.mp4" type="video/mp4" />
+            {/* Fallback for browsers that don't support video */}
+            <div className="w-full h-full bg-gradient-to-br from-blue-900 to-slate-800"></div>
           </video>
           {/* Video overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-blue-900/70 to-slate-800/80"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 via-blue-900/60 to-slate-800/70"></div>
         </div>
         
         {/* Content overlay */}
@@ -282,7 +284,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="bg-slate-800 border-t border-slate-700 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
