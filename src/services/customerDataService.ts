@@ -1,9 +1,29 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
 
-type Customer = Database['public']['Tables']['customers']['Row'];
-type Package = Database['public']['Tables']['packages']['Row'];
+type Customer = {
+  id: string;
+  customer_number: string;
+  customer_type: 'registered' | 'guest' | 'package_only';
+  full_name: string;
+  email: string | null;
+  phone_number: string | null;
+  address: string | null;
+  user_id: string | null;
+  preferred_contact_method: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type Package = {
+  id: string;
+  tracking_number: string;
+  status: string;
+  customer_id: string;
+  package_value: number | null;
+  created_at: string;
+};
 
 export interface CustomerStats {
   total: number;
@@ -18,14 +38,14 @@ export class CustomerDataService {
     try {
       // Get customer counts by type
       const { data: customers, error: customersError } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .select('id, customer_type');
 
       if (customersError) throw customersError;
 
       // Get customers with active packages
       const { data: activeCustomers, error: activeError } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .select(`
           id,
           packages!packages_customer_id_fkey(status)
@@ -39,8 +59,8 @@ export class CustomerDataService {
       const packageOnly = customers?.filter(c => c.customer_type === 'package_only').length || 0;
       
       const active = activeCustomers?.filter(customer => {
-        const packages = customer.packages || [];
-        return packages.some(pkg => 
+        const packages = (customer as any).packages || [];
+        return packages.some((pkg: any) => 
           ['received', 'in_transit', 'arrived', 'ready_for_pickup'].includes(pkg.status)
         );
       }).length || 0;
@@ -61,7 +81,7 @@ export class CustomerDataService {
   static async fetchCustomerWithPackages(customerId: string): Promise<Customer & { packages: Package[] } | null> {
     try {
       const { data, error } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .select(`
           *,
           packages!packages_customer_id_fkey(*)
@@ -90,7 +110,7 @@ export class CustomerDataService {
 
       // Create customer record
       const { data: customer, error: customerError } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .insert([{
           full_name: profile.full_name,
           email: profile.email,
