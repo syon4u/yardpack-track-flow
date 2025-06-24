@@ -86,7 +86,7 @@ const LandingPage: React.FC = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="mb-6">
-              <div className="text-white text-lg font-medium mb-2 drop-shadow-lg">JIL International Solutions</div>
+              
               <div className="flex justify-center items-center space-x-4 text-sm text-white drop-shadow-lg">
                 
                 
@@ -94,7 +94,7 @@ const LandingPage: React.FC = () => {
               </div>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 animate-fade-in drop-shadow-xl">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in drop-shadow-xl text-[#efb851]">
               J|L International Solutions
             </h1>
             <p className="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto animate-fade-in drop-shadow-lg">
