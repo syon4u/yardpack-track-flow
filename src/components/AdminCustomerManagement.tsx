@@ -1,10 +1,12 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import AdminCustomerStats from './admin/AdminCustomerStats';
 import AdminCustomerFilters from './admin/AdminCustomerFilters';
 import AdminCustomerTable from './admin/AdminCustomerTable';
+import CreateCustomerForm from './admin/CreateCustomerForm';
 
 interface CustomerData {
   id: string;
@@ -27,6 +29,7 @@ const AdminCustomerManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [customerTypeFilter, setCustomerTypeFilter] = useState('all');
   const [activityFilter, setActivityFilter] = useState('all');
+  const [showCreateCustomer, setShowCreateCustomer] = useState(false);
 
   const { data: customers, isLoading } = useQuery({
     queryKey: ['admin-customers'],
@@ -176,6 +179,10 @@ const AdminCustomerManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Customer Management</h2>
+        <Button onClick={() => setShowCreateCustomer(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Customer
+        </Button>
       </div>
 
       <AdminCustomerStats
@@ -195,6 +202,10 @@ const AdminCustomerManagement: React.FC = () => {
       />
 
       <AdminCustomerTable customers={filteredCustomers || []} />
+
+      {showCreateCustomer && (
+        <CreateCustomerForm onClose={() => setShowCreateCustomer(false)} />
+      )}
     </div>
   );
 };
