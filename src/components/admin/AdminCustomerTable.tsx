@@ -5,7 +5,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, MapPin, Calendar, MoreVertical } from 'lucide-react';
-import { CustomerData } from '@/hooks/useAdminCustomers';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DropdownMenu,
@@ -14,12 +13,49 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+interface CustomerWithStats {
+  id: string;
+  customer_number: string;
+  customer_type: 'registered' | 'guest' | 'package_only';
+  full_name: string;
+  email: string | null;
+  phone_number: string | null;
+  address: string | null;
+  created_at: string;
+  total_packages: number;
+  active_packages: number;
+  completed_packages: number;
+  total_spent: number;
+  outstanding_balance: number;
+  last_activity: string | null;
+}
+
 interface AdminCustomerTableProps {
-  customers: CustomerData[];
+  customers: CustomerWithStats[];
 }
 
 const AdminCustomerTable: React.FC<AdminCustomerTableProps> = ({ customers }) => {
   const isMobile = useIsMobile();
+
+  const getCustomerTypeBadge = (type: string) => {
+    const variants = {
+      registered: 'default',
+      guest: 'secondary', 
+      package_only: 'outline'
+    } as const;
+    
+    const labels = {
+      registered: 'Registered',
+      guest: 'Guest',
+      package_only: 'Package-Only'
+    };
+
+    return (
+      <Badge variant={variants[type as keyof typeof variants] || 'secondary'}>
+        {labels[type as keyof typeof labels] || type}
+      </Badge>
+    );
+  };
 
   if (isMobile) {
     // Mobile card layout
@@ -34,12 +70,10 @@ const AdminCustomerTable: React.FC<AdminCustomerTableProps> = ({ customers }) =>
                 <div>
                   <h4 className="font-medium text-sm">{customer.full_name}</h4>
                   <p className="text-xs text-gray-600">
-                    ID: {customer.id.length > 20 ? `${customer.id.substring(0, 8)}...` : customer.id}
+                    {customer.customer_number}
                   </p>
                 </div>
-                <Badge variant={customer.type === 'registered' ? 'default' : 'secondary'} className="text-xs">
-                  {customer.type === 'registered' ? 'Registered' : 'Package-Only'}
-                </Badge>
+                {getCustomerTypeBadge(customer.customer_type)}
               </div>
 
               {/* Contact Info */}
@@ -102,9 +136,7 @@ const AdminCustomerTable: React.FC<AdminCustomerTableProps> = ({ customers }) =>
                     {customer.email && (
                       <DropdownMenuItem>Contact</DropdownMenuItem>
                     )}
-                    {customer.type === 'package_only' && (
-                      <DropdownMenuItem>Convert to Registered</DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem>Edit Customer</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -142,14 +174,12 @@ const AdminCustomerTable: React.FC<AdminCustomerTableProps> = ({ customers }) =>
                     <div>
                       <div className="font-medium">{customer.full_name}</div>
                       <div className="text-sm text-gray-600">
-                        ID: {customer.id.length > 20 ? `${customer.id.substring(0, 8)}...` : customer.id}
+                        {customer.customer_number}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={customer.type === 'registered' ? 'default' : 'secondary'}>
-                      {customer.type === 'registered' ? 'Registered' : 'Package-Only'}
-                    </Badge>
+                    {getCustomerTypeBadge(customer.customer_type)}
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
@@ -207,11 +237,9 @@ const AdminCustomerTable: React.FC<AdminCustomerTableProps> = ({ customers }) =>
                           Contact
                         </Button>
                       )}
-                      {customer.type === 'package_only' && (
-                        <Button variant="outline" size="sm">
-                          Convert
-                        </Button>
-                      )}
+                      <Button variant="outline" size="sm">
+                        Edit
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

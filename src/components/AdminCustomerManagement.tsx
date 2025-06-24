@@ -6,12 +6,12 @@ import AdminCustomerStats from './admin/AdminCustomerStats';
 import AdminCustomerFilters from './admin/AdminCustomerFilters';
 import AdminCustomerTable from './admin/AdminCustomerTable';
 import CreateCustomerForm from './admin/CreateCustomerForm';
-import { useAdminCustomers } from '@/hooks/useAdminCustomers';
+import { useCustomers } from '@/hooks/useCustomers';
 import { useCustomerFilters } from '@/hooks/useCustomerFilters';
 
 const AdminCustomerManagement: React.FC = () => {
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
-  const { data: customers, isLoading } = useAdminCustomers();
+  const { data: customers, isLoading } = useCustomers();
   
   const {
     searchTerm,
@@ -24,8 +24,8 @@ const AdminCustomerManagement: React.FC = () => {
   } = useCustomerFilters(customers);
 
   const totalCustomers = customers?.length || 0;
-  const registeredCustomers = customers?.filter(c => c.type === 'registered').length || 0;
-  const packageOnlyCustomers = customers?.filter(c => c.type === 'package_only').length || 0;
+  const registeredCustomers = customers?.filter(c => c.customer_type === 'registered').length || 0;
+  const packageOnlyCustomers = customers?.filter(c => c.customer_type === 'package_only').length || 0;
   const activeCustomers = customers?.filter(c => c.active_packages > 0).length || 0;
 
   if (isLoading) {
