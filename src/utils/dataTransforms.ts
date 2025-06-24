@@ -13,9 +13,18 @@ type DatabaseProfile = Database['public']['Tables']['profiles']['Row'] & {
   })[];
 };
 
-// Transform database package to unified format
+// Memoization cache for expensive transformations
+const transformCache = new Map<string, any>();
+
+// Transform database package to unified format with memoization
 export const transformPackageToUnified = (pkg: DatabasePackage): UnifiedPackage => {
-  return {
+  const cacheKey = `package_${pkg.id}_${pkg.updated_at}`;
+  
+  if (transformCache.has(cacheKey)) {
+    return transformCache.get(cacheKey);
+  }
+
+  const transformed: UnifiedPackage = {
     id: pkg.id,
     tracking_number: pkg.tracking_number,
     external_tracking_number: pkg.external_tracking_number,
@@ -66,22 +75,57 @@ export const transformPackageToUnified = (pkg: DatabasePackage): UnifiedPackage 
       updated_at: pkg.profiles.updated_at
     } : null,
   };
+
+  // Cache the result for future use
+  transformCache.set(cacheKey, transformed);
+  
+  // Limit cache size to prevent memory leaks
+  if (transformCache.size > 1000) {
+    const firstKey = transformCache.keys().next().value;
+    transformCache.delete(firstKey);
+  }
+
+  return transformed;
 };
 
-// Transform profile to unified customer format
+// Transform profile to unified customer format with memoization
 export const transformProfileToUnifiedCustomer = (profile: DatabaseProfile): UnifiedCustomer => {
-  const packages = profile.packages || [];
-  const totalSpent = packages.reduce((sum, pkg) => sum + (pkg.package_value || 0), 0);
-  const outstandingBalance = packages.reduce((sum, pkg) => sum + (pkg.total_due || 0), 0);
-  const activePackages = packages.filter(pkg => 
-    ['received', 'in_transit', 'arrived', 'ready_for_pickup'].includes(pkg.status)
-  ).length;
-  const completedPackages = packages.filter(pkg => pkg.status === 'picked_up').length;
-  const lastActivity = packages.length > 0 
-    ? packages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
-    : null;
+  const cacheKey = `customer_${profile.id}_${profile.updated_at}`;
+  
+  if (transformCache.has(cacheKey)) {
+    return transformCache.get(cacheKey);
+  }
 
-  return {
+  const packages = profile.packages || [];
+  
+  // Optimized calculations using reduce for better performance
+  const stats = packages.reduce(
+    (acc, pkg) => {
+      acc.totalSpent += pkg.package_value || 0;
+      acc.outstandingBalance += pkg.total_due || 0;
+      
+      if (['received', 'in_transit', 'arrived', 'ready_for_pickup'].includes(pkg.status)) {
+        acc.activePackages++;
+      } else if (pkg.status === 'picked_up') {
+        acc.completedPackages++;
+      }
+      
+      if (!acc.lastActivity || new Date(pkg.created_at) > new Date(acc.lastActivity)) {
+        acc.lastActivity = pkg.created_at;
+      }
+      
+      return acc;
+    },
+    {
+      totalSpent: 0,
+      outstandingBalance: 0,
+      activePackages: 0,
+      completedPackages: 0,
+      lastActivity: null as string | null,
+    }
+  );
+
+  const transformed: UnifiedCustomer = {
     id: profile.id,
     type: 'registered',
     full_name: profile.full_name,
@@ -90,16 +134,25 @@ export const transformProfileToUnifiedCustomer = (profile: DatabaseProfile): Uni
     address: profile.address,
     created_at: profile.created_at,
     total_packages: packages.length,
-    active_packages: activePackages,
-    completed_packages: completedPackages,
-    total_spent: totalSpent,
-    outstanding_balance: outstandingBalance,
-    last_activity: lastActivity,
+    active_packages: stats.activePackages,
+    completed_packages: stats.completedPackages,
+    total_spent: stats.totalSpent,
+    outstanding_balance: stats.outstandingBalance,
+    last_activity: stats.lastActivity,
     registration_status: 'registered'
   };
+
+  transformCache.set(cacheKey, transformed);
+  
+  if (transformCache.size > 1000) {
+    const firstKey = transformCache.keys().next().value;
+    transformCache.delete(firstKey);
+  }
+
+  return transformed;
 };
 
-// Create package-only customer from packages
+// Create package-only customer from packages with memoization
 export const createPackageOnlyCustomer = (
   customerKey: string,
   customerName: string,
@@ -108,36 +161,74 @@ export const createPackageOnlyCustomer = (
     invoices?: Database['public']['Tables']['invoices']['Row'][];
   })[]
 ): UnifiedCustomer => {
-  const totalSpent = packages.reduce((sum, pkg) => sum + (pkg.package_value || 0), 0);
-  const outstandingBalance = packages.reduce((sum, pkg) => sum + (pkg.total_due || 0), 0);
-  const activePackages = packages.filter(pkg => 
-    ['received', 'in_transit', 'arrived', 'ready_for_pickup'].includes(pkg.status)
-  ).length;
-  const completedPackages = packages.filter(pkg => pkg.status === 'picked_up').length;
-  const lastActivity = packages.length > 0 
-    ? packages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
-    : null;
+  const cacheKey = `package_only_${customerKey}_${packages.length}`;
+  
+  if (transformCache.has(cacheKey)) {
+    return transformCache.get(cacheKey);
+  }
 
-  return {
+  // Optimized calculations
+  const stats = packages.reduce(
+    (acc, pkg) => {
+      acc.totalSpent += pkg.package_value || 0;
+      acc.outstandingBalance += pkg.total_due || 0;
+      
+      if (['received', 'in_transit', 'arrived', 'ready_for_pickup'].includes(pkg.status)) {
+        acc.activePackages++;
+      } else if (pkg.status === 'picked_up') {
+        acc.completedPackages++;
+      }
+      
+      if (!acc.lastActivity || new Date(pkg.created_at) > new Date(acc.lastActivity)) {
+        acc.lastActivity = pkg.created_at;
+      }
+      
+      return acc;
+    },
+    {
+      totalSpent: 0,
+      outstandingBalance: 0,
+      activePackages: 0,
+      completedPackages: 0,
+      lastActivity: packages[0]?.created_at || new Date().toISOString(),
+    }
+  );
+
+  const transformed: UnifiedCustomer = {
     id: customerKey,
     type: 'package_only',
     full_name: customerName,
     email: null,
     phone_number: null,
     address: address,
-    created_at: packages[0]?.created_at || new Date().toISOString(),
+    created_at: stats.lastActivity,
     total_packages: packages.length,
-    active_packages: activePackages,
-    completed_packages: completedPackages,
-    total_spent: totalSpent,
-    outstanding_balance: outstandingBalance,
-    last_activity: lastActivity,
+    active_packages: stats.activePackages,
+    completed_packages: stats.completedPackages,
+    total_spent: stats.totalSpent,
+    outstanding_balance: stats.outstandingBalance,
+    last_activity: stats.lastActivity,
     registration_status: 'guest'
   };
+
+  transformCache.set(cacheKey, transformed);
+  
+  if (transformCache.size > 1000) {
+    const firstKey = transformCache.keys().next().value;
+    transformCache.delete(firstKey);
+  }
+
+  return transformed;
 };
 
-// Status configuration for consistent display
+// Status configuration for consistent display (cached)
+const statusConfigCache = new Map<Database['public']['Enums']['package_status'], StatusConfig>();
+
 export const getStatusConfig = (status: Database['public']['Enums']['package_status']): StatusConfig => {
+  if (statusConfigCache.has(status)) {
+    return statusConfigCache.get(status)!;
+  }
+
   const configs: Record<Database['public']['Enums']['package_status'], StatusConfig> = {
     received: {
       value: 'received',
@@ -176,13 +267,19 @@ export const getStatusConfig = (status: Database['public']['Enums']['package_sta
     }
   };
 
-  return configs[status];
+  const config = configs[status];
+  statusConfigCache.set(status, config);
+  return config;
 };
 
-// Filter packages based on unified filters
+// Optimized filter functions with early returns
 export const filterPackages = (packages: UnifiedPackage[], filters: any): UnifiedPackage[] => {
+  if (!filters.searchTerm && (!filters.statusFilter || filters.statusFilter === 'all')) {
+    return packages; // No filtering needed
+  }
+
   return packages.filter(pkg => {
-    // Search filter
+    // Search filter with early return
     if (filters.searchTerm && filters.searchTerm.trim()) {
       const searchLower = filters.searchTerm.toLowerCase();
       const matchesSearch = 
@@ -194,7 +291,7 @@ export const filterPackages = (packages: UnifiedPackage[], filters: any): Unifie
       if (!matchesSearch) return false;
     }
 
-    // Status filter
+    // Status filter with early return
     if (filters.statusFilter && filters.statusFilter !== 'all') {
       if (pkg.status !== filters.statusFilter) return false;
     }
@@ -203,8 +300,14 @@ export const filterPackages = (packages: UnifiedPackage[], filters: any): Unifie
   });
 };
 
-// Filter customers based on unified filters
+// Optimized customer filtering
 export const filterCustomers = (customers: UnifiedCustomer[], filters: any): UnifiedCustomer[] => {
+  if (!filters.searchTerm && 
+      (!filters.customerTypeFilter || filters.customerTypeFilter === 'all') &&
+      (!filters.activityFilter || filters.activityFilter === 'all')) {
+    return customers; // No filtering needed
+  }
+
   return customers.filter(customer => {
     // Search filter
     if (filters.searchTerm && filters.searchTerm.trim()) {
@@ -231,4 +334,18 @@ export const filterCustomers = (customers: UnifiedCustomer[], filters: any): Uni
 
     return true;
   });
+};
+
+// Clear cache function for memory management
+export const clearTransformCache = (): void => {
+  transformCache.clear();
+  statusConfigCache.clear();
+};
+
+// Get cache statistics for monitoring
+export const getCacheStats = (): { size: number; statusCacheSize: number } => {
+  return {
+    size: transformCache.size,
+    statusCacheSize: statusConfigCache.size,
+  };
 };
