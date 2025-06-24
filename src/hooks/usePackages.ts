@@ -11,13 +11,66 @@ interface UsePackagesOptions {
   statusFilter?: string;
 }
 
+// Define the transformed package type that PackageList expects
+interface TransformedPackage {
+  id: string;
+  tracking_number: string;
+  customer_id: string;
+  description: string;
+  delivery_address: string;
+  sender_name: string | null;
+  sender_address: string | null;
+  weight: number | null;
+  dimensions: string | null;
+  package_value: number | null;
+  notes: string | null;
+  carrier: string | null;
+  external_tracking_number: string | null;
+  status: PackageStatus;
+  date_received: string;
+  estimated_delivery: string | null;
+  actual_delivery: string | null;
+  duty_rate: number | null;
+  duty_amount: number | null;
+  total_due: number | null;
+  api_sync_status: string | null;
+  last_api_sync: string | null;
+  delivery_estimate: string | null;
+  created_at: string;
+  updated_at: string;
+  profiles: {
+    id: string;
+    email: string;
+    full_name: string;
+    phone_number: string | null;
+    address: string | null;
+    role: string;
+    created_at: string;
+    updated_at: string;
+  } | null;
+  invoices: Array<{
+    id: string;
+    package_id: string;
+    file_name: string;
+    file_path: string;
+    file_type: string;
+    file_size: number | null;
+    uploaded_by: string;
+    uploaded_at: string;
+  }>;
+  customer_name: string;
+  customer_email: string | null;
+  invoice_uploaded: boolean;
+  duty_assessed: boolean;
+}
+
 export const usePackages = (options: UsePackagesOptions = {}) => {
   const { user, profile } = useAuth();
   const { searchTerm, statusFilter } = options;
   
   return useQuery({
     queryKey: ['packages', user?.id, profile?.role, searchTerm, statusFilter],
-    queryFn: async () => {
+    queryFn: async (): Promise<TransformedPackage[]> => {
       if (!user) return [];
       
       console.log('Fetching packages for user:', user.id, 'with role:', profile?.role);
@@ -59,7 +112,7 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
       console.log('Fetched packages:', data);
       
       // Transform data to include computed properties that PackageList expects
-      const transformedData = (data || []).map(pkg => ({
+      const transformedData: TransformedPackage[] = (data || []).map(pkg => ({
         ...pkg,
         customer_name: pkg.profiles?.full_name || 'Unknown Customer',
         customer_email: pkg.profiles?.email || null,
