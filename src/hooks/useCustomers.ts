@@ -1,12 +1,45 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 
-type Customer = Database['public']['Tables']['customers']['Row'];
-type CustomerInsert = Database['public']['Tables']['customers']['Insert'];
-type CustomerUpdate = Database['public']['Tables']['customers']['Update'];
+// Define the customer type locally since it's not in the generated types yet
+interface Customer {
+  id: string;
+  customer_number: string;
+  customer_type: 'registered' | 'guest' | 'package_only';
+  full_name: string;
+  email: string | null;
+  phone_number: string | null;
+  address: string | null;
+  user_id: string | null;
+  preferred_contact_method: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CustomerInsert {
+  customer_type: 'registered' | 'guest' | 'package_only';
+  full_name: string;
+  email?: string | null;
+  phone_number?: string | null;
+  address?: string | null;
+  user_id?: string | null;
+  preferred_contact_method?: string | null;
+  notes?: string | null;
+}
+
+interface CustomerUpdate {
+  customer_type?: 'registered' | 'guest' | 'package_only';
+  full_name?: string;
+  email?: string | null;
+  phone_number?: string | null;
+  address?: string | null;
+  user_id?: string | null;
+  preferred_contact_method?: string | null;
+  notes?: string | null;
+}
 
 interface CustomerWithStats extends Customer {
   total_packages: number;
@@ -21,45 +54,54 @@ export const useCustomers = () => {
   return useQuery({
     queryKey: ['customers'],
     queryFn: async (): Promise<CustomerWithStats[]> => {
-      const { data: customers, error } = await supabase
-        .from('customers')
-        .select(`
-          *,
-          packages!packages_customer_id_fkey(
-            id,
-            status,
-            package_value,
-            total_due,
-            created_at
-          )
-        `)
-        .order('created_at', { ascending: false });
+      // First get customers
+      const { data: customers, error: customersError } = await supabase
+        .rpc('get_customers_with_stats');
 
-      if (error) throw error;
+      if (customersError) {
+        // Fallback to manual query if RPC doesn't exist
+        const { data: customersData, error } = await supabase
+          .from('customers' as any)
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      return customers.map(customer => {
-        const packages = customer.packages || [];
-        const totalSpent = packages.reduce((sum, pkg) => sum + (pkg.package_value || 0), 0);
-        const outstandingBalance = packages.reduce((sum, pkg) => sum + (pkg.total_due || 0), 0);
-        const activePackages = packages.filter(pkg => 
-          ['received', 'in_transit', 'arrived', 'ready_for_pickup'].includes(pkg.status)
-        ).length;
-        const completedPackages = packages.filter(pkg => pkg.status === 'picked_up').length;
-        const lastActivity = packages.length > 0 
-          ? packages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
-          : null;
+        if (error) throw error;
 
-        return {
-          ...customer,
-          packages: undefined, // Remove packages array from final object
-          total_packages: packages.length,
-          active_packages: activePackages,
-          completed_packages: completedPackages,
-          total_spent: totalSpent,
-          outstanding_balance: outstandingBalance,
-          last_activity: lastActivity,
-        };
-      });
+        // Get package stats for each customer
+        const customersWithStats = await Promise.all(
+          (customersData || []).map(async (customer: Customer) => {
+            const { data: packages } = await supabase
+              .from('packages')
+              .select('id, status, package_value, total_due, created_at')
+              .eq('customer_id', customer.id);
+
+            const packagesList = packages || [];
+            const totalSpent = packagesList.reduce((sum, pkg) => sum + (pkg.package_value || 0), 0);
+            const outstandingBalance = packagesList.reduce((sum, pkg) => sum + (pkg.total_due || 0), 0);
+            const activePackages = packagesList.filter(pkg => 
+              ['received', 'in_transit', 'arrived', 'ready_for_pickup'].includes(pkg.status)
+            ).length;
+            const completedPackages = packagesList.filter(pkg => pkg.status === 'picked_up').length;
+            const lastActivity = packagesList.length > 0 
+              ? packagesList.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
+              : null;
+
+            return {
+              ...customer,
+              total_packages: packagesList.length,
+              active_packages: activePackages,
+              completed_packages: completedPackages,
+              total_spent: totalSpent,
+              outstanding_balance: outstandingBalance,
+              last_activity: lastActivity,
+            };
+          })
+        );
+
+        return customersWithStats;
+      }
+
+      return customers;
     },
   });
 };
@@ -71,7 +113,7 @@ export const useCustomerByUserId = (userId: string | undefined) => {
       if (!userId) return null;
       
       const { data, error } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
@@ -90,7 +132,7 @@ export const useCreateCustomer = () => {
   return useMutation({
     mutationFn: async (customerData: CustomerInsert) => {
       const { data, error } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .insert([customerData])
         .select()
         .single();
@@ -122,7 +164,7 @@ export const useUpdateCustomer = () => {
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: CustomerUpdate }) => {
       const { data, error } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .update(updates)
         .eq('id', id)
         .select()
@@ -155,7 +197,7 @@ export const useDeleteCustomer = () => {
   return useMutation({
     mutationFn: async (customerId: string) => {
       const { error } = await supabase
-        .from('customers')
+        .from('customers' as any)
         .delete()
         .eq('id', customerId);
 

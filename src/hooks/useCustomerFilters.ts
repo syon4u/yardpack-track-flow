@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 
 interface CustomerWithStats {
   id: string;
+  customer_number: string;
   customer_type: 'registered' | 'guest' | 'package_only';
   full_name: string;
   email: string | null;
