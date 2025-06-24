@@ -98,22 +98,20 @@ const LandingPage: React.FC = () => {
             muted
             loop
             playsInline
-            className="w-full h-full object-cover opacity-50"
+            className="w-full h-full object-cover opacity-80"
           >
             <source src="/videos/shipping-hero-bg.mp4" type="video/mp4" />
             {/* Fallback for browsers that don't support video */}
             <div className="w-full h-full bg-gradient-to-br from-blue-900 to-slate-800"></div>
           </video>
-          {/* Video overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 via-blue-900/60 to-slate-800/70"></div>
         </div>
         
         {/* Content overlay */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="mb-6">
-              <div className="text-blue-300 text-lg font-medium mb-2">JIL International Solutions</div>
-              <div className="flex justify-center items-center space-x-4 text-sm text-blue-200">
+              <div className="text-white text-lg font-medium mb-2 drop-shadow-lg">JIL International Solutions</div>
+              <div className="flex justify-center items-center space-x-4 text-sm text-white drop-shadow-lg">
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 mr-1" />
                   Miami: 25.7617° N, 80.1918° W
@@ -126,13 +124,13 @@ const LandingPage: React.FC = () => {
               </div>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 animate-fade-in">
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 animate-fade-in drop-shadow-xl">
               Ship to
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600"> Jamaica</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 drop-shadow-none"> Jamaica</span>
               <br />
               Made Simple
             </h1>
-            <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto animate-fade-in">
+            <p className="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto animate-fade-in drop-shadow-lg">
               Professional shipping solutions from Miami to Kingston. Track your packages in real-time and keep your family connected.
             </p>
             
@@ -159,11 +157,11 @@ const LandingPage: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/auth">
-                <Button className="bg-blue-600 text-white px-8 py-4 text-lg font-semibold hover:bg-blue-700 transition-colors">
+                <Button className="bg-blue-600 text-white px-8 py-4 text-lg font-semibold hover:bg-blue-700 transition-colors drop-shadow-lg">
                   Get Started <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50 px-8 py-4 text-lg">
+              <Button variant="outline" className="border-white/50 text-white hover:bg-white/10 px-8 py-4 text-lg backdrop-blur-sm">
                 Learn More
               </Button>
             </div>
