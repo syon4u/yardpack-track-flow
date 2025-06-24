@@ -89,21 +89,16 @@ const LandingPage: React.FC = () => {
         </div>
       </nav>
 
-      {/* Hero Section with Background Video */}
+      {/* Hero Section with Image Background */}
       <section className="relative overflow-hidden pt-20 pb-32">
-        {/* Background Video */}
-        <div className="absolute inset-0 z-0">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover opacity-80"
-          >
-            <source src="/videos/jlvid.mp4" type="video/mp4" />
-            {/* Fallback for browsers that don't support video */}
-            <div className="w-full h-full bg-gradient-to-br from-blue-900 to-slate-800"></div>
-          </video>
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80)',
+          }}
+        >
+          <div className="absolute inset-0 bg-blue-900/70"></div>
         </div>
         
         {/* Content overlay */}
