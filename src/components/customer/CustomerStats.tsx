@@ -3,21 +3,45 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Truck, CheckCircle, DollarSign } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 
-interface CustomerStatsProps {
-  totalPackages: number;
-  inTransitPackages: number;
-  readyForPickup: number;
-  totalDue: number;
-}
-
-const CustomerStats: React.FC<CustomerStatsProps> = ({
-  totalPackages,
-  inTransitPackages,
-  readyForPickup,
-  totalDue
-}) => {
+const CustomerStats: React.FC = () => {
   const isMobile = useIsMobile();
+  const { profile } = useAuth();
+  
+  // Fetch packages for the current customer
+  const { data: packageData, isLoading } = useOptimizedPackages(
+    { customerId: profile?.id },
+    { page: 1, limit: 1000 } // Get all packages for stats
+  );
+
+  const packages = packageData?.data || [];
+
+  // Calculate statistics from actual data
+  const totalPackages = packages.length;
+  const inTransitPackages = packages.filter(p => p.status === 'in_transit').length;
+  const readyForPickup = packages.filter(p => p.status === 'ready_for_pickup').length;
+  const totalDue = packages.reduce((sum, p) => sum + (p.total_due || 0), 0);
+
+  if (isLoading) {
+    return (
+      <div className={`grid gap-3 sm:gap-4 md:gap-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-4'}`}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className={isMobile ? 'p-3' : ''}>
+            <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
+              <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+            </CardHeader>
+            <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
+              <div className={`bg-gray-200 rounded animate-pulse mb-1 ${isMobile ? 'h-5 w-12' : 'h-8 w-16'}`}></div>
+              <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className={`grid gap-3 sm:gap-4 md:gap-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-4'}`}>

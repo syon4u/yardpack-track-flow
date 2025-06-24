@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePackages } from '@/hooks/usePackages';
+import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
 import CustomerHeader from './customer/CustomerHeader';
@@ -23,21 +24,28 @@ const CustomerDashboard: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const isMobile = useIsMobile();
   
-  const { data: packages, isLoading } = usePackages({ searchTerm, statusFilter });
+  // Use optimized packages hook for better performance
+  const { data: packageData, isLoading } = useOptimizedPackages(
+    { 
+      customerId: profile?.id,
+      searchTerm: searchTerm || undefined,
+      statusFilter: statusFilter !== 'all' ? statusFilter : undefined
+    },
+    { page: 1, limit: 1000 }
+  );
 
-  // Calculate statistics
-  const totalPackages = packages?.length || 0;
-  const receivedPackages = packages?.filter(p => p.status === 'received').length || 0;
-  const inTransitPackages = packages?.filter(p => p.status === 'in_transit').length || 0;
-  const arrivedPackages = packages?.filter(p => p.status === 'arrived').length || 0;
-  const readyForPickup = packages?.filter(p => p.status === 'ready_for_pickup').length || 0;
-  const pickedUpPackages = packages?.filter(p => p.status === 'picked_up').length || 0;
-  const pendingInvoices = packages?.filter(p => !p.invoices || p.invoices.length === 0).length || 0;
-  const totalValue = packages?.reduce((sum, p) => sum + (p.package_value || 0), 0) || 0;
-  const totalDue = packages?.reduce((sum, p) => sum + (p.total_due || 0), 0) || 0;
+  const packages = packageData?.data || [];
 
-  // Debug log to check profile data
-  console.log('Customer Dashboard - Profile data:', profile);
+  // Calculate statistics from real data
+  const totalPackages = packages.length;
+  const receivedPackages = packages.filter(p => p.status === 'received').length;
+  const inTransitPackages = packages.filter(p => p.status === 'in_transit').length;
+  const arrivedPackages = packages.filter(p => p.status === 'arrived').length;
+  const readyForPickup = packages.filter(p => p.status === 'ready_for_pickup').length;
+  const pickedUpPackages = packages.filter(p => p.status === 'picked_up').length;
+  const pendingInvoices = packages.filter(p => !p.invoices || p.invoices.length === 0).length;
+  const totalValue = packages.reduce((sum, p) => sum + (p.package_value || 0), 0);
+  const totalDue = packages.reduce((sum, p) => sum + (p.total_due || 0), 0);
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -48,12 +56,7 @@ const CustomerDashboard: React.FC = () => {
       <div className="space-y-4 sm:space-y-6">
         <CustomerHeader fullName={profile?.full_name} />
 
-        <CustomerStats
-          totalPackages={totalPackages}
-          inTransitPackages={inTransitPackages}
-          readyForPickup={readyForPickup}
-          totalDue={totalDue}
-        />
+        <CustomerStats />
 
         <CustomerActionItems
           pendingInvoices={pendingInvoices}
