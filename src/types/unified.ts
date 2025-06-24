@@ -38,7 +38,7 @@ export interface UnifiedPackage {
   updated_at: string;
   date_received: string;
   estimated_delivery: string | null;
-  delivery_estimate: string | null; // Added for compatibility
+  delivery_estimate: string | null;
   actual_delivery: string | null;
   
   // Customer information
@@ -79,10 +79,16 @@ export interface UnifiedPackage {
   api_sync_status: string | null;
   last_api_sync: string | null;
   
-  // Compatibility properties for existing components
+  // Full compatibility properties for existing components
   profiles?: {
     full_name: string;
     email: string;
+    address: string | null;
+    created_at: string;
+    id: string;
+    phone_number: string | null;
+    role: Database['public']['Enums']['app_role'];
+    updated_at: string;
   } | null;
 }
 

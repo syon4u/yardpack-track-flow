@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Package, Search, Truck, CheckCircle, AlertCircle, DollarSign, LayoutGrid, LayoutList } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
+import { UnifiedPackage } from '@/types/unified';
 
 type DatabasePackage = Database['public']['Tables']['packages']['Row'] & {
   profiles?: Database['public']['Tables']['profiles']['Row'] | null;
@@ -245,6 +246,41 @@ const samplePackages: DatabasePackage[] = [
   }
 ];
 
+// Transform sample packages to UnifiedPackage format
+const transformedSamplePackages: UnifiedPackage[] = samplePackages.map(pkg => ({
+  id: pkg.id,
+  tracking_number: pkg.tracking_number,
+  external_tracking_number: pkg.external_tracking_number,
+  description: pkg.description,
+  status: pkg.status,
+  created_at: pkg.created_at,
+  updated_at: pkg.updated_at,
+  date_received: pkg.date_received,
+  estimated_delivery: pkg.estimated_delivery,
+  delivery_estimate: pkg.delivery_estimate,
+  actual_delivery: pkg.actual_delivery,
+  customer_id: pkg.customer_id,
+  customer_name: pkg.profiles?.full_name || 'Unknown Customer',
+  customer_email: pkg.profiles?.email || null,
+  sender_name: pkg.sender_name,
+  sender_address: pkg.sender_address,
+  delivery_address: pkg.delivery_address,
+  carrier: pkg.carrier,
+  weight: pkg.weight,
+  dimensions: pkg.dimensions,
+  package_value: pkg.package_value,
+  duty_amount: pkg.duty_amount,
+  duty_rate: pkg.duty_rate,
+  total_due: pkg.total_due,
+  invoices: pkg.invoices,
+  invoice_uploaded: pkg.invoices && pkg.invoices.length > 0,
+  duty_assessed: pkg.duty_amount !== null,
+  notes: pkg.notes,
+  api_sync_status: pkg.api_sync_status,
+  last_api_sync: pkg.last_api_sync,
+  profiles: pkg.profiles
+}));
+
 const CustomerDashboardDemo: React.FC = () => {
   const { profile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -252,7 +288,7 @@ const CustomerDashboardDemo: React.FC = () => {
   const [viewMode, setViewMode] = useState<'tiles' | 'table'>('tiles');
   
   // Filter packages based on search and status
-  const filteredPackages = samplePackages.filter(pkg => {
+  const filteredPackages = transformedSamplePackages.filter(pkg => {
     const matchesSearch = !searchTerm || 
       pkg.tracking_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pkg.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -262,12 +298,12 @@ const CustomerDashboardDemo: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Calculate statistics
-  const totalPackages = samplePackages.length;
-  const inTransitPackages = samplePackages.filter(p => p.status === 'in_transit').length;
-  const readyForPickup = samplePackages.filter(p => p.status === 'ready_for_pickup').length;
-  const pendingInvoices = samplePackages.filter(p => !p.invoices || p.invoices.length === 0).length;
-  const totalDue = samplePackages.reduce((sum, p) => sum + (p.total_due || 0), 0);
+  // Calculate statistics using transformed packages
+  const totalPackages = transformedSamplePackages.length;
+  const inTransitPackages = transformedSamplePackages.filter(p => p.status === 'in_transit').length;
+  const readyForPickup = transformedSamplePackages.filter(p => p.status === 'ready_for_pickup').length;
+  const pendingInvoices = transformedSamplePackages.filter(p => !p.invoice_uploaded).length;
+  const totalDue = transformedSamplePackages.reduce((sum, p) => sum + (p.total_due || 0), 0);
 
   const handleUploadInvoice = (packageId: string) => {
     console.log('Upload invoice for package:', packageId);
@@ -462,10 +498,10 @@ const CustomerDashboardDemo: React.FC = () => {
                   status: pkg.status,
                   dateReceived: pkg.date_received,
                   estimatedDelivery: pkg.estimated_delivery || undefined,
-                  invoiceUploaded: pkg.invoices && pkg.invoices.length > 0,
-                  dutyAssessed: pkg.duty_amount !== null,
+                  invoiceUploaded: pkg.invoice_uploaded,
+                  dutyAssessed: pkg.duty_assessed,
                   totalDue: pkg.total_due || undefined,
-                  customerName: pkg.profiles?.full_name || 'Unknown Customer',
+                  customerName: pkg.customer_name,
                 }}
                 userRole="customer"
                 onUploadInvoice={handleUploadInvoice}

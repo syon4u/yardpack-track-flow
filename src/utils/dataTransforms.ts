@@ -8,7 +8,9 @@ type DatabasePackage = Database['public']['Tables']['packages']['Row'] & {
 };
 
 type DatabaseProfile = Database['public']['Tables']['profiles']['Row'] & {
-  packages?: DatabasePackage[];
+  packages?: (Database['public']['Tables']['packages']['Row'] & {
+    invoices?: Database['public']['Tables']['invoices']['Row'][];
+  })[];
 };
 
 // Transform database package to unified format
@@ -24,7 +26,7 @@ export const transformPackageToUnified = (pkg: DatabasePackage): UnifiedPackage 
     updated_at: pkg.updated_at,
     date_received: pkg.date_received,
     estimated_delivery: pkg.estimated_delivery,
-    delivery_estimate: pkg.delivery_estimate, // Map delivery_estimate
+    delivery_estimate: pkg.delivery_estimate,
     actual_delivery: pkg.actual_delivery,
     
     customer_id: pkg.customer_id,
@@ -45,17 +47,23 @@ export const transformPackageToUnified = (pkg: DatabasePackage): UnifiedPackage 
     
     invoices: pkg.invoices || [],
     
-    invoice_uploaded: pkg.invoices && pkg.invoices.length > 0,
+    invoice_uploaded: pkg.invoices ? pkg.invoices.length > 0 : false,
     duty_assessed: pkg.duty_amount !== null,
     
     notes: pkg.notes,
     api_sync_status: pkg.api_sync_status,
     last_api_sync: pkg.last_api_sync,
     
-    // Add compatibility property
+    // Add full compatibility property for legacy components
     profiles: pkg.profiles ? {
       full_name: pkg.profiles.full_name,
-      email: pkg.profiles.email
+      email: pkg.profiles.email,
+      address: pkg.profiles.address,
+      created_at: pkg.profiles.created_at,
+      id: pkg.profiles.id,
+      phone_number: pkg.profiles.phone_number,
+      role: pkg.profiles.role,
+      updated_at: pkg.profiles.updated_at
     } : null,
   };
 };
@@ -96,7 +104,9 @@ export const createPackageOnlyCustomer = (
   customerKey: string,
   customerName: string,
   address: string,
-  packages: DatabasePackage[]
+  packages: (Database['public']['Tables']['packages']['Row'] & {
+    invoices?: Database['public']['Tables']['invoices']['Row'][];
+  })[]
 ): UnifiedCustomer => {
   const totalSpent = packages.reduce((sum, pkg) => sum + (pkg.package_value || 0), 0);
   const outstandingBalance = packages.reduce((sum, pkg) => sum + (pkg.total_due || 0), 0);

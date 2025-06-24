@@ -10,6 +10,7 @@ import {
   transformProfileToUnifiedCustomer,
   createPackageOnlyCustomer 
 } from '@/utils/dataTransforms';
+import { Database } from '@/integrations/supabase/types';
 
 export class UnifiedDataService {
   // Fetch all customers (registered + package-only)
@@ -20,32 +21,7 @@ export class UnifiedDataService {
         .from('profiles')
         .select(`
           *,
-          packages!packages_customer_id_fkey(
-            id,
-            status,
-            package_value,
-            duty_amount,
-            total_due,
-            created_at,
-            updated_at,
-            date_received,
-            delivery_address,
-            description,
-            tracking_number,
-            external_tracking_number,
-            estimated_delivery,
-            delivery_estimate,
-            actual_delivery,
-            sender_name,
-            sender_address,
-            carrier,
-            weight,
-            dimensions,
-            duty_rate,
-            notes,
-            api_sync_status,
-            last_api_sync
-          )
+          packages!packages_customer_id_fkey(*)
         `);
 
       if (profilesError) throw profilesError;
@@ -140,7 +116,7 @@ export class UnifiedDataService {
         .from('packages')
         .select(`
           *,
-          profiles:customer_id(full_name, email),
+          profiles:customer_id(full_name, email, address, created_at, id, phone_number, role, updated_at),
           invoices(*)
         `)
         .order('created_at', { ascending: false });
@@ -157,7 +133,13 @@ export class UnifiedDataService {
 
       // Apply status filter
       if (options.statusFilter && options.statusFilter !== 'all') {
-        query = query.eq('status', options.statusFilter);
+        const validStatuses: Database['public']['Enums']['package_status'][] = [
+          'received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'
+        ];
+        
+        if (validStatuses.includes(options.statusFilter as Database['public']['Enums']['package_status'])) {
+          query = query.eq('status', options.statusFilter);
+        }
       }
 
       const { data, error } = await query;
