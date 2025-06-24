@@ -56,15 +56,17 @@ export const useCustomers = () => {
     queryFn: async (): Promise<CustomerWithStats[]> => {
       // Get customers from the new customers table
       const { data: customersData, error } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      if (!customersData) return [];
+
       // Get package stats for each customer
       const customersWithStats = await Promise.all(
-        (customersData || []).map(async (customer: Customer) => {
+        customersData.map(async (customer: Customer) => {
           const { data: packages } = await supabase
             .from('packages')
             .select('id, status, package_value, total_due, created_at')
@@ -105,7 +107,7 @@ export const useCustomerByUserId = (userId: string | undefined) => {
       if (!userId) return null;
       
       const { data, error } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
@@ -124,7 +126,7 @@ export const useCreateCustomer = () => {
   return useMutation({
     mutationFn: async (customerData: CustomerInsert) => {
       const { data, error } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .insert([customerData])
         .select()
         .single();
@@ -156,7 +158,7 @@ export const useUpdateCustomer = () => {
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: CustomerUpdate }) => {
       const { data, error } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .update(updates)
         .eq('id', id)
         .select()
@@ -189,7 +191,7 @@ export const useDeleteCustomer = () => {
   return useMutation({
     mutationFn: async (customerId: string) => {
       const { error } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .delete()
         .eq('id', customerId);
 

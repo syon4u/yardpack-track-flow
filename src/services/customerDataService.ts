@@ -38,14 +38,24 @@ export class CustomerDataService {
     try {
       // Get customer counts by type
       const { data: customers, error: customersError } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .select('id, customer_type');
 
       if (customersError) throw customersError;
 
+      if (!customers) {
+        return {
+          total: 0,
+          registered: 0,
+          guest: 0,
+          package_only: 0,
+          active: 0,
+        };
+      }
+
       // Get customers with active packages
       const { data: activeCustomers, error: activeError } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .select(`
           id,
           packages!packages_customer_id_fkey(status)
@@ -56,10 +66,10 @@ export class CustomerDataService {
         // Fallback: just count customers without package data
         const active = 0; // We'll calculate this differently if needed
         
-        const total = customers?.length || 0;
-        const registered = customers?.filter(c => c.customer_type === 'registered').length || 0;
-        const guest = customers?.filter(c => c.customer_type === 'guest').length || 0;
-        const packageOnly = customers?.filter(c => c.customer_type === 'package_only').length || 0;
+        const total = customers.length;
+        const registered = customers.filter(c => c.customer_type === 'registered').length;
+        const guest = customers.filter(c => c.customer_type === 'guest').length;
+        const packageOnly = customers.filter(c => c.customer_type === 'package_only').length;
 
         return {
           total,
@@ -70,10 +80,10 @@ export class CustomerDataService {
         };
       }
 
-      const total = customers?.length || 0;
-      const registered = customers?.filter(c => c.customer_type === 'registered').length || 0;
-      const guest = customers?.filter(c => c.customer_type === 'guest').length || 0;
-      const packageOnly = customers?.filter(c => c.customer_type === 'package_only').length || 0;
+      const total = customers.length;
+      const registered = customers.filter(c => c.customer_type === 'registered').length;
+      const guest = customers.filter(c => c.customer_type === 'guest').length;
+      const packageOnly = customers.filter(c => c.customer_type === 'package_only').length;
       
       const active = activeCustomers?.filter(customer => {
         const packages = (customer as any).packages || [];
@@ -98,12 +108,14 @@ export class CustomerDataService {
   static async fetchCustomerWithPackages(customerId: string): Promise<Customer & { packages: Package[] } | null> {
     try {
       const { data: customer, error: customerError } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .select('*')
         .eq('id', customerId)
         .single();
 
       if (customerError) throw customerError;
+
+      if (!customer) return null;
 
       const { data: packages, error: packagesError } = await supabase
         .from('packages')
@@ -135,7 +147,7 @@ export class CustomerDataService {
 
       // Create customer record
       const { data: customer, error: customerError } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .insert([{
           full_name: profile.full_name,
           email: profile.email,
