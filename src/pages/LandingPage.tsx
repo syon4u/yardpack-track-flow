@@ -137,39 +137,13 @@ const LandingPage: React.FC = () => {
             muted
             loop
             playsInline
-            poster="/videos/shipping-hero-bg.mp4"
+            poster="/videos/jlvid.mp4"
           >
-            <source src="/videos/shipping-hero-bg.mp4" type="video/mp4" />
             <source src="/videos/jlvid.mp4" type="video/mp4" />
-            <source src="/videos/jl-vid.mp4" type="video/mp4" />
-            {/* Fallback for browsers that don't support video */}
           </video>
           
           {/* Video Overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-purple-900/80 to-teal-900/90"></div>
-          
-          {/* Artistic Background Fallback */}
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-purple-900/80 to-teal-900/90"></div>
-            <div className="absolute top-0 left-0 w-full h-full opacity-30">
-              <svg className="w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
-                <defs>
-                  <linearGradient id="wave1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.1" />
-                  </linearGradient>
-                  <linearGradient id="wave2" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.2" />
-                    <stop offset="100%" stopColor="#ec4899" stopOpacity="0.1" />
-                  </linearGradient>
-                </defs>
-                <path d="M0,400 C300,200 600,600 1200,300 L1200,800 L0,800 Z" fill="url(#wave1)" className="animate-pulse" />
-                <path d="M0,500 C400,300 800,700 1200,400 L1200,800 L0,800 Z" fill="url(#wave2)" className="animate-pulse" style={{
-                  animationDelay: '1s'
-                }} />
-              </svg>
-            </div>
-          </div>
         </div>
         
         {/* Content overlay */}
