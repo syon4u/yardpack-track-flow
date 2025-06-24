@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useCreatePackage } from '@/hooks/usePackages';
+import { useCarrierDetection } from '@/hooks/useTrackingAPI';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -18,6 +19,8 @@ interface CreatePackageFormProps {
 const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
   const { toast } = useToast();
   const createPackageMutation = useCreatePackage();
+  const { detectCarrier } = useCarrierDetection();
+  
   const [formData, setFormData] = useState({
     tracking_number: '',
     customer_id: '',
@@ -28,7 +31,9 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
     weight: '',
     dimensions: '',
     package_value: '',
-    notes: ''
+    notes: '',
+    carrier: '',
+    external_tracking_number: ''
   });
 
   // Fetch customers for dropdown
@@ -53,6 +58,8 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
         ...formData,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
         package_value: formData.package_value ? parseFloat(formData.package_value) : undefined,
+        carrier: formData.carrier || undefined,
+        external_tracking_number: formData.external_tracking_number || undefined,
       });
       
       toast({
@@ -72,6 +79,14 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Auto-detect carrier when external tracking number changes
+    if (field === 'external_tracking_number' && value) {
+      const detectedCarrier = detectCarrier(value);
+      if (detectedCarrier !== 'UNKNOWN') {
+        setFormData(prev => ({ ...prev, carrier: detectedCarrier }));
+      }
+    }
   };
 
   return (
@@ -84,7 +99,7 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="tracking_number">Tracking Number</Label>
+              <Label htmlFor="tracking_number">Internal Tracking Number</Label>
               <Input
                 id="tracking_number"
                 value={formData.tracking_number}
@@ -106,6 +121,34 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
                       {customer.full_name} ({customer.email})
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="external_tracking_number">Carrier Tracking Number</Label>
+              <Input
+                id="external_tracking_number"
+                value={formData.external_tracking_number}
+                onChange={(e) => handleInputChange('external_tracking_number', e.target.value)}
+                placeholder="External carrier tracking number"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="carrier">Carrier</Label>
+              <Select value={formData.carrier} onValueChange={(value) => handleInputChange('carrier', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select carrier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USPS">USPS</SelectItem>
+                  <SelectItem value="FEDEX">FedEx</SelectItem>
+                  <SelectItem value="UPS">UPS</SelectItem>
+                  <SelectItem value="DHL">DHL</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>

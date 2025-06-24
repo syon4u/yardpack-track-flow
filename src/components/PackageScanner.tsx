@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Scan, Package, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Scan, Package, CheckCircle, AlertCircle, Loader2, Truck, RefreshCw } from 'lucide-react';
 import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
+import { useUSPSTracking } from '@/hooks/useTrackingAPI';
 import { useToast } from '@/hooks/use-toast';
 
 const PackageScanner: React.FC = () => {
@@ -20,6 +21,7 @@ const PackageScanner: React.FC = () => {
   
   const { data: packages, isLoading: packagesLoading, error: packagesError } = usePackages();
   const updateStatusMutation = useUpdatePackageStatus();
+  const uspsTrackingMutation = useUSPSTracking();
   const { toast } = useToast();
 
   const handleScan = async () => {
@@ -78,6 +80,18 @@ const PackageScanner: React.FC = () => {
         packageId: foundPackage.id,
         status: 'arrived'
       });
+
+      // If package has external tracking and carrier, sync with carrier API
+      if (foundPackage.external_tracking_number && foundPackage.carrier === 'USPS') {
+        try {
+          await uspsTrackingMutation.mutateAsync({
+            trackingNumber: foundPackage.external_tracking_number,
+            packageId: foundPackage.id
+          });
+        } catch (apiError) {
+          console.warn('API sync failed, but package was still marked as arrived:', apiError);
+        }
+      }
       
       setScanResult({
         status: 'success',
@@ -105,6 +119,34 @@ const PackageScanner: React.FC = () => {
     }
     
     setIsScanning(false);
+  };
+
+  const handleSyncTracking = async (pkg: any) => {
+    if (!pkg.external_tracking_number || !pkg.carrier) {
+      toast({
+        title: "Cannot Sync",
+        description: "Package missing external tracking number or carrier information",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (pkg.carrier === 'USPS') {
+      try {
+        await uspsTrackingMutation.mutateAsync({
+          trackingNumber: pkg.external_tracking_number,
+          packageId: pkg.id
+        });
+      } catch (error) {
+        console.error('Tracking sync error:', error);
+      }
+    } else {
+      toast({
+        title: "Carrier Not Supported",
+        description: `${pkg.carrier} tracking integration coming soon`,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -214,9 +256,38 @@ const PackageScanner: React.FC = () => {
                   <div className="text-sm space-y-1">
                     <p><strong>Customer:</strong> {scanResult.package.profiles?.full_name || 'Unknown'}</p>
                     <p><strong>Description:</strong> {scanResult.package.description}</p>
-                    <p><strong>Previous Status:</strong> <Badge variant="outline">{scanResult.package.status}</Badge></p>
+                    <div className="flex items-center gap-2">
+                      <strong>Previous Status:</strong> <Badge variant="outline">{scanResult.package.status}</Badge>
+                    </div>
+                    {scanResult.package.carrier && (
+                      <div className="flex items-center gap-2">
+                        <strong>Carrier:</strong> 
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          <Truck className="h-3 w-3" />
+                          {scanResult.package.carrier}
+                        </Badge>
+                      </div>
+                    )}
                     {scanResult.status === 'success' && (
-                      <p><strong>New Status:</strong> <Badge variant="default">Arrived</Badge></p>
+                      <div className="flex items-center gap-2">
+                        <strong>New Status:</strong> <Badge variant="default">Arrived</Badge>
+                      </div>
+                    )}
+                    {scanResult.package.external_tracking_number && scanResult.package.carrier === 'USPS' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleSyncTracking(scanResult.package)}
+                        disabled={uspsTrackingMutation.isPending}
+                        className="mt-2 flex items-center gap-2"
+                      >
+                        {uspsTrackingMutation.isPending ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3 w-3" />
+                        )}
+                        Sync Carrier Tracking
+                      </Button>
                     )}
                   </div>
                 )}
@@ -237,14 +308,16 @@ const PackageScanner: React.FC = () => {
       
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Scanning Instructions</CardTitle>
+          <CardTitle className="text-lg">Enhanced Scanning Instructions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-gray-600">
           <p>• Use a barcode scanner or manually enter the tracking number</p>
           <p>• Press Enter or click the Scan button</p>
           <p>• The system will automatically mark the package as "Arrived"</p>
+          <p>• If the package has carrier tracking, it will sync with the carrier API</p>
           <p>• Package status will be updated in real-time for customers</p>
           <p>• Only packages not already marked as "Arrived" can be processed</p>
+          <p>• Supported carriers: USPS (more carriers coming soon)</p>
         </CardContent>
       </Card>
       
@@ -262,6 +335,18 @@ const PackageScanner: React.FC = () => {
               <p className="font-medium">Arrived Today:</p>
               <p className="text-2xl font-bold text-green-600">
                 {packages?.filter(pkg => pkg.status === 'arrived').length || 0}
+              </p>
+            </div>
+            <div>
+              <p className="font-medium">With Carrier Tracking:</p>
+              <p className="text-2xl font-bold text-purple-600">
+                {packages?.filter(pkg => pkg.external_tracking_number).length || 0}
+              </p>
+            </div>
+            <div>
+              <p className="font-medium">API Synced:</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {packages?.filter(pkg => pkg.api_sync_status === 'synced').length || 0}
               </p>
             </div>
           </div>

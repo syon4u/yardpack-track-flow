@@ -43,7 +43,7 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
       
       // Apply search filter
       if (searchTerm && searchTerm.trim()) {
-        query = query.or(`tracking_number.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+        query = query.or(`tracking_number.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,external_tracking_number.ilike.%${searchTerm}%`);
       }
       
       // Apply status filter - only if it's a valid status and not 'all'
@@ -103,6 +103,8 @@ export const useCreatePackage = () => {
       dimensions?: string;
       package_value?: number;
       notes?: string;
+      carrier?: string;
+      external_tracking_number?: string;
     }) => {
       console.log('Creating new package:', packageData);
       

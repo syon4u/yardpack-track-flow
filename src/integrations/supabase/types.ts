@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      api_configurations: {
+        Row: {
+          api_key_name: string
+          base_url: string
+          carrier: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          rate_limit_per_minute: number | null
+          updated_at: string
+        }
+        Insert: {
+          api_key_name: string
+          base_url: string
+          carrier: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          rate_limit_per_minute?: number | null
+          updated_at?: string
+        }
+        Update: {
+          api_key_name?: string
+          base_url?: string
+          carrier?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          rate_limit_per_minute?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           file_name: string
@@ -111,16 +144,21 @@ export type Database = {
       packages: {
         Row: {
           actual_delivery: string | null
+          api_sync_status: string | null
+          carrier: string | null
           created_at: string
           customer_id: string
           date_received: string
           delivery_address: string
+          delivery_estimate: string | null
           description: string
           dimensions: string | null
           duty_amount: number | null
           duty_rate: number | null
           estimated_delivery: string | null
+          external_tracking_number: string | null
           id: string
+          last_api_sync: string | null
           notes: string | null
           package_value: number | null
           sender_address: string | null
@@ -133,16 +171,21 @@ export type Database = {
         }
         Insert: {
           actual_delivery?: string | null
+          api_sync_status?: string | null
+          carrier?: string | null
           created_at?: string
           customer_id: string
           date_received?: string
           delivery_address: string
+          delivery_estimate?: string | null
           description: string
           dimensions?: string | null
           duty_amount?: number | null
           duty_rate?: number | null
           estimated_delivery?: string | null
+          external_tracking_number?: string | null
           id?: string
+          last_api_sync?: string | null
           notes?: string | null
           package_value?: number | null
           sender_address?: string | null
@@ -155,16 +198,21 @@ export type Database = {
         }
         Update: {
           actual_delivery?: string | null
+          api_sync_status?: string | null
+          carrier?: string | null
           created_at?: string
           customer_id?: string
           date_received?: string
           delivery_address?: string
+          delivery_estimate?: string | null
           description?: string
           dimensions?: string | null
           duty_amount?: number | null
           duty_rate?: number | null
           estimated_delivery?: string | null
+          external_tracking_number?: string | null
           id?: string
+          last_api_sync?: string | null
           notes?: string | null
           package_value?: number | null
           sender_address?: string | null
@@ -217,6 +265,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      tracking_events: {
+        Row: {
+          carrier: string
+          created_at: string
+          event_description: string
+          event_location: string | null
+          event_timestamp: string
+          event_type: string
+          id: string
+          package_id: string
+          raw_data: Json | null
+        }
+        Insert: {
+          carrier: string
+          created_at?: string
+          event_description: string
+          event_location?: string | null
+          event_timestamp: string
+          event_type: string
+          id?: string
+          package_id: string
+          raw_data?: Json | null
+        }
+        Update: {
+          carrier?: string
+          created_at?: string
+          event_description?: string
+          event_location?: string | null
+          event_timestamp?: string
+          event_type?: string
+          id?: string
+          package_id?: string
+          raw_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_events_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
