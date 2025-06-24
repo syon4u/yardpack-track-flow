@@ -54,6 +54,16 @@ const AppContent = () => {
                 )
               } 
             />
+            <Route 
+              path="/warehouse" 
+              element={
+                profile?.role === 'admin' ? (
+                  <Layout><WarehousePage /></Layout>
+                ) : (
+                  <Navigate to="/dashboard" replace />
+                )
+              } 
+            />
           </>
         )}
         

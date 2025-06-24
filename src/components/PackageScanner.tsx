@@ -18,14 +18,22 @@ const PackageScanner: React.FC = () => {
   const [isScanning, setIsScanning] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   
-  const { data: packages } = usePackages();
+  const { data: packages, isLoading: packagesLoading, error: packagesError } = usePackages();
   const updateStatusMutation = useUpdatePackageStatus();
   const { toast } = useToast();
 
   const handleScan = async () => {
-    if (!scannedCode.trim()) return;
+    if (!scannedCode.trim()) {
+      toast({
+        title: "Invalid Input",
+        description: "Please enter a tracking number",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsScanning(true);
+    setScanResult(null);
     
     try {
       // Find package by tracking number
@@ -37,6 +45,29 @@ const PackageScanner: React.FC = () => {
         setScanResult({
           status: 'not_found',
           message: `Package with tracking number "${scannedCode}" not found`,
+        });
+        
+        toast({
+          title: "Package Not Found",
+          description: `No package found with tracking number: ${scannedCode}`,
+          variant: "destructive",
+        });
+        setIsScanning(false);
+        return;
+      }
+
+      // Check if package is already arrived
+      if (foundPackage.status === 'arrived') {
+        setScanResult({
+          status: 'error',
+          message: `Package "${scannedCode}" has already been marked as arrived`,
+          package: foundPackage
+        });
+        
+        toast({
+          title: "Package Already Processed",
+          description: `This package was already marked as arrived`,
+          variant: "destructive",
         });
         setIsScanning(false);
         return;
@@ -60,9 +91,10 @@ const PackageScanner: React.FC = () => {
       });
       
     } catch (error) {
+      console.error('Scan error:', error);
       setScanResult({
         status: 'error',
-        message: 'Failed to update package status',
+        message: 'Failed to update package status. Please try again.',
       });
       
       toast({
@@ -76,7 +108,7 @@ const PackageScanner: React.FC = () => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !isScanning) {
       handleScan();
     }
   };
@@ -86,6 +118,32 @@ const PackageScanner: React.FC = () => {
     setScanResult(null);
     inputRef.current?.focus();
   };
+
+  if (packagesLoading) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card>
+          <CardContent className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin mr-2" />
+            <span>Loading package data...</span>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (packagesError) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card>
+          <CardContent className="flex items-center justify-center py-8 text-red-600">
+            <AlertCircle className="h-6 w-6 mr-2" />
+            <span>Error loading package data. Please refresh the page.</span>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -107,6 +165,7 @@ const PackageScanner: React.FC = () => {
               onKeyPress={handleKeyPress}
               className="flex-1"
               autoFocus
+              disabled={isScanning}
             />
             <Button 
               onClick={handleScan} 
@@ -155,7 +214,10 @@ const PackageScanner: React.FC = () => {
                   <div className="text-sm space-y-1">
                     <p><strong>Customer:</strong> {scanResult.package.profiles?.full_name || 'Unknown'}</p>
                     <p><strong>Description:</strong> {scanResult.package.description}</p>
-                    <p><strong>Status:</strong> <Badge variant="outline">Arrived</Badge></p>
+                    <p><strong>Previous Status:</strong> <Badge variant="outline">{scanResult.package.status}</Badge></p>
+                    {scanResult.status === 'success' && (
+                      <p><strong>New Status:</strong> <Badge variant="default">Arrived</Badge></p>
+                    )}
                   </div>
                 )}
                 
@@ -178,10 +240,31 @@ const PackageScanner: React.FC = () => {
           <CardTitle className="text-lg">Scanning Instructions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-gray-600">
-          <p>1. Use a barcode scanner or manually enter the tracking number</p>
-          <p>2. Press Enter or click the Scan button</p>
-          <p>3. The system will automatically mark the package as "Arrived"</p>
-          <p>4. Package status will be updated in real-time for customers</p>
+          <p>• Use a barcode scanner or manually enter the tracking number</p>
+          <p>• Press Enter or click the Scan button</p>
+          <p>• The system will automatically mark the package as "Arrived"</p>
+          <p>• Package status will be updated in real-time for customers</p>
+          <p>• Only packages not already marked as "Arrived" can be processed</p>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Package Statistics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="font-medium">Total Packages:</p>
+              <p className="text-2xl font-bold text-blue-600">{packages?.length || 0}</p>
+            </div>
+            <div>
+              <p className="font-medium">Arrived Today:</p>
+              <p className="text-2xl font-bold text-green-600">
+                {packages?.filter(pkg => pkg.status === 'arrived').length || 0}
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
