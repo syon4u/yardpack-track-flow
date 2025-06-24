@@ -4,67 +4,51 @@ import { Package, Search, Truck, CheckCircle, Star, ArrowRight, Users, Shield, C
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import TrackingResults from '@/components/TrackingResults';
-
 const LandingPage: React.FC = () => {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [showResults, setShowResults] = useState(false);
-
   const handleTrack = () => {
     if (trackingNumber.trim()) {
       setShowResults(true);
     }
   };
-
-  const features = [
-    {
-      icon: <Package className="h-12 w-12 text-blue-500" />,
-      title: "Secure Packaging",
-      description: "Your items are handled with care from Miami to Kingston"
-    },
-    {
-      icon: <Truck className="h-12 w-12 text-blue-600" />,
-      title: "Fast Delivery",
-      description: "Reliable shipping schedules between Miami and Kingston"
-    },
-    {
-      icon: <Shield className="h-12 w-12 text-blue-500" />,
-      title: "Full Insurance",
-      description: "Complete protection for your valuable shipments"
-    },
-    {
-      icon: <Clock className="h-12 w-12 text-blue-600" />,
-      title: "Real-time Tracking",
-      description: "Know exactly where your package is at all times"
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: "Marcus Johnson",
-      role: "Software Engineer",
-      content: "JIL International makes sending care packages to my family in Kingston so easy. The tracking is spot-on!",
-      rating: 5
-    },
-    {
-      name: "Keisha Williams",
-      role: "Marketing Manager",
-      content: "Best shipping service for Jamaica! Fast, reliable, and the team is amazing.",
-      rating: 5
-    },
-    {
-      name: "David Brown",
-      role: "Business Owner",
-      content: "I ship products regularly and JIL International always delivers on time. Highly recommended!",
-      rating: 5
-    }
-  ];
-
+  const features = [{
+    icon: <Package className="h-12 w-12 text-blue-500" />,
+    title: "Secure Packaging",
+    description: "Your items are handled with care from Miami to Kingston"
+  }, {
+    icon: <Truck className="h-12 w-12 text-blue-600" />,
+    title: "Fast Delivery",
+    description: "Reliable shipping schedules between Miami and Kingston"
+  }, {
+    icon: <Shield className="h-12 w-12 text-blue-500" />,
+    title: "Full Insurance",
+    description: "Complete protection for your valuable shipments"
+  }, {
+    icon: <Clock className="h-12 w-12 text-blue-600" />,
+    title: "Real-time Tracking",
+    description: "Know exactly where your package is at all times"
+  }];
+  const testimonials = [{
+    name: "Marcus Johnson",
+    role: "Software Engineer",
+    content: "JIL International makes sending care packages to my family in Kingston so easy. The tracking is spot-on!",
+    rating: 5
+  }, {
+    name: "Keisha Williams",
+    role: "Marketing Manager",
+    content: "Best shipping service for Jamaica! Fast, reliable, and the team is amazing.",
+    rating: 5
+  }, {
+    name: "David Brown",
+    role: "Business Owner",
+    content: "I ship products regularly and JIL International always delivers on time. Highly recommended!",
+    rating: 5
+  }];
   if (showResults) {
     return <TrackingResults trackingNumber={trackingNumber} onBack={() => setShowResults(false)} />;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+  return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
       {/* Navigation */}
       <nav className="relative z-50 bg-white/95 backdrop-blur-md border-b border-blue-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -92,12 +76,9 @@ const LandingPage: React.FC = () => {
       {/* Hero Section with Image Background */}
       <section className="relative overflow-hidden pt-20 pb-32">
         {/* Background Image */}
-        <div 
-          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80)',
-          }}
-        >
+        <div className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat" style={{
+        backgroundImage: 'url(https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80)'
+      }}>
           <div className="absolute inset-0 bg-blue-900/70"></div>
         </div>
         
@@ -107,15 +88,9 @@ const LandingPage: React.FC = () => {
             <div className="mb-6">
               <div className="text-white text-lg font-medium mb-2 drop-shadow-lg">JIL International Solutions</div>
               <div className="flex justify-center items-center space-x-4 text-sm text-white drop-shadow-lg">
-                <div className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  Miami: 25.7617° N, 80.1918° W
-                </div>
-                <div className="hidden sm:block">•</div>
-                <div className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  Kingston: 17.9712° N, 76.7936° W
-                </div>
+                
+                
+                
               </div>
             </div>
             
@@ -134,16 +109,8 @@ const LandingPage: React.FC = () => {
               <div className="bg-white/95 backdrop-blur-md rounded-2xl p-6 border border-blue-200 shadow-lg">
                 <h3 className="text-lg font-semibold text-slate-800 mb-4">Track Your Package</h3>
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="Enter tracking number"
-                    value={trackingNumber}
-                    onChange={(e) => setTrackingNumber(e.target.value)}
-                    className="bg-white border-blue-200 text-slate-800 placeholder:text-slate-500"
-                  />
-                  <Button 
-                    onClick={handleTrack}
-                    className="bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                  >
+                  <Input placeholder="Enter tracking number" value={trackingNumber} onChange={e => setTrackingNumber(e.target.value)} className="bg-white border-blue-200 text-slate-800 placeholder:text-slate-500" />
+                  <Button onClick={handleTrack} className="bg-blue-600 text-white hover:bg-blue-700 transition-colors">
                     <Search className="h-4 w-4" />
                   </Button>
                 </div>
@@ -156,7 +123,7 @@ const LandingPage: React.FC = () => {
                   Get Started <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Button variant="outline" className="border-white/50 text-white hover:bg-white/10 px-8 py-4 text-lg backdrop-blur-sm">
+              <Button variant="outline" className="border-white/50 hover:bg-white/10 px-8 py-4 text-lg backdrop-blur-sm text-amber-400">
                 Learn More
               </Button>
             </div>
@@ -205,15 +172,13 @@ const LandingPage: React.FC = () => {
             <p className="text-xl text-slate-600">Everything you need for hassle-free shipping</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 border border-blue-100 hover:border-blue-300 transition-colors group hover:scale-105 transform transition-transform shadow-sm">
+            {features.map((feature, index) => <div key={index} className="bg-white rounded-xl p-6 border border-blue-100 hover:border-blue-300 transition-colors group hover:scale-105 transform transition-transform shadow-sm">
                 <div className="mb-4 group-hover:scale-110 transition-transform">
                   {feature.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-slate-800 mb-2">{feature.title}</h3>
                 <p className="text-slate-600">{feature.description}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -226,20 +191,16 @@ const LandingPage: React.FC = () => {
             <p className="text-xl text-slate-600">Trusted by thousands shipping to Jamaica</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-slate-50 rounded-xl p-6 border border-blue-100 hover:scale-105 transition-transform">
+            {testimonials.map((testimonial, index) => <div key={index} className="bg-slate-50 rounded-xl p-6 border border-blue-100 hover:scale-105 transition-transform">
                 <div className="flex mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-blue-500 fill-current" />
-                  ))}
+                  {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="h-5 w-5 text-blue-500 fill-current" />)}
                 </div>
                 <p className="text-slate-700 mb-4 italic">"{testimonial.content}"</p>
                 <div className="border-t border-blue-100 pt-4">
                   <p className="text-slate-800 font-semibold">{testimonial.name}</p>
                   <p className="text-slate-600 text-sm">{testimonial.role}</p>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -322,8 +283,6 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default LandingPage;
