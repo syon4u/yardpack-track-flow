@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useCreatePackage } from '@/hooks/usePackages';
 import { useCarrierDetection } from '@/hooks/useTrackingAPI';
-import { useUnifiedCustomers } from '@/hooks/usePackages';
+import { useCustomers } from '@/hooks/useCustomers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,18 +35,41 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
     external_tracking_number: ''
   });
 
-  // Use unified customers dataset that includes both registered and package-only customers
-  const { data: customers } = useUnifiedCustomers();
+  // Use the customers from the new customers table
+  const { data: customers, isLoading: customersLoading } = useCustomers();
 
-  // Filter to only show registered customers for the dropdown (package-only customers can't be assigned packages directly)
-  const registeredCustomers = customers?.filter(customer => customer.type === 'registered') || [];
+  // Filter to only show registered customers for the dropdown
+  const registeredCustomers = customers?.filter(customer => 
+    customer.customer_type === 'registered' && customer.user_id
+  ) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.customer_id) {
+      toast({
+        title: "Error",
+        description: "Please select a customer",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Find the selected customer to get their user_id
+    const selectedCustomer = customers?.find(c => c.id === formData.customer_id);
+    if (!selectedCustomer?.user_id) {
+      toast({
+        title: "Error",
+        description: "Selected customer must be registered",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       await createPackageMutation.mutateAsync({
         ...formData,
+        customer_id: selectedCustomer.user_id, // Use the user_id for packages table
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
         package_value: formData.package_value ? parseFloat(formData.package_value) : undefined,
         carrier: formData.carrier || undefined,
@@ -60,6 +83,7 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
       
       onClose();
     } catch (error) {
+      console.error('Error creating package:', error);
       toast({
         title: "Error",
         description: "Failed to create package",
@@ -102,14 +126,18 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
             
             <div>
               <Label htmlFor="customer_id">Customer</Label>
-              <Select value={formData.customer_id} onValueChange={(value) => handleInputChange('customer_id', value)}>
+              <Select 
+                value={formData.customer_id} 
+                onValueChange={(value) => handleInputChange('customer_id', value)}
+                disabled={customersLoading}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select customer" />
+                  <SelectValue placeholder={customersLoading ? "Loading customers..." : "Select customer"} />
                 </SelectTrigger>
                 <SelectContent>
                   {registeredCustomers.map((customer) => (
                     <SelectItem key={customer.id} value={customer.id}>
-                      {customer.full_name} ({customer.email})
+                      {customer.full_name} {customer.email ? `(${customer.email})` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -241,7 +269,7 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
             </Button>
             <Button 
               type="submit" 
-              disabled={createPackageMutation.isPending}
+              disabled={createPackageMutation.isPending || customersLoading}
             >
               {createPackageMutation.isPending ? 'Creating...' : 'Create Package'}
             </Button>
