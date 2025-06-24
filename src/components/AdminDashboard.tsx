@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import { Link } from 'react-router-dom';
 import PackageList from './PackageList';
 import CreatePackageForm from './CreatePackageForm';
 import AdminUserManagement from './AdminUserManagement';
+import AdminCustomerManagement from './AdminCustomerManagement';
 import AdminAnalytics from './AdminAnalytics';
 
 const AdminDashboard: React.FC = () => {
@@ -96,8 +98,9 @@ const AdminDashboard: React.FC = () => {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="packages">Packages</TabsTrigger>
+          <TabsTrigger value="customers">Customers</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -138,6 +141,10 @@ const AdminDashboard: React.FC = () => {
 
           {/* Package List with filters */}
           <PackageList searchTerm={searchTerm} statusFilter={statusFilter} />
+        </TabsContent>
+
+        <TabsContent value="customers">
+          <AdminCustomerManagement />
         </TabsContent>
 
         <TabsContent value="users">
