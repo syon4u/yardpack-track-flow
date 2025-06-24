@@ -38,20 +38,37 @@ export class CustomerDataService {
     try {
       // Get customer counts by type
       const { data: customers, error: customersError } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .select('id, customer_type');
 
       if (customersError) throw customersError;
 
       // Get customers with active packages
       const { data: activeCustomers, error: activeError } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .select(`
           id,
           packages!packages_customer_id_fkey(status)
         `);
 
-      if (activeError) throw activeError;
+      if (activeError) {
+        console.warn('Failed to fetch customers with packages, falling back to simple count:', activeError);
+        // Fallback: just count customers without package data
+        const active = 0; // We'll calculate this differently if needed
+        
+        const total = customers?.length || 0;
+        const registered = customers?.filter(c => c.customer_type === 'registered').length || 0;
+        const guest = customers?.filter(c => c.customer_type === 'guest').length || 0;
+        const packageOnly = customers?.filter(c => c.customer_type === 'package_only').length || 0;
+
+        return {
+          total,
+          registered,
+          guest,
+          package_only: packageOnly,
+          active,
+        };
+      }
 
       const total = customers?.length || 0;
       const registered = customers?.filter(c => c.customer_type === 'registered').length || 0;
@@ -80,17 +97,25 @@ export class CustomerDataService {
 
   static async fetchCustomerWithPackages(customerId: string): Promise<Customer & { packages: Package[] } | null> {
     try {
-      const { data, error } = await supabase
-        .from('customers' as any)
-        .select(`
-          *,
-          packages!packages_customer_id_fkey(*)
-        `)
+      const { data: customer, error: customerError } = await supabase
+        .from('customers')
+        .select('*')
         .eq('id', customerId)
         .single();
 
-      if (error) throw error;
-      return data;
+      if (customerError) throw customerError;
+
+      const { data: packages, error: packagesError } = await supabase
+        .from('packages')
+        .select('*')
+        .eq('customer_id', customerId);
+
+      if (packagesError) throw packagesError;
+
+      return {
+        ...customer,
+        packages: packages || []
+      };
     } catch (error) {
       console.error('Error fetching customer with packages:', error);
       throw error;
@@ -110,7 +135,7 @@ export class CustomerDataService {
 
       // Create customer record
       const { data: customer, error: customerError } = await supabase
-        .from('customers' as any)
+        .from('customers')
         .insert([{
           full_name: profile.full_name,
           email: profile.email,
