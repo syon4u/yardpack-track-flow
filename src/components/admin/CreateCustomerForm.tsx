@@ -27,44 +27,50 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
 
   const createCustomerMutation = useMutation({
     mutationFn: async (customerData: typeof formData) => {
-      // Create user in auth system
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Use the standard signup process
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: customerData.email,
         password: customerData.password,
-        user_metadata: {
-          full_name: customerData.full_name,
-          phone_number: customerData.phone_number
-        },
-        email_confirm: true
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: customerData.full_name,
+            phone_number: customerData.phone_number
+          }
+        }
       });
 
       if (authError) throw authError;
 
-      // Update profile with additional information
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: customerData.full_name,
-          phone_number: customerData.phone_number,
-          address: customerData.address,
-          role: 'customer'
-        })
-        .eq('id', authData.user.id);
+      // If signup was successful and user was created, update profile with additional info
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            address: customerData.address,
+            role: 'customer'
+          })
+          .eq('id', authData.user.id);
 
-      if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile update error:', profileError);
+          // Don't throw here as the user was created successfully
+        }
+      }
 
       return authData.user;
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Customer created successfully",
+        description: "Customer created successfully. They will receive a confirmation email.",
       });
       queryClient.invalidateQueries({ queryKey: ['admin-customers'] });
       queryClient.invalidateQueries({ queryKey: ['unified-customers'] });
       onClose();
     },
     onError: (error: any) => {
+      console.error('Customer creation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to create customer",
@@ -155,6 +161,10 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
               onChange={(e) => handleInputChange('address', e.target.value)}
               placeholder="Enter customer's address"
             />
+          </div>
+
+          <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+            <p><strong>Note:</strong> The customer will receive a confirmation email and will need to verify their email address before they can log in.</p>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
