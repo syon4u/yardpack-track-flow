@@ -105,8 +105,8 @@ const AdminDashboardTester: React.FC = () => {
     }
 
     // Test 5: Error Handling (simulate timeout)
+    const testStartTime = performance.now(); // Declare outside try block
     try {
-      const startTime = performance.now();
       // Test with a very short timeout to trigger error handling
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Simulated timeout')), 100)
@@ -119,7 +119,7 @@ const AdminDashboardTester: React.FC = () => {
       
       updateTest(4, { status: 'warning', message: 'Query completed before timeout simulation' });
     } catch (error) {
-      const duration = performance.now() - startTime;
+      const duration = performance.now() - testStartTime;
       if (duration < 200) {
         updateTest(4, { 
           status: 'success', 
