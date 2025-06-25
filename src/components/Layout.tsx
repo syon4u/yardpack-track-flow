@@ -13,6 +13,7 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import AppSidebar from './navigation/AppSidebar';
 import TrackingResults from './TrackingResults';
+import ComponentErrorBoundary from './error/ComponentErrorBoundary';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -24,7 +25,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [showTrackingResults, setShowTrackingResults] = useState(false);
 
+  React.useEffect(() => {
+    console.log('Layout - Effect running', { profile, isMobile, trackingNumber, showTrackingResults });
+    
+    // Add error handling for potential runtime issues
+    if (profile) {
+      console.log('Layout - Profile loaded:', profile);
+    }
+  }, [profile, isMobile, trackingNumber, showTrackingResults]);
+
   const handleTrack = () => {
+    console.log('Layout - Track package:', trackingNumber);
     if (trackingNumber.trim()) {
       setShowTrackingResults(true);
     }
@@ -32,81 +43,88 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   if (showTrackingResults) {
     return (
-      <TrackingResults 
-        trackingNumber={trackingNumber} 
-        onBack={() => {
-          setShowTrackingResults(false);
-          setTrackingNumber('');
-        }} 
-      />
+      <ComponentErrorBoundary componentName="TrackingResults">
+        <TrackingResults 
+          trackingNumber={trackingNumber} 
+          onBack={() => {
+            console.log('Layout - Back from tracking results');
+            setShowTrackingResults(false);
+            setTrackingNumber('');
+          }} 
+        />
+      </ComponentErrorBoundary>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-gray-50 flex w-full">
-        <AppSidebar />
+    <ComponentErrorBoundary componentName="Layout">
+      <SidebarProvider>
+        <div className="min-h-screen bg-gray-50 flex w-full">
+          <AppSidebar />
 
-        <SidebarInset className="flex-1">
-          {/* Header */}
-          <header className="bg-white shadow-sm border-b sticky top-0 z-40">
-            <div className="px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-14 sm:h-16">
-                <div className="flex items-center space-x-4">
-                  <SidebarTrigger />
-                  <div className="hidden sm:block">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Welcome back, {profile?.full_name?.split(' ')[0]}
-                    </h2>
+          <SidebarInset className="flex-1">
+            {/* Header */}
+            <header className="bg-white shadow-sm border-b sticky top-0 z-40">
+              <div className="px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-14 sm:h-16">
+                  <div className="flex items-center space-x-4">
+                    <SidebarTrigger />
+                    <div className="hidden sm:block">
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Welcome back, {profile?.full_name?.split(' ')[0]}
+                      </h2>
+                    </div>
                   </div>
-                </div>
-                
-                {profile && (
-                  <div className="flex items-center space-x-2 sm:space-x-4">
-                    {/* Track Package */}
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                          <Search className="h-4 w-4 mr-0 sm:mr-2" />
-                          <span className="hidden sm:inline">Track</span>
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-72 sm:w-80" side="bottom" align="end">
-                        <div className="space-y-3">
-                          <h4 className="font-medium">Track Package</h4>
-                          <div className="flex gap-2">
-                            <Input
-                              placeholder="Enter tracking number"
-                              value={trackingNumber}
-                              onChange={(e) => setTrackingNumber(e.target.value)}
-                              onKeyPress={(e) => e.key === 'Enter' && handleTrack()}
-                              className="flex-1"
-                            />
-                            <Button onClick={handleTrack} size="sm" className="px-3">
-                              <Search className="h-4 w-4" />
-                            </Button>
+                  
+                  {profile && (
+                    <div className="flex items-center space-x-2 sm:space-x-4">
+                      {/* Track Package */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                            <Search className="h-4 w-4 mr-0 sm:mr-2" />
+                            <span className="hidden sm:inline">Track</span>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-72 sm:w-80" side="bottom" align="end">
+                          <div className="space-y-3">
+                            <h4 className="font-medium">Track Package</h4>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Enter tracking number"
+                                value={trackingNumber}
+                                onChange={(e) => setTrackingNumber(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleTrack()}
+                                className="flex-1"
+                              />
+                              <Button onClick={handleTrack} size="sm" className="px-3">
+                                <Search className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                        </PopoverContent>
+                      </Popover>
 
-                    {/* Notifications */}
-                    <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                      <Bell className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
+                      {/* Notifications */}
+                      <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                        <Bell className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </header>
+            </header>
 
-          {/* Main Content */}
-          <main className="flex-1">
-            {children}
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+            {/* Main Content */}
+            <main className="flex-1">
+              <ComponentErrorBoundary componentName="MainContent">
+                {children}
+              </ComponentErrorBoundary>
+            </main>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    </ComponentErrorBoundary>
   );
 };
 
