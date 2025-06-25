@@ -44,7 +44,7 @@ interface TransformedPackage {
     full_name: string;
     phone_number: string | null;
     address: string | null;
-    role: string;
+    role: Database['public']['Enums']['app_role'];
     created_at: string;
     updated_at: string;
   } | null;
