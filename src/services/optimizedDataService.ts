@@ -95,7 +95,7 @@ export class OptimizedDataService {
       }
 
       // Execute the main query with timeout
-      const { data, error } = await createQueryWithTimeout(query, 8000);
+      const { data, error } = await createQueryWithTimeout(query.then(), 8000);
       if (error) throw error;
 
       // Get total count with a separate query
@@ -116,7 +116,7 @@ export class OptimizedDataService {
         countQuery = countQuery.eq('status', filters.statusFilter as PackageStatus);
       }
 
-      const { count: totalCount, error: countError } = await createQueryWithTimeout(countQuery, 5000);
+      const { count: totalCount, error: countError } = await createQueryWithTimeout(countQuery.then(), 5000);
       if (countError) throw countError;
 
       const total = totalCount || 0;
@@ -307,7 +307,7 @@ export class OptimizedDataService {
   static async fetchOptimizedStats(): Promise<UnifiedStats> {
     try {
       // Use manual aggregation with proper promise handling
-      const [packageStatsResult, customerStatsResult, financialStatsResult] = await Promise.all([
+      const [packageStats, customerStats, financialStats] = await Promise.all([
         supabase
           .from('packages')
           .select('status, package_value, total_due')
@@ -389,9 +389,9 @@ export class OptimizedDataService {
       ]);
 
       return {
-        packages: packageStatsResult,
-        customers: customerStatsResult,
-        financial: financialStatsResult,
+        packages: packageStats,
+        customers: customerStats,
+        financial: financialStats,
       };
     } catch (error) {
       console.error('Error fetching optimized stats:', error);
