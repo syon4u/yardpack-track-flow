@@ -30,6 +30,7 @@ export class DataIntegrityService {
         
         // Process each orphaned package with proper validation
         for (const pkg of orphanedPackages) {
+          // Skip packages with null customer_id
           if (!pkg.customer_id) {
             console.warn(`Package ${pkg.id} has null customer_id, skipping...`);
             continue;
@@ -59,6 +60,7 @@ export class DataIntegrityService {
 
               if (createError) {
                 console.error(`Failed to create registered customer for package ${pkg.id}:`, createError);
+                throw new Error(`Failed to create registered customer for package ${pkg.id}: ${createError.message}`);
               } else {
                 fixedCount++;
                 console.log(`Created registered customer for package ${pkg.id}`);
@@ -77,6 +79,7 @@ export class DataIntegrityService {
 
               if (createError) {
                 console.error(`Failed to create package-only customer for package ${pkg.id}:`, createError);
+                throw new Error(`Failed to create package-only customer for package ${pkg.id}: ${createError.message}`);
               } else {
                 fixedCount++;
                 console.log(`Created package-only customer for package ${pkg.id}`);
@@ -84,7 +87,8 @@ export class DataIntegrityService {
             }
           } catch (error) {
             console.error(`Error processing orphaned package ${pkg.id}:`, error);
-            // Continue processing other packages rather than failing completely
+            // Re-throw to fail fast and alert admin of issues
+            throw error;
           }
         }
       }
