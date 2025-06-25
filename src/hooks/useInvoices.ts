@@ -25,7 +25,7 @@ export const useUploadInvoice = () => {
         throw new Error('File size too large. Please upload a file smaller than 10MB.');
       }
       
-      // Create file path
+      // Create file path with user ID folder structure for security
       const fileExt = file.name.split('.').pop();
       const fileName = `${packageId}_${Date.now()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
@@ -49,7 +49,13 @@ export const useUploadInvoice = () => {
           uploaded_by: user.id,
         });
       
-      if (dbError) throw dbError;
+      if (dbError) {
+        // Clean up uploaded file if database insert fails
+        await supabase.storage
+          .from('invoices')
+          .remove([filePath]);
+        throw dbError;
+      }
 
       return { fileName: file.name, packageId };
     },
@@ -76,14 +82,22 @@ export const useDownloadInvoice = () => {
 
   return useMutation({
     mutationFn: async (filePath: string) => {
-      const { data, error } = await supabase.storage
+      // Use signed URL for secure download
+      const { data: signedUrl, error: urlError } = await supabase.storage
         .from('invoices')
-        .download(filePath);
+        .createSignedUrl(filePath, 60); // 60 seconds expiry
       
-      if (error) throw error;
+      if (urlError) throw urlError;
+      if (!signedUrl) throw new Error('Failed to generate download URL');
+      
+      // Download file using signed URL
+      const response = await fetch(signedUrl.signedUrl);
+      if (!response.ok) throw new Error('Failed to download file');
+      
+      const blob = await response.blob();
       
       // Create download URL
-      const url = URL.createObjectURL(data);
+      const url = URL.createObjectURL(blob);
       const fileName = filePath.split('/').pop() || 'invoice';
       const a = document.createElement('a');
       a.href = url;
@@ -108,6 +122,25 @@ export const useDownloadInvoice = () => {
         description: error.message || 'There was an error downloading the invoice. Please try again.',
         variant: 'destructive',
       });
+    },
+  });
+};
+
+export const useGetInvoiceUrl = () => {
+  return useMutation({
+    mutationFn: async (filePath: string) => {
+      // Generate signed URL for viewing
+      const { data: signedUrl, error } = await supabase.storage
+        .from('invoices')
+        .createSignedUrl(filePath, 300); // 5 minutes expiry for viewing
+      
+      if (error) throw error;
+      if (!signedUrl) throw new Error('Failed to generate view URL');
+      
+      return signedUrl.signedUrl;
+    },
+    onError: (error: Error) => {
+      console.error('Failed to generate invoice URL:', error);
     },
   });
 };
