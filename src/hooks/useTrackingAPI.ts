@@ -95,7 +95,7 @@ export const useCarrierDetection = () => {
     const cleaned = trackingNumber.replace(/\s/g, '').toUpperCase();
     
     // USPS patterns
-    if (/^(94|93|92|94|95)\d{20}$/.test(cleaned) || 
+    if (/^(94|93|92|95)\d{20}$/.test(cleaned) || 
         /^[A-Z]{2}\d{9}US$/.test(cleaned) ||
         /^(70|14|23|03)\d{14}$/.test(cleaned)) {
       return 'USPS';
