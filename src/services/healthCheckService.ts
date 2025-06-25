@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { MonitoringService } from './monitoringService';
 import { SecurityService } from './securityService';
@@ -287,13 +286,14 @@ export class HealthCheckService {
     try {
       // Check critical DOM elements and app state
       const appRoot = document.getElementById('root');
-      const hasReactErrors = document.querySelector('[data-reactroot]') === null;
+      const hasReactRoot = !!appRoot;
+      const hasReactErrors = false; // Remove data-reactroot logic for React 18+ compatibility
       
       const responseTime = Date.now() - startTime;
 
       let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
       
-      if (!appRoot || hasReactErrors) {
+      if (!hasReactRoot) {
         status = 'unhealthy';
       }
 
@@ -302,7 +302,7 @@ export class HealthCheckService {
         status,
         responseTime,
         details: {
-          domLoaded: !!appRoot,
+          domLoaded: hasReactRoot,
           reactMounted: !hasReactErrors,
           userAgent: navigator.userAgent.substring(0, 50)
         },
