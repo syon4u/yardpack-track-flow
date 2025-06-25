@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Package, Truck, MapPin, CheckCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,9 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
-type Package = Database['public']['Tables']['packages']['Row'] & {
-  profiles: Database['public']['Tables']['profiles']['Row'];
-};
+type PackageRow = Database['public']['Tables']['packages']['Row'];
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+
+interface PackageWithProfile extends PackageRow {
+  profiles: ProfileRow | null;
+}
 
 interface TrackingResultsProps {
   trackingNumber: string;
@@ -17,7 +19,7 @@ interface TrackingResultsProps {
 }
 
 const TrackingResults: React.FC<TrackingResultsProps> = ({ trackingNumber, onBack }) => {
-  const [packageData, setPackageData] = useState<Package | null>(null);
+  const [packageData, setPackageData] = useState<PackageWithProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -28,7 +30,10 @@ const TrackingResults: React.FC<TrackingResultsProps> = ({ trackingNumber, onBac
           .from('packages')
           .select(`
             *,
-            profiles!packages_customer_id_fkey(full_name, email)
+            customers!fk_packages_customer_id(
+              full_name,
+              email
+            )
           `)
           .eq('tracking_number', trackingNumber.trim())
           .single();
@@ -38,7 +43,22 @@ const TrackingResults: React.FC<TrackingResultsProps> = ({ trackingNumber, onBac
           return;
         }
 
-        setPackageData(data as Package);
+        // Transform the data to match our expected structure
+        const transformedData: PackageWithProfile = {
+          ...data,
+          profiles: data.customers ? {
+            id: '',
+            full_name: data.customers.full_name,
+            email: data.customers.email || '',
+            phone_number: null,
+            address: null,
+            role: 'customer' as const,
+            created_at: '',
+            updated_at: ''
+          } : null
+        };
+
+        setPackageData(transformedData);
       } catch (err) {
         setError('Failed to fetch package information.');
       } finally {
