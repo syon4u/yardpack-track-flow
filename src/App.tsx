@@ -16,6 +16,8 @@ import RouteErrorBoundary from "@/components/error/RouteErrorBoundary";
 import { HealthCheckService } from '@/services/healthCheckService';
 import { ConfigService } from '@/services/configService';
 import { MonitoringService } from '@/services/monitoringService';
+import { ProductionConfigService } from '@/services/productionConfigService';
+import { DataIntegrityService } from '@/services/dataIntegrityService';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -106,6 +108,21 @@ function App() {
         
         // Initialize performance monitoring
         MonitoringService.initializePerformanceMonitoring();
+        
+        // Set security headers for production
+        ProductionConfigService.setSecurityHeaders();
+        
+        // Optimize bundle performance
+        ProductionConfigService.optimizeBundlePerformance();
+        
+        // Run data integrity check on startup
+        setTimeout(async () => {
+          try {
+            await DataIntegrityService.runFullDataValidation();
+          } catch (error) {
+            console.warn('Data integrity check failed:', error);
+          }
+        }, 2000);
         
         console.log('Production services initialized successfully');
       } catch (error) {
