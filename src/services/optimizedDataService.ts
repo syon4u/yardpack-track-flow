@@ -306,104 +306,92 @@ export class OptimizedDataService {
   // Highly optimized stats fetching using database aggregation
   static async fetchOptimizedStats(): Promise<UnifiedStats> {
     try {
-      // Use manual aggregation since RPC doesn't exist
+      // Use manual aggregation with proper promise handling
       const [packageStatsResult, customerStatsResult, financialStatsResult] = await Promise.all([
-        Promise.resolve(
-          supabase
-            .from('packages')
-            .select('status, package_value, total_due')
-            .then(({ data, error }) => {
-              if (error) throw error;
-              
-              const stats = {
-                total: data?.length || 0,
-                received: 0,
-                in_transit: 0,
-                arrived: 0,
-                ready_for_pickup: 0,
-                picked_up: 0,
-              };
+        supabase
+          .from('packages')
+          .select('status, package_value, total_due')
+          .then(({ data, error }) => {
+            if (error) throw error;
+            
+            const stats = {
+              total: data?.length || 0,
+              received: 0,
+              in_transit: 0,
+              arrived: 0,
+              ready_for_pickup: 0,
+              picked_up: 0,
+            };
 
-              data?.forEach(pkg => {
-                if (pkg.status in stats) {
-                  stats[pkg.status as keyof typeof stats]++;
-                }
-              });
+            data?.forEach(pkg => {
+              if (pkg.status in stats) {
+                stats[pkg.status as keyof typeof stats]++;
+              }
+            });
 
-              return stats;
-            })
-        ),
+            return stats;
+          }),
         
-        Promise.resolve(
-          supabase
-            .from('customers')
-            .select(`
-              customer_type,
-              packages!fk_packages_customer_id(status)
-            `)
-            .then(({ data, error }) => {
-              if (error) throw error;
-              
-              const totalCustomers = data?.length || 0;
-              const registeredCustomers = data?.filter(customer => customer.customer_type === 'registered').length || 0;
-              const packageOnlyCustomers = data?.filter(customer => customer.customer_type === 'package_only').length || 0;
-              const activeCustomers = data?.filter(customer => {
-                const packages = customer.packages || [];
-                return packages.some((p: any) => 
-                  ['received', 'in_transit', 'arrived', 'ready_for_pickup'].includes(p.status)
-                );
-              }).length || 0;
+        supabase
+          .from('customers')
+          .select(`
+            customer_type,
+            packages!fk_packages_customer_id(status)
+          `)
+          .then(({ data, error }) => {
+            if (error) throw error;
+            
+            const totalCustomers = data?.length || 0;
+            const registeredCustomers = data?.filter(customer => customer.customer_type === 'registered').length || 0;
+            const packageOnlyCustomers = data?.filter(customer => customer.customer_type === 'package_only').length || 0;
+            const activeCustomers = data?.filter(customer => {
+              const packages = customer.packages || [];
+              return packages.some((p: any) => 
+                ['received', 'in_transit', 'arrived', 'ready_for_pickup'].includes(p.status)
+              );
+            }).length || 0;
 
-              return {
-                total: totalCustomers,
-                registered: registeredCustomers,
-                package_only: packageOnlyCustomers,
-                active: activeCustomers,
-              };
-            })
-        ),
+            return {
+              total: totalCustomers,
+              registered: registeredCustomers,
+              package_only: packageOnlyCustomers,
+              active: activeCustomers,
+            };
+          }),
 
-        Promise.resolve(
-          supabase
-            .from('packages')
-            .select('package_value, total_due, invoices!inner(id)')
-            .then(({ data, error }) => {
-              if (error) throw error;
-              
-              const totalValue = data?.reduce((sum, p) => sum + (p.package_value || 0), 0) || 0;
-              const totalDue = data?.reduce((sum, p) => sum + (p.total_due || 0), 0) || 0;
-              
-              // Count packages without invoices for pending invoices
-              return supabase
-                .from('packages')
-                .select('id, invoices(id)')
-                .then(({ data: packagesData, error: packagesError }) => {
-                  if (packagesError) throw packagesError;
-                  
-                  const pendingInvoices = packagesData?.filter(p => 
-                    !p.invoices || p.invoices.length === 0
-                  ).length || 0;
-                  
-                  return {
-                    total_value: totalValue,
-                    total_due: totalDue,
-                    pending_invoices: pendingInvoices,
-                  };
-                });
-            })
-        )
-      ]);
-
-      const [packageStats, customerStats, financialStats] = await Promise.all([
-        packageStatsResult,
-        customerStatsResult,
-        financialStatsResult
+        supabase
+          .from('packages')
+          .select('package_value, total_due, invoices!inner(id)')
+          .then(({ data, error }) => {
+            if (error) throw error;
+            
+            const totalValue = data?.reduce((sum, p) => sum + (p.package_value || 0), 0) || 0;
+            const totalDue = data?.reduce((sum, p) => sum + (p.total_due || 0), 0) || 0;
+            
+            // Count packages without invoices for pending invoices
+            return supabase
+              .from('packages')
+              .select('id, invoices(id)')
+              .then(({ data: packagesData, error: packagesError }) => {
+                if (packagesError) throw packagesError;
+                
+                const pendingInvoices = packagesData?.filter(p => 
+                  !p.invoices || p.invoices.length === 0
+                ).length || 0;
+                
+                return {
+                  total_value: totalValue,
+                  total_due: totalDue,
+                  pending_invoices: pendingInvoices,
+                };
+              });
+          })
       ]);
 
       return {
-        packages: packageStats,
-        customers: customerStats,
-        financial: financialStats,
+        packages: packageStatsResult,
+        customers: customerStatsResult,
+        financial: financialStatsResult,
       };
     } catch (error) {
       console.error('Error fetching optimized stats:', error);
