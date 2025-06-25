@@ -28,20 +28,63 @@ export class DataIntegrityService {
       if (orphanedPackages && orphanedPackages.length > 0) {
         issues.push(`Found ${orphanedPackages.length} packages with invalid customer references`);
         
-        // Create package-only customers for orphaned packages
+        // Process each orphaned package with proper validation
         for (const pkg of orphanedPackages) {
-          const { error: createError } = await supabase
-            .from('customers')
-            .insert({
-              id: pkg.customer_id,
-              customer_type: 'package_only',
-              full_name: 'Unknown Customer',
-              email: null,
-              user_id: null
-            });
+          if (!pkg.customer_id) {
+            console.warn(`Package ${pkg.id} has null customer_id, skipping...`);
+            continue;
+          }
 
-          if (!createError) {
-            fixedCount++;
+          try {
+            // First check if there's a profile for this customer_id
+            const { data: existingProfile, error: profileError } = await supabase
+              .from('profiles')
+              .select('id, full_name, email, phone_number, address')
+              .eq('id', pkg.customer_id)
+              .single();
+
+            if (!profileError && existingProfile) {
+              // Create a registered customer with profile data
+              const { error: createError } = await supabase
+                .from('customers')
+                .insert({
+                  id: pkg.customer_id,
+                  user_id: pkg.customer_id,
+                  full_name: existingProfile.full_name,
+                  email: existingProfile.email,
+                  phone_number: existingProfile.phone_number,
+                  address: existingProfile.address,
+                  customer_type: 'registered'
+                });
+
+              if (createError) {
+                console.error(`Failed to create registered customer for package ${pkg.id}:`, createError);
+              } else {
+                fixedCount++;
+                console.log(`Created registered customer for package ${pkg.id}`);
+              }
+            } else {
+              // Only create generic placeholder if no profile exists
+              const { error: createError } = await supabase
+                .from('customers')
+                .insert({
+                  id: pkg.customer_id,
+                  customer_type: 'package_only',
+                  full_name: 'Unknown Customer',
+                  email: null,
+                  user_id: null
+                });
+
+              if (createError) {
+                console.error(`Failed to create package-only customer for package ${pkg.id}:`, createError);
+              } else {
+                fixedCount++;
+                console.log(`Created package-only customer for package ${pkg.id}`);
+              }
+            }
+          } catch (error) {
+            console.error(`Error processing orphaned package ${pkg.id}:`, error);
+            // Continue processing other packages rather than failing completely
           }
         }
       }
