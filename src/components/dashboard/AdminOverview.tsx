@@ -1,13 +1,14 @@
-
 import React from 'react';
 import { useOptimizedStats } from '@/hooks/useOptimizedCustomers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Package, Users, TrendingUp, Clock, Plus, Scan } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const AdminOverview: React.FC = () => {
   const { data: stats, isLoading } = useOptimizedStats();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -39,6 +40,18 @@ const AdminOverview: React.FC = () => {
     registered: 0,
     package_only: 0,
     active: 0,
+  };
+
+  const handlePackageManagement = () => {
+    navigate('/dashboard?tab=packages');
+  };
+
+  const handleCustomerManagement = () => {
+    navigate('/dashboard?tab=customers');
+  };
+
+  const handleAnalytics = () => {
+    navigate('/dashboard?tab=analytics');
   };
 
   return (
@@ -125,7 +138,9 @@ const AdminOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">View, create, and manage all packages in the system</p>
-            <Button variant="outline" className="w-full">Manage Packages</Button>
+            <Button variant="outline" className="w-full" onClick={handlePackageManagement}>
+              Manage Packages
+            </Button>
           </CardContent>
         </Card>
 
@@ -138,7 +153,9 @@ const AdminOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">View customer profiles and manage accounts</p>
-            <Button variant="outline" className="w-full">Manage Customers</Button>
+            <Button variant="outline" className="w-full" onClick={handleCustomerManagement}>
+              Manage Customers
+            </Button>
           </CardContent>
         </Card>
 
@@ -151,7 +168,9 @@ const AdminOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">View detailed reports and analytics</p>
-            <Button variant="outline" className="w-full">View Analytics</Button>
+            <Button variant="outline" className="w-full" onClick={handleAnalytics}>
+              View Analytics
+            </Button>
           </CardContent>
         </Card>
       </div>
