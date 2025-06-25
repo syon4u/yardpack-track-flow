@@ -16,22 +16,26 @@ export class UnifiedDataService {
   // Fetch all customers (registered + package-only)
   static async fetchAllCustomers(): Promise<UnifiedCustomer[]> {
     try {
-      // Get registered users with their packages
+      // Get registered users with their packages using the new FK constraints
       const { data: registeredUsers, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           *,
-          packages!packages_customer_id_fkey(*)
+          customers!fk_customers_user_id(
+            id,
+            packages!fk_packages_customer_id(*)
+          )
         `);
 
       if (profilesError) throw profilesError;
 
-      // Get all packages to find non-registered customers
+      // Get all packages to find non-registered customers using the new FK constraints
       const { data: allPackages, error: packagesError } = await supabase
         .from('packages')
         .select(`
           *,
-          invoices(*)
+          customers!fk_packages_customer_id(*),
+          invoices!fk_invoices_package_id(*)
         `);
 
       if (packagesError) throw packagesError;
@@ -40,8 +44,11 @@ export class UnifiedDataService {
 
       // Process registered users
       registeredUsers?.forEach(user => {
+        // Get packages from the customer relationship if it exists
+        const userPackages = user.customers?.[0]?.packages || [];
+        
         // Add invoices to packages for registered users
-        const packagesWithInvoices = (user.packages || []).map(pkg => ({
+        const packagesWithInvoices = userPackages.map((pkg: any) => ({
           ...pkg,
           invoices: []
         }));
@@ -64,7 +71,11 @@ export class UnifiedDataService {
 
       allPackages?.forEach(pkg => {
         // Skip if this package belongs to a registered user
-        if (customerMap.has(pkg.customer_id)) return;
+        const hasRegisteredCustomer = registeredUsers?.some(user => 
+          user.customers?.[0]?.id === pkg.customer_id
+        );
+        
+        if (hasRegisteredCustomer) return;
 
         const customerKey = `${pkg.sender_name || 'Unknown'}_${pkg.delivery_address}`;
         
@@ -116,8 +127,18 @@ export class UnifiedDataService {
         .from('packages')
         .select(`
           *,
-          profiles:customer_id(full_name, email, address, created_at, id, phone_number, role, updated_at),
-          invoices(*)
+          customers!fk_packages_customer_id(
+            id,
+            full_name,
+            email,
+            address,
+            phone_number,
+            customer_type,
+            created_at,
+            updated_at,
+            user_id
+          ),
+          invoices!fk_invoices_package_id(*)
         `)
         .order('created_at', { ascending: false });
 
@@ -146,10 +167,25 @@ export class UnifiedDataService {
 
       if (error) throw error;
 
-      return (data || []).map(pkg => transformPackageToUnified({
-        ...pkg,
-        invoices: pkg.invoices || []
-      }));
+      return (data || []).map(pkg => {
+        // Transform the customer data to match the profile format expected by transformPackageToUnified
+        const transformedPkg = {
+          ...pkg,
+          profiles: pkg.customers ? {
+            full_name: pkg.customers.full_name,
+            email: pkg.customers.email || '',
+            address: pkg.customers.address || '',
+            created_at: pkg.customers.created_at,
+            id: pkg.customers.id,
+            phone_number: pkg.customers.phone_number || '',
+            role: 'customer' as const,
+            updated_at: pkg.customers.updated_at
+          } : null,
+          invoices: pkg.invoices || []
+        };
+
+        return transformPackageToUnified(transformedPkg);
+      });
     } catch (error) {
       console.error('Error fetching packages:', error);
       throw error;
