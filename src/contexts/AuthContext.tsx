@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,6 +54,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       setProfile(data);
+      if (import.meta.env.DEV) {
+        console.log('✅ Profile loaded:', data);
+      }
       await MonitoringService.logUserActivity('profile_loaded', 'profile', userId);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -61,19 +65,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('🔄 AuthProvider useEffect running - initializing auth...');
+    }
+
     // Initialize monitoring
     MonitoringService.initializePerformanceMonitoring();
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
+        if (import.meta.env.DEV) {
+          console.log('🔐 Auth state changed:', event, 'Session:', session?.user?.email || 'No session');
+        }
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           // Generate CSRF token for authenticated users
           SecurityService.setCSRFToken();
+          
+          if (import.meta.env.DEV) {
+            console.log('👤 User set:', session.user.email);
+          }
           
           // Defer profile fetching to avoid blocking
           setTimeout(() => {
@@ -84,6 +98,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } else {
           setProfile(null);
           SecurityService.clearSecurityData();
+          if (import.meta.env.DEV) {
+            console.log('🚪 User logged out, profile cleared');
+          }
         }
         
         setIsLoading(false);
@@ -91,17 +108,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        SecurityService.setCSRFToken();
-        fetchProfile(session.user.id);
-      }
-      
-      setIsLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        if (import.meta.env.DEV) {
+          console.log('🔍 Initial session check:', session?.user?.email || 'No existing session');
+        }
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          SecurityService.setCSRFToken();
+          if (import.meta.env.DEV) {
+            console.log('👤 Initial user set:', session.user.email);
+          }
+          fetchProfile(session.user.id);
+        } else {
+          if (import.meta.env.DEV) {
+            console.log('❌ No initial session found');
+          }
+        }
+      })
+      .catch((error) => {
+        console.error('Error getting initial session:', error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+        if (import.meta.env.DEV) {
+          console.log('✅ Auth initialization complete, loading set to false');
+        }
+      });
 
     return () => {
       subscription.unsubscribe();
