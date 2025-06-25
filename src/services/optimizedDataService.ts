@@ -42,10 +42,10 @@ function sanitizeSearchTerm(term: string): string {
   return term.replace(/[%_]/g, '\\$&').replace(/[,]/g, '\\,');
 }
 
-// Helper function to create query with timeout
-function createQueryWithTimeout<T>(queryPromise: Promise<T>, timeoutMs: number = 10000): Promise<T> {
+// Helper function to create query with timeout - fixed to handle PromiseLike
+function createQueryWithTimeout<T>(queryPromise: PromiseLike<T>, timeoutMs: number = 10000): Promise<T> {
   return Promise.race([
-    queryPromise,
+    Promise.resolve(queryPromise),
     new Promise<never>((_, reject) => 
       setTimeout(() => reject(new Error('Query timeout')), timeoutMs)
     )
