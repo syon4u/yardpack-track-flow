@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -18,6 +19,7 @@ import { ConfigService } from '@/services/configService';
 import { MonitoringService } from '@/services/monitoringService';
 import { ProductionConfigService } from '@/services/productionConfigService';
 import { DataIntegrityService } from '@/services/dataIntegrityService';
+import { EnvironmentValidationService } from '@/services/environmentValidationService';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,10 +33,26 @@ const queryClient = new QueryClient({
 const AppContent: React.FC = () => {
   const { user, profile, isLoading } = useAuth();
 
+  // Validate environment on component mount
+  useEffect(() => {
+    EnvironmentValidationService.logValidationResults();
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-green-900">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-400"></div>
+      </div>
+    );
+  }
+
+  // Check for environment configuration errors
+  const { hasErrors, component: ErrorComponent } = EnvironmentValidationService.getValidationComponent();
+  
+  if (hasErrors && ErrorComponent) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <ErrorComponent />
       </div>
     );
   }
@@ -100,6 +118,13 @@ function App() {
     // Initialize production-ready services
     const initializeProductionServices = async () => {
       try {
+        // Validate environment first
+        const validation = EnvironmentValidationService.validateEnvironment();
+        if (!validation.isValid) {
+          console.error('Environment validation failed:', validation.errors);
+          return;
+        }
+        
         // Initialize configuration
         await ConfigService.initializeConfig();
         

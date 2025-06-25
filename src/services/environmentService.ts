@@ -31,13 +31,17 @@ export class EnvironmentService {
       appUrl += `:${port}`;
     }
 
+    // Use hardcoded values for now (these should eventually come from environment variables)
+    const supabaseUrl = 'https://lkvelwwrztkmnvgeknpa.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrdmVsd3dyenRrbW52Z2VrbnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MDU5MDksImV4cCI6MjA2NjI4MTkwOX0.FYncO6mPqw5mJr4ek8kQdgvdo15nXU42vqq-TUtwuts';
+
     this.config = {
       isDevelopment,
       isStaging,
       isProduction,
       appUrl,
-      supabaseUrl: 'https://lkvelwwrztkmnvgeknpa.supabase.co',
-      supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrdmVsd3dyenRrbW52Z2VrbnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MDU5MDksImV4cCI6MjA2NjI4MTkwOX0.FYncO6mPqw5mJr4ek8kQdgvdo15nXU42vqq-TUtwuts'
+      supabaseUrl,
+      supabaseAnonKey
     };
 
     return this.config;
@@ -65,7 +69,8 @@ export class EnvironmentService {
       hostname: window.location.hostname,
       isDevelopment: config.isDevelopment,
       isStaging: config.isStaging,
-      isProduction: config.isProduction
+      isProduction: config.isProduction,
+      supabaseConfigured: !!config.supabaseUrl && !!config.supabaseAnonKey
     });
 
     if (config.isProduction) {
@@ -75,5 +80,56 @@ export class EnvironmentService {
     } else {
       console.log('🛠️ Running in DEVELOPMENT mode');
     }
+
+    // Validate Supabase configuration
+    if (!config.supabaseUrl || !config.supabaseAnonKey) {
+      console.error('❌ Supabase configuration is incomplete');
+    } else {
+      console.log('✅ Supabase configuration is present');
+    }
+  }
+
+  static validateSupabaseConnection(): Promise<boolean> {
+    return new Promise((resolve) => {
+      try {
+        const config = this.getEnvironmentConfig();
+        
+        // Basic URL validation
+        if (!config.supabaseUrl || !config.supabaseUrl.startsWith('https://')) {
+          console.error('❌ Invalid Supabase URL');
+          resolve(false);
+          return;
+        }
+
+        if (!config.supabaseAnonKey || config.supabaseAnonKey.length < 50) {
+          console.error('❌ Invalid Supabase Anon Key');
+          resolve(false);
+          return;
+        }
+
+        // Test network connectivity to Supabase
+        fetch(`${config.supabaseUrl}/rest/v1/`, {
+          method: 'HEAD',
+          headers: {
+            'apikey': config.supabaseAnonKey
+          }
+        }).then(response => {
+          if (response.ok || response.status === 404) {
+            console.log('✅ Supabase connectivity test passed');
+            resolve(true);
+          } else {
+            console.error('❌ Supabase connectivity test failed:', response.status);
+            resolve(false);
+          }
+        }).catch(error => {
+          console.error('❌ Supabase connectivity test error:', error);
+          resolve(false);
+        });
+
+      } catch (error) {
+        console.error('❌ Supabase validation error:', error);
+        resolve(false);
+      }
+    });
   }
 }
