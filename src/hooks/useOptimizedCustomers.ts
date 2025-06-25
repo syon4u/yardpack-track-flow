@@ -1,63 +1,73 @@
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect } from 'react';
-import { OptimizedDataService, CustomerFilters, PaginationOptions } from '@/services/optimizedDataService';
+import { useQuery } from '@tanstack/react-query';
+import { OptimizedDataService } from '@/services/optimizedDataService';
+import { useToast } from '@/hooks/use-toast';
 
-export const useOptimizedCustomers = (
-  filters: CustomerFilters = {},
-  pagination: PaginationOptions = { page: 1, limit: 50 }
-) => {
-  const queryClient = useQueryClient();
-
-  const queryKey = ['customers-optimized', filters, pagination];
-
-  const query = useQuery({
-    queryKey,
-    queryFn: () => OptimizedDataService.measureQueryPerformance(
-      'fetchCustomersPaginated',
-      () => OptimizedDataService.fetchCustomersPaginated(filters, pagination)
-    ),
-    staleTime: 60000, // 1 minute - customers change less frequently
-    gcTime: 600000, // 10 minutes
-    refetchOnWindowFocus: false,
+export const useOptimizedStats = () => {
+  const { toast } = useToast();
+  
+  return useQuery({
+    queryKey: ['optimized-stats'],
+    queryFn: async () => {
+      try {
+        return await OptimizedDataService.fetchOptimizedStats();
+      } catch (error) {
+        console.error('Failed to load admin stats:', error);
+        toast({
+          title: "Error",
+          description: "Unable to fetch admin statistics",
+          variant: "destructive",
+        });
+        throw error;
+      }
+    },
+    staleTime: 30000, // 30 seconds
+    retry: 2,
   });
-
-  // Prefetch next page
-  const prefetchNextPage = useCallback(() => {
-    if (query.data?.pagination.hasNext) {
-      const nextPagination = { ...pagination, page: pagination.page + 1 };
-      queryClient.prefetchQuery({
-        queryKey: ['customers-optimized', filters, nextPagination],
-        queryFn: () => OptimizedDataService.fetchCustomersPaginated(filters, nextPagination),
-        staleTime: 60000,
-      });
-    }
-  }, [query.data?.pagination.hasNext, pagination, filters, queryClient]);
-
-  useEffect(() => {
-    if (query.data && !query.isFetching) {
-      prefetchNextPage();
-    }
-  }, [query.data, query.isFetching, prefetchNextPage]);
-
-  return {
-    ...query,
-    customers: query.data?.data || [],
-    pagination: query.data?.pagination,
-    prefetchNextPage,
-  };
 };
 
-// Hook for customer statistics with caching
-export const useOptimizedStats = () => {
+export const useOptimizedPackages = (filters = {}, pagination = { page: 1, limit: 50 }) => {
+  const { toast } = useToast();
+  
   return useQuery({
-    queryKey: ['stats-optimized'],
-    queryFn: () => OptimizedDataService.measureQueryPerformance(
-      'fetchOptimizedStats',
-      () => OptimizedDataService.fetchOptimizedStats()
-    ),
-    staleTime: 120000, // 2 minutes - stats don't change very frequently
-    gcTime: 600000, // 10 minutes
-    refetchInterval: 300000, // Refetch every 5 minutes
+    queryKey: ['optimized-packages', filters, pagination],
+    queryFn: async () => {
+      try {
+        return await OptimizedDataService.fetchPackagesPaginated(filters, pagination);
+      } catch (error) {
+        console.error('Failed to load packages:', error);
+        toast({
+          title: "Error",
+          description: "Unable to fetch packages data",
+          variant: "destructive",
+        });
+        throw error;
+      }
+    },
+    staleTime: 30000,
+    retry: 2,
+  });
+};
+
+export const useOptimizedCustomers = (filters = {}, pagination = { page: 1, limit: 50 }) => {
+  const { toast } = useToast();
+  
+  return useQuery({
+    queryKey: ['optimized-customers', filters, pagination],
+    queryFn: async () => {
+      try {
+        return await OptimizedDataService.fetchCustomersPaginated(filters, pagination);
+      } catch (error) {
+        console.error('Failed to load customers:', error);
+        toast({
+          title: "Error",
+          description: "Unable to fetch customers data",
+          variant: "destructive",
+        });
+        throw error;
+      }
+    },
+    staleTime: 30000,
+    retry: 2,
   });
 };
