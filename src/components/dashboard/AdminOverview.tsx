@@ -12,6 +12,7 @@ const AdminOverview: React.FC = () => {
   const { data: stats, isLoading, error } = useOptimizedStats();
 
   React.useEffect(() => {
+    console.log("Is loading:", isLoading, "Data:", stats, "Error:", error);
     console.log('AdminOverview - Effect running', { stats, isLoading, error });
     
     // Add error handling for potential runtime issues

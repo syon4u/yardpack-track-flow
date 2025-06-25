@@ -10,6 +10,7 @@ const AdminDashboardStats: React.FC = () => {
   const { data: stats, isLoading, error } = useOptimizedStats();
 
   React.useEffect(() => {
+    console.log("Is loading:", isLoading, "Data:", stats, "Error:", error);
     console.log('AdminDashboardStats - Effect running', { stats, isLoading, error });
     
     // Add error handling for potential runtime issues

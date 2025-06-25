@@ -17,6 +17,7 @@ const CustomerOverview: React.FC = () => {
   );
 
   React.useEffect(() => {
+    console.log("Is loading:", isLoading, "Data:", packageData, "Error:", error);
     console.log('CustomerOverview - Effect running', { 
       profileId: profile?.id, 
       packageData, 
