@@ -31,9 +31,17 @@ export class EnvironmentService {
       appUrl += `:${port}`;
     }
 
-    // Use hardcoded values for now (these should eventually come from environment variables)
-    const supabaseUrl = 'https://lkvelwwrztkmnvgeknpa.supabase.co';
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrdmVsd3dyenRrbW52Z2VrbnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MDU5MDksImV4cCI6MjA2NjI4MTkwOX0.FYncO6mPqw5mJr4ek8kQdgvdo15nXU42vqq-TUtwuts';
+    // Get environment variables
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+    // Validate required environment variables
+    if (!supabaseUrl) {
+      console.error('❌ VITE_SUPABASE_URL environment variable is missing');
+    }
+    if (!supabaseAnonKey) {
+      console.error('❌ VITE_SUPABASE_ANON_KEY environment variable is missing');
+    }
 
     this.config = {
       isDevelopment,
@@ -83,9 +91,10 @@ export class EnvironmentService {
 
     // Validate Supabase configuration
     if (!config.supabaseUrl || !config.supabaseAnonKey) {
-      console.error('❌ Supabase configuration is incomplete');
+      console.error('❌ Supabase environment variables are missing');
+      console.error('Required: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
     } else {
-      console.log('✅ Supabase configuration is present');
+      console.log('✅ Supabase environment variables are present');
     }
   }
 
@@ -96,13 +105,13 @@ export class EnvironmentService {
         
         // Basic URL validation
         if (!config.supabaseUrl || !config.supabaseUrl.startsWith('https://')) {
-          console.error('❌ Invalid Supabase URL');
+          console.error('❌ Invalid or missing VITE_SUPABASE_URL environment variable');
           resolve(false);
           return;
         }
 
         if (!config.supabaseAnonKey || config.supabaseAnonKey.length < 50) {
-          console.error('❌ Invalid Supabase Anon Key');
+          console.error('❌ Invalid or missing VITE_SUPABASE_ANON_KEY environment variable');
           resolve(false);
           return;
         }

@@ -3,18 +3,18 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://lkvelwwrztkmnvgeknpa.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrdmVsd3dyenRrbW52Z2VrbnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MDU5MDksImV4cCI6MjA2NjI4MTkwOX0.FYncO6mPqw5mJr4ek8kQdgvdo15nXU42vqq-TUtwuts";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validate configuration before creating client
 if (!SUPABASE_URL) {
-  console.error('❌ SUPABASE_URL is not configured');
-  throw new Error('Supabase URL is required');
+  console.error('❌ VITE_SUPABASE_URL environment variable is not configured');
+  throw new Error('Supabase URL environment variable is required');
 }
 
 if (!SUPABASE_PUBLISHABLE_KEY) {
-  console.error('❌ SUPABASE_PUBLISHABLE_KEY is not configured');
-  throw new Error('Supabase publishable key is required');
+  console.error('❌ VITE_SUPABASE_ANON_KEY environment variable is not configured');
+  throw new Error('Supabase publishable key environment variable is required');
 }
 
 console.log('🔗 Initializing Supabase client with URL:', SUPABASE_URL);

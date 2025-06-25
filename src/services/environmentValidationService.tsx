@@ -22,20 +22,20 @@ export class EnvironmentValidationService {
     // Get environment configuration
     const envConfig = EnvironmentService.getEnvironmentConfig();
     
-    // Check for required Supabase configuration
+    // Check for required Supabase environment variables
     const supabaseUrl = envConfig.supabaseUrl;
     const supabaseAnonKey = envConfig.supabaseAnonKey;
     
     if (!supabaseUrl) {
-      errors.push('SUPABASE_URL is not configured');
+      errors.push('VITE_SUPABASE_URL environment variable is not configured');
     } else if (!supabaseUrl.startsWith('https://')) {
-      errors.push('SUPABASE_URL must be a valid HTTPS URL');
+      errors.push('VITE_SUPABASE_URL must be a valid HTTPS URL');
     }
     
     if (!supabaseAnonKey) {
-      errors.push('SUPABASE_ANON_KEY is not configured');
+      errors.push('VITE_SUPABASE_ANON_KEY environment variable is not configured');
     } else if (supabaseAnonKey.length < 100) {
-      warnings.push('SUPABASE_ANON_KEY appears to be too short - verify it is correct');
+      warnings.push('VITE_SUPABASE_ANON_KEY appears to be too short - verify it is correct');
     }
     
     // Check environment-specific configurations
@@ -114,6 +114,16 @@ export class EnvironmentValidationService {
                 </ul>
               </>
             )}
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+              <p className="text-blue-800 text-sm font-medium">To fix this locally:</p>
+              <p className="text-blue-700 text-sm mt-1">
+                Set the following environment variables in your development environment:
+              </p>
+              <ul className="text-blue-700 text-sm mt-2 font-mono">
+                <li>VITE_SUPABASE_URL=https://lkvelwwrztkmnvgeknpa.supabase.co</li>
+                <li>VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</li>
+              </ul>
+            </div>
           </div>
         )
       };
