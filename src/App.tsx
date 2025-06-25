@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +13,9 @@ import WarehousePage from "@/pages/WarehousePage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "@/components/error/ErrorBoundary";
 import RouteErrorBoundary from "@/components/error/RouteErrorBoundary";
+import { HealthCheckService } from '@/services/healthCheckService';
+import { ConfigService } from '@/services/configService';
+import { MonitoringService } from '@/services/monitoringService';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,7 +93,34 @@ const AppContent: React.FC = () => {
   );
 };
 
-const App: React.FC = () => {
+function App() {
+  useEffect(() => {
+    // Initialize production-ready services
+    const initializeProductionServices = async () => {
+      try {
+        // Initialize configuration
+        await ConfigService.initializeConfig();
+        
+        // Start periodic health checks
+        HealthCheckService.startPeriodicHealthChecks(5); // Every 5 minutes
+        
+        // Initialize performance monitoring
+        MonitoringService.initializePerformanceMonitoring();
+        
+        console.log('Production services initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize production services:', error);
+      }
+    };
+
+    initializeProductionServices();
+
+    // Cleanup on unmount
+    return () => {
+      MonitoringService.cleanup();
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
