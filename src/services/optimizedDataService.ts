@@ -53,12 +53,12 @@ export class OptimizedDataService {
       const { page, limit } = pagination;
       const offset = (page - 1) * limit;
 
-      // Build the query with proper joins
+      // Build the query with proper joins using the correct FK
       let query = supabase
         .from('packages')
         .select(`
           *,
-          profiles!packages_customer_id_fkey(
+          customers!fk_packages_customer_id(
             id,
             full_name,
             email,
@@ -128,8 +128,8 @@ export class OptimizedDataService {
         delivery_estimate: pkg.delivery_estimate,
         actual_delivery: pkg.actual_delivery,
         customer_id: pkg.customer_id,
-        customer_name: pkg.profiles?.full_name || 'Unknown Customer',
-        customer_email: pkg.profiles?.email || null,
+        customer_name: pkg.customers?.full_name || 'Unknown Customer',
+        customer_email: pkg.customers?.email || null,
         sender_name: pkg.sender_name,
         sender_address: pkg.sender_address,
         delivery_address: pkg.delivery_address,
@@ -146,13 +146,13 @@ export class OptimizedDataService {
         notes: pkg.notes,
         api_sync_status: pkg.api_sync_status,
         last_api_sync: pkg.last_api_sync,
-        profiles: pkg.profiles ? {
-          full_name: pkg.profiles.full_name,
-          email: pkg.profiles.email,
-          address: pkg.profiles.address,
+        profiles: pkg.customers ? {
+          full_name: pkg.customers.full_name,
+          email: pkg.customers.email,
+          address: pkg.customers.address,
           created_at: pkg.created_at,
           id: pkg.customer_id,
-          phone_number: pkg.profiles.phone_number,
+          phone_number: pkg.customers.phone_number,
           role: 'customer' as const,
           updated_at: pkg.updated_at
         } : null,
