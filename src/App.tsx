@@ -79,7 +79,15 @@ const AppContent: React.FC = () => {
             <Route 
               path="/admin" 
               element={
-                profile?.role === 'admin' ? (
+                // Show loading if user exists but profile is still loading
+                profile === null ? (
+                  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading admin dashboard...</p>
+                    </div>
+                  </div>
+                ) : profile.role === 'admin' ? (
                   <RouteErrorBoundary>
                     <Layout><Dashboard /></Layout>
                   </RouteErrorBoundary>
@@ -91,7 +99,15 @@ const AppContent: React.FC = () => {
             <Route 
               path="/warehouse" 
               element={
-                profile?.role === 'admin' ? (
+                // Show loading if user exists but profile is still loading
+                profile === null ? (
+                  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading warehouse access...</p>
+                    </div>
+                  </div>
+                ) : profile.role === 'admin' ? (
                   <RouteErrorBoundary>
                     <Layout><WarehousePage /></Layout>
                   </RouteErrorBoundary>
