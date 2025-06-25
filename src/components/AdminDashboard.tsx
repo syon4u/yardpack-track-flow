@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import PackageList from './PackageList';
@@ -7,6 +8,7 @@ import AdminDashboardStats from './admin/AdminDashboardStats';
 import AdminPackageFilters from './admin/AdminPackageFilters';
 import AdminDashboardTester from './admin/AdminDashboardTester';
 import CustomerRLSTest from './admin/CustomerRLSTest';
+import ServiceRoleRLSTest from './admin/ServiceRoleRLSTest';
 
 const AdminDashboard: React.FC = () => {
   const { profile, isLoading } = useAuth();
@@ -15,6 +17,7 @@ const AdminDashboard: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showTester, setShowTester] = useState(false);
   const [showRLSTest, setShowRLSTest] = useState(false);
+  const [showServiceRoleTest, setShowServiceRoleTest] = useState(false);
 
   // Show loading while auth is still being determined
   if (isLoading) {
@@ -54,21 +57,28 @@ const AdminDashboard: React.FC = () => {
       <AdminDashboardStats />
 
       {/* Add test suite toggles */}
-      <div className="flex justify-end gap-4">
+      <div className="flex justify-end gap-4 text-sm">
+        <button
+          onClick={() => setShowServiceRoleTest(!showServiceRoleTest)}
+          className="text-orange-600 hover:text-orange-800 underline"
+        >
+          {showServiceRoleTest ? 'Hide' : 'Show'} Service Role Tests
+        </button>
         <button
           onClick={() => setShowRLSTest(!showRLSTest)}
-          className="text-sm text-blue-600 hover:text-blue-800 underline"
+          className="text-blue-600 hover:text-blue-800 underline"
         >
           {showRLSTest ? 'Hide' : 'Show'} Customer RLS Tests
         </button>
         <button
           onClick={() => setShowTester(!showTester)}
-          className="text-sm text-blue-600 hover:text-blue-800 underline"
+          className="text-blue-600 hover:text-blue-800 underline"
         >
           {showTester ? 'Hide' : 'Show'} Performance Tests
         </button>
       </div>
 
+      {showServiceRoleTest && <ServiceRoleRLSTest />}
       {showRLSTest && <CustomerRLSTest />}
       {showTester && <AdminDashboardTester />}
 
