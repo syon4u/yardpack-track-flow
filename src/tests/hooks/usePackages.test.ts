@@ -13,13 +13,15 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: React.ReactNode }) => {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>{children}</AuthProvider>
-      </QueryClientProvider>
+  const Wrapper = ({ children }: { children: React.ReactNode }) => {
+    return React.createElement(
+      QueryClientProvider,
+      { client: queryClient },
+      React.createElement(AuthProvider, null, children)
     );
   };
+
+  return Wrapper;
 };
 
 describe('usePackages', () => {
