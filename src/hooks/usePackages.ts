@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
 
@@ -130,6 +131,15 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
 
 export const useUpdatePackageStatus = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const statusLabels = {
+    received: 'Received at Miami',
+    in_transit: 'In Transit',
+    arrived: 'Arrived in Jamaica',
+    ready_for_pickup: 'Ready for Pickup',
+    picked_up: 'Picked Up'
+  };
   
   return useMutation({
     mutationFn: async ({ packageId, status }: { packageId: string; status: PackageStatus }) => {
@@ -141,15 +151,32 @@ export const useUpdatePackageStatus = () => {
         .eq('id', packageId);
       
       if (error) throw error;
+
+      return { packageId, status };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['packages'] });
+      const statusLabel = statusLabels[data.status] || data.status;
+      toast({
+        title: 'Package status updated',
+        description: `Package has been marked as "${statusLabel}".`,
+      });
+    },
+    onError: (error: Error, variables) => {
+      console.error('Package status update failed:', error);
+      const statusLabel = statusLabels[variables.status] || variables.status;
+      toast({
+        title: 'Status update failed',
+        description: `Failed to update package status to "${statusLabel}". ${error.message || 'Please try again.'}`,
+        variant: 'destructive',
+      });
     },
   });
 };
 
 export const useCreatePackage = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (packageData: {
@@ -177,8 +204,20 @@ export const useCreatePackage = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['packages'] });
+      toast({
+        title: 'Package created successfully',
+        description: `Package ${data.tracking_number} has been added to the system.`,
+      });
+    },
+    onError: (error: Error) => {
+      console.error('Package creation failed:', error);
+      toast({
+        title: 'Package creation failed',
+        description: error.message || 'There was an error creating the package. Please try again.',
+        variant: 'destructive',
+      });
     },
   });
 };
