@@ -101,8 +101,8 @@ export const useCarrierDetection = () => {
       return 'USPS';
     }
     
-    // FedEx patterns
-    if (/^\d{12,14}$/.test(cleaned) || 
+    // FedEx patterns - updated to include 15-digit numbers
+    if (/^\d{12,15}$/.test(cleaned) || 
         /^\d{20}$/.test(cleaned) ||
         /^61\d{8}$/.test(cleaned)) {
       return 'FEDEX';
