@@ -68,9 +68,15 @@ export const useOptimizedPackages = (
         query = query.or(`tracking_number.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,external_tracking_number.ilike.%${searchTerm}%`);
       }
 
-      // Apply status filter
+      // Apply status filter with proper type checking
       if (statusFilter && statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+        const validStatuses: Database['public']['Enums']['package_status'][] = [
+          'received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'
+        ];
+        
+        if (validStatuses.includes(statusFilter as Database['public']['Enums']['package_status'])) {
+          query = query.eq('status', statusFilter);
+        }
       }
 
       // Apply pagination

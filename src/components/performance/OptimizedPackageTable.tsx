@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 import { VirtualizedTable } from './VirtualizedTable';
@@ -28,13 +27,11 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
   // Debounce search term to avoid excessive API calls
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Fetch optimized packages
+  // Fetch optimized packages - destructure the query result properly
   const {
-    packages,
-    pagination,
+    data: queryResult,
     isLoading,
     error,
-    prefetchNextPage,
   } = useOptimizedPackages(
     {
       searchTerm: debouncedSearchTerm,
@@ -46,6 +43,14 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       limit: pageSize,
     }
   );
+
+  const packages = queryResult?.data || [];
+  const pagination = queryResult ? {
+    page: currentPage,
+    totalPages: Math.ceil(queryResult.total / pageSize),
+    total: queryResult.total,
+    hasMore: queryResult.hasMore
+  } : null;
 
   // Define table columns
   const columns = useMemo(() => [
@@ -120,7 +125,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
     setCurrentPage(page);
     // Prefetch next page when user navigates
     if (page === currentPage + 1) {
-      prefetchNextPage();
+      // prefetchNextPage();  // prefetchNextPage is not defined anymore
     }
   };
 

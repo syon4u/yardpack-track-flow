@@ -116,7 +116,7 @@ export class UnifiedDataService {
         .from('packages')
         .select(`
           *,
-          profiles:customer_id(full_name, email, address, created_at, id, phone_number, role, updated_at),
+          profiles:customer_id(*),
           invoices(*)
         `)
         .order('created_at', { ascending: false });
@@ -146,10 +146,18 @@ export class UnifiedDataService {
 
       if (error) throw error;
 
-      return (data || []).map(pkg => transformPackageToUnified({
-        ...pkg,
-        invoices: pkg.invoices || []
-      }));
+      return (data || []).map(pkg => {
+        // Handle the case where profiles might be null or have errors
+        const profileData = pkg.profiles && typeof pkg.profiles === 'object' && !('error' in pkg.profiles) 
+          ? pkg.profiles 
+          : null;
+          
+        return transformPackageToUnified({
+          ...pkg,
+          profiles: profileData,
+          invoices: pkg.invoices || []
+        });
+      });
     } catch (error) {
       console.error('Error fetching packages:', error);
       throw error;

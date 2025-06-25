@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
-type Package = Database['public']['Tables']['packages']['Row'] & {
-  profiles: Database['public']['Tables']['profiles']['Row'];
+type PackageData = Database['public']['Tables']['packages']['Row'] & {
+  profiles: Database['public']['Tables']['profiles']['Row'] | null;
 };
 
 interface TrackingResultsProps {
@@ -17,7 +17,7 @@ interface TrackingResultsProps {
 }
 
 const TrackingResults: React.FC<TrackingResultsProps> = ({ trackingNumber, onBack }) => {
-  const [packageData, setPackageData] = useState<Package | null>(null);
+  const [packageData, setPackageData] = useState<PackageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -28,7 +28,7 @@ const TrackingResults: React.FC<TrackingResultsProps> = ({ trackingNumber, onBac
           .from('packages')
           .select(`
             *,
-            profiles!packages_customer_id_fkey(full_name, email)
+            profiles!packages_customer_id_fkey(*)
           `)
           .eq('tracking_number', trackingNumber.trim())
           .single();
@@ -38,7 +38,7 @@ const TrackingResults: React.FC<TrackingResultsProps> = ({ trackingNumber, onBac
           return;
         }
 
-        setPackageData(data as Package);
+        setPackageData(data);
       } catch (err) {
         setError('Failed to fetch package information.');
       } finally {
