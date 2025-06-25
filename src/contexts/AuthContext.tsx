@@ -20,126 +20,51 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  // Authentication disabled - provide mock values
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { profile, setProfile, fetchProfile } = useProfileFetch();
+  const [isLoading, setIsLoading] = useState(false); // No loading needed
+  const [profile, setProfile] = useState<any>({
+    id: 'mock-admin-id',
+    email: 'admin@example.com',
+    full_name: 'Mock Admin',
+    role: 'admin'
+  });
 
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.log('🔄 AuthProvider useEffect running - initializing auth...');
+      console.log('🚫 AuthProvider: Authentication disabled, using mock admin profile');
     }
-
-    // Initialize monitoring
+    
+    // Initialize monitoring without auth requirements
     MonitoringService.initializePerformanceMonitoring();
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (import.meta.env.DEV) {
-          console.log('🔐 Auth state changed:', event, 'Session:', session?.user?.email || 'No session');
-        }
-        
-        // Log session details whenever auth state changes
-        await logSessionDetails();
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Generate CSRF token for authenticated users
-          SecurityService.setCSRFToken();
-          
-          if (import.meta.env.DEV) {
-            console.log('👤 User set:', session.user.email);
-          }
-          
-          // Defer profile fetching to avoid blocking
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
-
-          await MonitoringService.logUserActivity('auth_state_changed', 'auth', session.user.id, { event });
-        } else {
-          setProfile(null);
-          SecurityService.clearSecurityData();
-          if (import.meta.env.DEV) {
-            console.log('🚪 User logged out, profile cleared');
-          }
-        }
-        
-        setIsLoading(false);
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        if (import.meta.env.DEV) {
-          console.log('🔍 Initial session check:', session?.user?.email || 'No existing session');
-        }
-        
-        // Log initial session details
-        logSessionDetails();
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          SecurityService.setCSRFToken();
-          if (import.meta.env.DEV) {
-            console.log('👤 Initial user set:', session.user.email);
-          }
-          fetchProfile(session.user.id);
-        } else {
-          if (import.meta.env.DEV) {
-            console.log('❌ No initial session found');
-          }
-        }
-      })
-      .catch((error) => {
-        console.error('Error getting initial session:', error);
-      })
-      .finally(() => {
-        setIsLoading(false);
-        if (import.meta.env.DEV) {
-          console.log('✅ Auth initialization complete, loading set to false');
-        }
-      });
-
     return () => {
-      subscription.unsubscribe();
       MonitoringService.cleanup();
     };
-  }, [fetchProfile]);
+  }, []);
 
   const signUp = async (email: string, password: string, fullName: string, phoneNumber?: string) => {
-    return await signUpUser(email, password, fullName, phoneNumber);
+    console.log('🚫 SignUp disabled');
+    return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {
-    return await signInUser(email, password);
+    console.log('🚫 SignIn disabled');
+    return { error: null };
   };
 
   const signOut = async () => {
-    await signOutUser(user?.id);
-    setProfile(null);
+    console.log('🚫 SignOut disabled');
   };
 
   const handleRefreshJWT = async (): Promise<{ session: Session | null; error: any }> => {
-    const result = await refreshJWT();
-    if (result.session) {
-      setSession(result.session);
-      setUser(result.session.user);
-    }
-    return result;
+    console.log('🚫 JWT refresh disabled');
+    return { session: null, error: 'JWT disabled' };
   };
 
   const handleForceReauth = async (): Promise<void> => {
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    await forceReauth();
+    console.log('🚫 Force reauth disabled');
   };
 
   return (

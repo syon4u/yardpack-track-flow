@@ -1,18 +1,13 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 export const useUploadInvoice = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
   const { toast } = useToast();
   
   return useMutation({
     mutationFn: async ({ packageId, file }: { packageId: string; file: File }) => {
-      if (!user) throw new Error('Not authenticated');
-      
       // Validate file type
       const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
       if (!allowedTypes.includes(file.type)) {
@@ -25,10 +20,10 @@ export const useUploadInvoice = () => {
         throw new Error('File size too large. Please upload a file smaller than 10MB.');
       }
       
-      // Create file path with user ID folder structure for security
+      // Create file path without user ID requirement
       const fileExt = file.name.split('.').pop();
       const fileName = `${packageId}_${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      const filePath = `public/${fileName}`;
       
       // Upload file to storage
       const { error: uploadError } = await supabase.storage
@@ -37,7 +32,7 @@ export const useUploadInvoice = () => {
       
       if (uploadError) throw uploadError;
       
-      // Create invoice record
+      // Create invoice record without uploaded_by requirement
       const { error: dbError } = await supabase
         .from('invoices')
         .insert({
@@ -46,7 +41,7 @@ export const useUploadInvoice = () => {
           file_path: filePath,
           file_size: file.size,
           file_type: file.type,
-          uploaded_by: user.id,
+          uploaded_by: 'system', // Mock uploader since auth is disabled
         });
       
       if (dbError) {
@@ -63,14 +58,14 @@ export const useUploadInvoice = () => {
       queryClient.invalidateQueries({ queryKey: ['packages'] });
       toast({
         title: 'Invoice uploaded successfully',
-        description: `${data.fileName} has been uploaded and linked to your package.`,
+        description: `${data.fileName} has been uploaded and linked to the package.`,
       });
     },
     onError: (error: Error) => {
       console.error('Invoice upload failed:', error);
       toast({
         title: 'Invoice upload failed',
-        description: error.message || 'There was an error uploading your invoice. Please try again.',
+        description: error.message || 'There was an error uploading the invoice. Please try again.',
         variant: 'destructive',
       });
     },
