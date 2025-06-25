@@ -6,6 +6,7 @@ import AdminDashboardHeader from './admin/AdminDashboardHeader';
 import AdminDashboardStats from './admin/AdminDashboardStats';
 import AdminPackageFilters from './admin/AdminPackageFilters';
 import AdminDashboardTester from './admin/AdminDashboardTester';
+import CustomerRLSTest from './admin/CustomerRLSTest';
 
 const AdminDashboard: React.FC = () => {
   const { profile, isLoading } = useAuth();
@@ -13,6 +14,7 @@ const AdminDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showTester, setShowTester] = useState(false);
+  const [showRLSTest, setShowRLSTest] = useState(false);
 
   // Show loading while auth is still being determined
   if (isLoading) {
@@ -51,8 +53,14 @@ const AdminDashboard: React.FC = () => {
 
       <AdminDashboardStats />
 
-      {/* Add test suite toggle */}
-      <div className="flex justify-end">
+      {/* Add test suite toggles */}
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={() => setShowRLSTest(!showRLSTest)}
+          className="text-sm text-blue-600 hover:text-blue-800 underline"
+        >
+          {showRLSTest ? 'Hide' : 'Show'} Customer RLS Tests
+        </button>
         <button
           onClick={() => setShowTester(!showTester)}
           className="text-sm text-blue-600 hover:text-blue-800 underline"
@@ -61,6 +69,7 @@ const AdminDashboard: React.FC = () => {
         </button>
       </div>
 
+      {showRLSTest && <CustomerRLSTest />}
       {showTester && <AdminDashboardTester />}
 
       <div className="space-y-4 sm:space-y-6">
