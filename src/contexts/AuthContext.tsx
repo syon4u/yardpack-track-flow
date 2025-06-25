@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +16,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string, phoneNumber?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  refreshJWT: () => Promise<{ session: Session | null; error: any }>;
+  forceReauth: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -143,6 +144,65 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         description: "An unexpected error occurred while loading your profile.",
         variant: "destructive"
       });
+    }
+  };
+
+  const refreshJWT = async (): Promise<{ session: Session | null; error: any }> => {
+    try {
+      console.log('🔄 Attempting to refresh JWT token...');
+      
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        console.error('❌ JWT refresh failed:', error);
+        await MonitoringService.logError(error, { operation: 'jwt_refresh_failed' });
+        return { session: null, error };
+      }
+      
+      if (data.session) {
+        console.log('✅ JWT token refreshed successfully');
+        setSession(data.session);
+        setUser(data.session.user);
+        await MonitoringService.logUserActivity('jwt_refreshed', 'auth', data.session.user.id);
+        return { session: data.session, error: null };
+      }
+      
+      console.warn('⚠️ JWT refresh returned no session');
+      return { session: null, error: 'No session returned from refresh' };
+    } catch (error) {
+      console.error('💥 Exception during JWT refresh:', error);
+      await MonitoringService.logError(error as Error, { operation: 'jwt_refresh_exception' });
+      return { session: null, error };
+    }
+  };
+
+  const forceReauth = async (): Promise<void> => {
+    try {
+      console.log('🚪 Forcing re-authentication...');
+      
+      // Clear current session state
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      
+      // Clear security data
+      SecurityService.clearSecurityData();
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Show toast to user
+      toast({
+        title: "Session Expired",
+        description: "Please log in again to continue.",
+        variant: "destructive"
+      });
+      
+      console.log('✅ Forced logout completed');
+      await MonitoringService.logUserActivity('forced_logout', 'auth');
+    } catch (error) {
+      console.error('💥 Exception during forced logout:', error);
+      await MonitoringService.logError(error as Error, { operation: 'forced_logout_exception' });
     }
   };
 
@@ -355,6 +415,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       signUp, 
       signIn, 
       signOut, 
+      refreshJWT,
+      forceReauth,
       isLoading 
     }}>
       {children}

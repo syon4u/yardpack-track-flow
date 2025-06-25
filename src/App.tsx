@@ -20,6 +20,7 @@ import { ProductionConfigService } from '@/services/productionConfigService';
 import { DataIntegrityService } from '@/services/dataIntegrityService';
 import { EnvironmentValidationService } from '@/services/environmentValidationService.tsx';
 import { useDebugQueries } from '@/hooks/useDebugQueries';
+import { useJWTDebug } from '@/hooks/useJWTDebug';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,7 @@ const AppContent: React.FC = () => {
   
   // Add debug hooks
   useDebugQueries();
+  useJWTDebug();
 
   // Debug logging
   console.log('🔍 AppContent render - Auth state:', { 
@@ -103,29 +105,35 @@ const AppContent: React.FC = () => {
               )}
             </div>
             <div>
-              <strong>Loading State:</strong>
-              <br />
-              isLoading: {isLoading ? 'true' : 'false'}
+              <strong>JWT Tests:</strong>
               <br />
               <button 
-                onClick={() => (window as any).testSupabaseQuery?.()}
-                className="mt-1 px-2 py-1 bg-blue-500 text-white text-xs rounded"
+                onClick={() => (window as any).testJWTRefresh?.()}
+                className="mt-1 px-2 py-1 bg-blue-500 text-white text-xs rounded mr-1"
               >
-                Test Query
+                Refresh JWT
+              </button>
+              <button 
+                onClick={() => (window as any).checkJWTExpiry?.()}
+                className="mt-1 px-2 py-1 bg-green-500 text-white text-xs rounded"
+              >
+                Check Expiry
               </button>
             </div>
             <div>
-              <strong>Current Route:</strong>
-              <br />
-              Path: {window.location.pathname}
-              <br />
-              Hash: {window.location.hash}
+              <strong>Query Tests:</strong>
               <br />
               <button 
-                onClick={() => (window as any).checkSupabaseHeaders?.()}
-                className="mt-1 px-2 py-1 bg-green-500 text-white text-xs rounded"
+                onClick={() => (window as any).testQueryWithRetry?.()}
+                className="mt-1 px-2 py-1 bg-purple-500 text-white text-xs rounded mr-1"
               >
-                Check Headers
+                Test Retry
+              </button>
+              <button 
+                onClick={() => (window as any).testForceReauth?.()}
+                className="mt-1 px-2 py-1 bg-red-500 text-white text-xs rounded"
+              >
+                Force Logout
               </button>
             </div>
           </div>
