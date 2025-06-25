@@ -11,7 +11,6 @@ import { Package } from './PackageCard';
 import CardSkeleton from './loading/CardSkeleton';
 import TableSkeleton from './loading/TableSkeleton';
 import ErrorBoundary from './error/ErrorBoundary';
-import { useToast } from '@/hooks/use-toast';
 
 interface PackageListProps {
   searchTerm?: string;
@@ -27,7 +26,6 @@ const PackageList: React.FC<PackageListProps> = ({
   onViewModeChange 
 }) => {
   const { profile } = useAuth();
-  const { toast } = useToast();
   const { data: packages, isLoading, error } = usePackages({ searchTerm, statusFilter });
   const updateStatusMutation = useUpdatePackageStatus();
   const uploadInvoiceMutation = useUploadInvoice();
@@ -37,10 +35,7 @@ const PackageList: React.FC<PackageListProps> = ({
     try {
       await updateStatusMutation.mutateAsync({ packageId, status });
     } catch (error) {
-      // Error handling is now done in the mutation hook
-      if (import.meta.env.DEV) {
-        console.error('Error updating status:', error);
-      }
+      console.error('Error updating status:', error);
     }
   };
 
@@ -54,10 +49,7 @@ const PackageList: React.FC<PackageListProps> = ({
         try {
           await uploadInvoiceMutation.mutateAsync({ packageId, file });
         } catch (error) {
-          // Error handling is now done in the mutation hook
-          if (import.meta.env.DEV) {
-            console.error('Error uploading invoice:', error);
-          }
+          console.error('Error uploading invoice:', error);
         }
       }
     };
@@ -70,17 +62,8 @@ const PackageList: React.FC<PackageListProps> = ({
       try {
         await downloadInvoiceMutation.mutateAsync(pkg.invoices[0].file_path);
       } catch (error) {
-        // Error handling is now done in the mutation hook
-        if (import.meta.env.DEV) {
-          console.error('Error downloading invoice:', error);
-        }
+        console.error('Error downloading invoice:', error);
       }
-    } else {
-      toast({
-        title: 'No invoice found',
-        description: 'No invoice is available for this package.',
-        variant: 'destructive',
-      });
     }
   };
 

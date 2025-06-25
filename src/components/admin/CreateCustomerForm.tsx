@@ -43,8 +43,6 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
       return;
     }
 
-    let authUser = null;
-
     try {
       if (formData.customer_type === 'registered') {
         if (!formData.email || !formData.password) {
@@ -70,44 +68,19 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
         });
 
         if (authError) throw authError;
-        authUser = authData.user;
 
-        if (authUser) {
-          try {
-            // Create customer record linked to user
-            await createCustomerMutation.mutateAsync({
-              full_name: formData.full_name,
-              email: formData.email,
-              phone_number: formData.phone_number || null,
-              address: formData.address || null,
-              customer_type: 'registered' as const,
-              user_id: authUser.id,
-              preferred_contact_method: formData.preferred_contact_method,
-              notes: formData.notes || null,
-            });
-            
-            // Only close modal on successful creation
-            onClose();
-          } catch (customerError) {
-            // Rollback: Delete the auth user if customer creation failed
-            console.error('Customer creation failed, attempting rollback of auth user');
-            try {
-              await supabase.auth.admin.deleteUser(authUser.id);
-              toast({
-                title: "Rollback Successful",
-                description: "Customer creation failed, but the user account was successfully cleaned up.",
-                variant: "destructive",
-              });
-            } catch (rollbackError) {
-              console.error('Failed to rollback auth user:', rollbackError);
-              toast({
-                title: "Manual Cleanup Required",
-                description: `Customer creation failed and automatic cleanup failed. Please manually delete user account: ${authUser.email}`,
-                variant: "destructive",
-              });
-            }
-            throw customerError;
-          }
+        if (authData.user) {
+          // Create customer record linked to user
+          await createCustomerMutation.mutateAsync({
+            full_name: formData.full_name,
+            email: formData.email,
+            phone_number: formData.phone_number || null,
+            address: formData.address || null,
+            customer_type: 'registered' as const,
+            user_id: authData.user.id,
+            preferred_contact_method: formData.preferred_contact_method,
+            notes: formData.notes || null,
+          });
         }
       } else {
         // Create customer record without user account
@@ -121,14 +94,16 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
           preferred_contact_method: formData.preferred_contact_method,
           notes: formData.notes || null,
         });
-
-        // Only close modal on successful creation
-        onClose();
       }
+
+      onClose();
     } catch (error: any) {
       console.error('Customer creation error:', error);
-      // Don't close modal on error - let the mutation hook handle the toast
-      // The form stays open so user can retry
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create customer",
+        variant: "destructive",
+      });
     }
   };
 

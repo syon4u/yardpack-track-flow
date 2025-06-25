@@ -319,6 +319,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "packages_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -410,10 +417,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_duplicate_customers: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean

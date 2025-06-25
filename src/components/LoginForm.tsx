@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Package, AlertCircle, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,58 +13,6 @@ const LoginForm: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
-  const { toast } = useToast();
-
-  const handleSpecificError = (error: any) => {
-    const errorMessage = error?.message || '';
-    
-    // Check for rate limiting
-    if (errorMessage.toLowerCase().includes('too many') || 
-        errorMessage.toLowerCase().includes('rate limit') ||
-        errorMessage.toLowerCase().includes('attempts')) {
-      setError('Too many login attempts. Please try again later.');
-      toast({
-        title: 'Rate Limited',
-        description: 'Too many login attempts. Please wait a few minutes before trying again.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    // Check for email verification
-    if (errorMessage.toLowerCase().includes('email not confirmed') ||
-        errorMessage.toLowerCase().includes('not verified') ||
-        errorMessage.toLowerCase().includes('confirm your email')) {
-      setError('Email not verified. Please check your email and click the verification link.');
-      toast({
-        title: 'Email Not Verified',
-        description: 'Please check your email and click the verification link before signing in.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Check for invalid credentials
-    if (errorMessage.toLowerCase().includes('invalid login credentials') ||
-        errorMessage.toLowerCase().includes('invalid email or password')) {
-      setError('Invalid email or password');
-      return;
-    }
-
-    // For any other specific error, show the actual message
-    if (errorMessage) {
-      setError(errorMessage);
-      toast({
-        title: 'Sign In Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Fallback generic message
-    setError('Invalid email or password');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,12 +21,7 @@ const LoginForm: React.FC = () => {
 
     const { error } = await signIn(email, password);
     if (error) {
-      handleSpecificError(error);
-    } else {
-      toast({
-        title: 'Welcome back!',
-        description: 'You have successfully signed in.',
-      });
+      setError('Invalid email or password');
     }
     setIsLoading(false);
   };

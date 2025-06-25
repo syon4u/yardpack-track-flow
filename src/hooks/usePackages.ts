@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
 
@@ -66,12 +66,15 @@ interface TransformedPackage {
 }
 
 export const usePackages = (options: UsePackagesOptions = {}) => {
+  const { user, profile } = useAuth();
   const { searchTerm, statusFilter } = options;
   
   return useQuery({
-    queryKey: ['packages', searchTerm, statusFilter],
+    queryKey: ['packages', user?.id, profile?.role, searchTerm, statusFilter],
     queryFn: async (): Promise<TransformedPackage[]> => {
-      console.log('Fetching packages');
+      if (!user) return [];
+      
+      console.log('Fetching packages for user:', user.id, 'with role:', profile?.role);
       
       let query = supabase
         .from('packages')
@@ -82,7 +85,10 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
         `)
         .order('created_at', { ascending: false });
 
-      // Remove all role-based filtering - show all packages
+      // If customer, only show packages for customers linked to their user account
+      if (profile?.role === 'customer') {
+        query = query.eq('customers.user_id', user.id);
+      }
 
       // Apply search filter
       if (searchTerm && searchTerm.trim()) {
@@ -102,10 +108,7 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
 
       const { data, error } = await query;
       
-      if (error) {
-        console.error('Error fetching packages:', error);
-        throw error;
-      }
+      if (error) throw error;
       
       console.log('Fetched packages:', data);
       
@@ -121,24 +124,12 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
       
       return transformedData;
     },
-    enabled: true, // Always enabled, no auth checks
-    retry: (failureCount, error) => {
-      return failureCount < 2;
-    },
+    enabled: !!user,
   });
 };
 
 export const useUpdatePackageStatus = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  const statusLabels = {
-    received: 'Received at Miami',
-    in_transit: 'In Transit',
-    arrived: 'Arrived in Jamaica',
-    ready_for_pickup: 'Ready for Pickup',
-    picked_up: 'Picked Up'
-  };
   
   return useMutation({
     mutationFn: async ({ packageId, status }: { packageId: string; status: PackageStatus }) => {
@@ -150,33 +141,15 @@ export const useUpdatePackageStatus = () => {
         .eq('id', packageId);
       
       if (error) throw error;
-
-      return { packageId, status };
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['packages'] });
-      const statusLabel = statusLabels[data.status] || data.status;
-      toast({
-        title: 'Package status updated',
-        description: `Package has been marked as "${statusLabel}".`,
-      });
-    },
-    onError: (error: Error, variables) => {
-      console.error('Package status update failed:', error);
-      const statusLabel = statusLabels[variables.status] || variables.status;
-      
-      toast({
-        title: 'Status update failed',
-        description: `Failed to update package status to "${statusLabel}". ${error.message || 'Please try again.'}`,
-        variant: 'destructive',
-      });
     },
   });
 };
 
 export const useCreatePackage = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (packageData: {
@@ -204,21 +177,8 @@ export const useCreatePackage = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['packages'] });
-      toast({
-        title: 'Package created successfully',
-        description: `Package ${data.tracking_number} has been added to the system.`,
-      });
-    },
-    onError: (error: Error) => {
-      console.error('Package creation failed:', error);
-      
-      toast({
-        title: 'Package creation failed',
-        description: error.message || 'There was an error creating the package. Please try again.',
-        variant: 'destructive',
-      });
     },
   });
 };

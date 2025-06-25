@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { 
   UnifiedCustomer, 
@@ -37,23 +38,8 @@ export interface PaginatedResponse<T> {
 
 type PackageStatus = Database['public']['Enums']['package_status'];
 
-// Helper function to sanitize search terms for Supabase queries
-function sanitizeSearchTerm(term: string): string {
-  return term.replace(/[%_]/g, '\\$&').replace(/[,]/g, '\\,');
-}
-
-// Helper function to create query with timeout - fixed to handle PromiseLike
-function createQueryWithTimeout<T>(queryPromise: PromiseLike<T>, timeoutMs: number = 10000): Promise<T> {
-  return Promise.race([
-    Promise.resolve(queryPromise),
-    new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Query timeout')), timeoutMs)
-    )
-  ]);
-}
-
 export class OptimizedDataService {
-  // Optimized package fetching with pagination and timeout
+  // Optimized package fetching with pagination
   static async fetchPackagesPaginated(
     filters: PackageFilters = {},
     pagination: PaginationOptions = { page: 1, limit: 50 }
@@ -62,12 +48,12 @@ export class OptimizedDataService {
       const { page, limit } = pagination;
       const offset = (page - 1) * limit;
 
-      // Build the query with proper joins using the correct FK
+      // Build the query with proper joins
       let query = supabase
         .from('packages')
         .select(`
           *,
-          customers!fk_packages_customer_id(
+          profiles!packages_customer_id_fkey(
             id,
             full_name,
             email,
@@ -85,19 +71,18 @@ export class OptimizedDataService {
       }
 
       if (filters.searchTerm && filters.searchTerm.trim()) {
-        const safeTerm = sanitizeSearchTerm(filters.searchTerm);
-        query = query.or(`tracking_number.ilike.%${safeTerm}%,description.ilike.%${safeTerm}%,external_tracking_number.ilike.%${safeTerm}%`);
+        query = query.or(`tracking_number.ilike.%${filters.searchTerm}%,description.ilike.%${filters.searchTerm}%,external_tracking_number.ilike.%${filters.searchTerm}%`);
       }
 
       if (filters.statusFilter && filters.statusFilter !== 'all') {
+        // Cast to the correct enum type
         query = query.eq('status', filters.statusFilter as PackageStatus);
       }
 
-      // Execute the main query with timeout
-      const { data, error } = await createQueryWithTimeout(Promise.resolve(query), 8000);
+      const { data, error, count } = await query;
       if (error) throw error;
 
-      // Get total count with a separate query
+      // Get total count for pagination
       let countQuery = supabase
         .from('packages')
         .select('*', { count: 'exact', head: true });
@@ -107,15 +92,15 @@ export class OptimizedDataService {
       }
 
       if (filters.searchTerm && filters.searchTerm.trim()) {
-        const safeTerm = sanitizeSearchTerm(filters.searchTerm);
-        countQuery = countQuery.or(`tracking_number.ilike.%${safeTerm}%,description.ilike.%${safeTerm}%,external_tracking_number.ilike.%${safeTerm}%`);
+        countQuery = countQuery.or(`tracking_number.ilike.%${filters.searchTerm}%,description.ilike.%${filters.searchTerm}%,external_tracking_number.ilike.%${filters.searchTerm}%`);
       }
 
       if (filters.statusFilter && filters.statusFilter !== 'all') {
+        // Cast to the correct enum type
         countQuery = countQuery.eq('status', filters.statusFilter as PackageStatus);
       }
 
-      const { count: totalCount, error: countError } = await createQueryWithTimeout(Promise.resolve(countQuery), 5000);
+      const { count: totalCount, error: countError } = await countQuery;
       if (countError) throw countError;
 
       const total = totalCount || 0;
@@ -135,8 +120,8 @@ export class OptimizedDataService {
         delivery_estimate: pkg.delivery_estimate,
         actual_delivery: pkg.actual_delivery,
         customer_id: pkg.customer_id,
-        customer_name: pkg.customers?.full_name || 'Unknown Customer',
-        customer_email: pkg.customers?.email || null,
+        customer_name: pkg.profiles?.full_name || 'Unknown Customer',
+        customer_email: pkg.profiles?.email || null,
         sender_name: pkg.sender_name,
         sender_address: pkg.sender_address,
         delivery_address: pkg.delivery_address,
@@ -153,13 +138,13 @@ export class OptimizedDataService {
         notes: pkg.notes,
         api_sync_status: pkg.api_sync_status,
         last_api_sync: pkg.last_api_sync,
-        profiles: pkg.customers ? {
-          full_name: pkg.customers.full_name,
-          email: pkg.customers.email,
-          address: pkg.customers.address,
+        profiles: pkg.profiles ? {
+          full_name: pkg.profiles.full_name,
+          email: pkg.profiles.email,
+          address: pkg.profiles.address,
           created_at: pkg.created_at,
           id: pkg.customer_id,
-          phone_number: pkg.customers.phone_number,
+          phone_number: pkg.profiles.phone_number,
           role: 'customer' as const,
           updated_at: pkg.updated_at
         } : null,
@@ -178,7 +163,7 @@ export class OptimizedDataService {
       };
     } catch (error) {
       console.error('Error fetching paginated packages:', error);
-      throw new Error(`Failed to fetch packages: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error;
     }
   }
 
@@ -191,9 +176,9 @@ export class OptimizedDataService {
       const { page, limit } = pagination;
       const offset = (page - 1) * limit;
 
-      // Fetch customers from the customers table which includes both registered and package_only customers
+      // Fetch customers with package statistics
       let query = supabase
-        .from('customers')
+        .from('profiles')
         .select(`
           *,
           packages(
@@ -204,42 +189,20 @@ export class OptimizedDataService {
             created_at
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
       // Apply filters
       if (filters.searchTerm && filters.searchTerm.trim()) {
-        const safeTerm = sanitizeSearchTerm(filters.searchTerm.toLowerCase());
-        query = query.or(`full_name.ilike.%${safeTerm}%,email.ilike.%${safeTerm}%,address.ilike.%${safeTerm}%`);
+        const searchLower = filters.searchTerm.toLowerCase();
+        query = query.or(`full_name.ilike.%${searchLower}%,email.ilike.%${searchLower}%,address.ilike.%${searchLower}%`);
       }
 
-      if (filters.customerTypeFilter && filters.customerTypeFilter !== 'all') {
-        query = query.eq('customer_type', filters.customerTypeFilter as 'registered' | 'guest' | 'package_only');
-      }
-
-      // Get total count for pagination (before applying range)
-      let countQuery = supabase
-        .from('customers')
-        .select('*', { count: 'exact', head: true });
-
-      // Apply same filters to count query
-      if (filters.searchTerm && filters.searchTerm.trim()) {
-        const safeTerm = sanitizeSearchTerm(filters.searchTerm.toLowerCase());
-        countQuery = countQuery.or(`full_name.ilike.%${safeTerm}%,email.ilike.%${safeTerm}%,address.ilike.%${safeTerm}%`);
-      }
-
-      if (filters.customerTypeFilter && filters.customerTypeFilter !== 'all') {
-        countQuery = countQuery.eq('customer_type', filters.customerTypeFilter as 'registered' | 'guest' | 'package_only');
-      }
-
-      const { count: totalCount, error: countError } = await countQuery;
-      if (countError) throw countError;
-
-      // Apply pagination
-      const { data, error } = await query.range(offset, offset + limit - 1);
+      const { data, error, count } = await query;
       if (error) throw error;
 
       // Transform to unified customer format with calculated stats
-      const unifiedCustomers: UnifiedCustomer[] = (data || []).map((customer: any) => {
+      const unifiedCustomers = (data || []).map((customer: any) => {
         const packages = customer.packages || [];
         const totalPackages = packages.length;
         const activePackages = packages.filter((p: any) => 
@@ -254,7 +217,7 @@ export class OptimizedDataService {
 
         return {
           id: customer.id,
-          type: (customer.customer_type === 'guest' ? 'package_only' : customer.customer_type) as 'registered' | 'package_only',
+          type: 'registered' as const,
           full_name: customer.full_name,
           email: customer.email,
           phone_number: customer.phone_number,
@@ -266,12 +229,16 @@ export class OptimizedDataService {
           total_spent: totalSpent,
           outstanding_balance: outstandingBalance,
           last_activity: lastActivity,
-          registration_status: (customer.customer_type === 'package_only' || customer.customer_type === 'guest' ? 'guest' : 'registered') as 'registered' | 'guest'
+          registration_status: 'registered' as const
         };
       });
 
-      // Apply client-side filters for activity
+      // Apply client-side filters
       let filteredCustomers = unifiedCustomers;
+
+      if (filters.customerTypeFilter && filters.customerTypeFilter !== 'all') {
+        filteredCustomers = filteredCustomers.filter(c => c.type === filters.customerTypeFilter);
+      }
 
       if (filters.activityFilter && filters.activityFilter !== 'all') {
         const isActive = (c: UnifiedCustomer) => c.active_packages > 0;
@@ -282,7 +249,7 @@ export class OptimizedDataService {
         }
       }
 
-      const total = totalCount || 0;
+      const total = count || filteredCustomers.length;
       const totalPages = Math.ceil(total / limit);
 
       return {
@@ -302,136 +269,79 @@ export class OptimizedDataService {
     }
   }
 
-  // Highly optimized stats fetching using direct aggregation queries with timeout and error handling
+  // Optimized stats fetching
   static async fetchOptimizedStats(): Promise<UnifiedStats> {
     try {
-      console.log('Starting optimized stats fetch with direct aggregation queries...');
-      
-      // Use Promise.allSettled to handle partial failures gracefully
-      const [packageStatsResult, customerStatsResult, financialStatsResult] = await Promise.allSettled([
-        // Package stats using direct aggregation
-        createQueryWithTimeout(
-          supabase
-            .from('packages')
-            .select('status', { count: 'exact' })
-            .then(({ data, error, count }) => {
-              if (error) throw error;
-              
-              // Count packages by status
-              const statusCounts = (data || []).reduce((acc: any, pkg: any) => {
-                acc[pkg.status] = (acc[pkg.status] || 0) + 1;
-                return acc;
-              }, {});
-              
-              return {
-                total: count || 0,
-                received: statusCounts.received || 0,
-                in_transit: statusCounts.in_transit || 0,
-                arrived: statusCounts.arrived || 0,
-                ready_for_pickup: statusCounts.ready_for_pickup || 0,
-                picked_up: statusCounts.picked_up || 0,
-              };
-            }),
-          5000
-        ),
-        
-        // Customer stats using direct aggregation
-        createQueryWithTimeout(
-          supabase
-            .from('customers')
-            .select('customer_type', { count: 'exact' })
-            .then(({ data, error, count }) => {
-              if (error) throw error;
-              
-              // Count customers by type
-              const typeCounts = (data || []).reduce((acc: any, customer: any) => {
-                acc[customer.customer_type] = (acc[customer.customer_type] || 0) + 1;
-                return acc;
-              }, {});
-              
-              return {
-                total: count || 0,
-                registered: typeCounts.registered || 0,
-                package_only: (typeCounts.package_only || 0) + (typeCounts.guest || 0),
-                active: count || 0, // For now, consider all customers as potentially active
-              };
-            }),
-          5000
-        ),
+      // Use efficient aggregate queries
+      const [packageStats, customerStats] = await Promise.all([
+        supabase
+          .from('packages')
+          .select('status, package_value, total_due, invoices(id)')
+          .then(({ data }) => {
+            const stats = {
+              total: data?.length || 0,
+              received: 0,
+              in_transit: 0,
+              arrived: 0,
+              ready_for_pickup: 0,
+              picked_up: 0,
+            };
 
-        // Financial stats using direct aggregation
-        createQueryWithTimeout(
-          supabase
-            .from('packages')
-            .select('package_value, total_due')
-            .then(({ data, error }) => {
-              if (error) throw error;
-              
-              const packages = data || [];
-              const totalValue = packages.reduce((sum, pkg) => sum + (pkg.package_value || 0), 0);
-              const totalDue = packages.reduce((sum, pkg) => sum + (pkg.total_due || 0), 0);
-              
-              return {
-                total_value: totalValue,
-                total_due: totalDue,
-                pending_invoices: packages.filter(pkg => pkg.total_due && pkg.total_due > 0).length,
-              };
-            }),
-          5000
-        )
+            data?.forEach(pkg => {
+              if (pkg.status in stats) {
+                stats[pkg.status as keyof typeof stats]++;
+              }
+            });
+
+            return stats;
+          }),
+        
+        supabase
+          .from('profiles')
+          .select(`
+            *,
+            packages(
+              id,
+              status
+            )
+          `)
+          .then(({ data }) => {
+            const totalCustomers = data?.length || 0;
+            const activeCustomers = data?.filter(customer => {
+              const packages = customer.packages || [];
+              return packages.some((p: any) => 
+                ['received', 'in_transit', 'arrived', 'ready_for_pickup'].includes(p.status)
+              );
+            }).length || 0;
+
+            return {
+              total: totalCustomers,
+              registered: totalCustomers,
+              package_only: 0,
+              active: activeCustomers,
+            };
+          })
       ]);
 
-      // Handle results, using defaults for failed queries
-      const packageStats = packageStatsResult.status === 'fulfilled' 
-        ? packageStatsResult.value 
-        : {
-            total: 0,
-            received: 0,
-            in_transit: 0,
-            arrived: 0,
-            ready_for_pickup: 0,
-            picked_up: 0,
-          };
+      // Calculate financial stats efficiently
+      const { data: financialData } = await supabase
+        .from('packages')
+        .select('package_value, total_due, invoices(id)');
 
-      const customerStats = customerStatsResult.status === 'fulfilled'
-        ? customerStatsResult.value
-        : {
-            total: 0,
-            registered: 0,
-            package_only: 0,
-            active: 0,
-          };
+      const financialStats = {
+        total_value: financialData?.reduce((sum, p) => sum + (p.package_value || 0), 0) || 0,
+        total_due: financialData?.reduce((sum, p) => sum + (p.total_due || 0), 0) || 0,
+        pending_invoices: financialData?.filter(p => !p.invoices || p.invoices.length === 0).length || 0,
+      };
 
-      const financialStats = financialStatsResult.status === 'fulfilled'
-        ? financialStatsResult.value
-        : {
-            total_value: 0,
-            total_due: 0,
-            pending_invoices: 0,
-          };
-
-      // Log any failures for debugging
-      if (packageStatsResult.status === 'rejected') {
-        console.error('Package stats query failed:', packageStatsResult.reason);
-      }
-      if (customerStatsResult.status === 'rejected') {
-        console.error('Customer stats query failed:', customerStatsResult.reason);
-      }
-      if (financialStatsResult.status === 'rejected') {
-        console.error('Financial stats query failed:', financialStatsResult.reason);
-      }
-
-      const result: UnifiedStats = {
+      return {
         packages: packageStats,
         customers: customerStats,
         financial: financialStats,
       };
-
-      console.log('Optimized stats fetch completed:', result);
-      return result;
     } catch (error) {
-      console.error('Critical error in fetchOptimizedStats:', error);
-      throw new Error(`Failed to load dashboard statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error fetching optimized stats:', error);
+      throw error;
     }
   }
 

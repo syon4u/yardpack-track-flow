@@ -8,28 +8,11 @@ import AdminCustomerTable from './admin/AdminCustomerTable';
 import CreateCustomerForm from './admin/CreateCustomerForm';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useCustomerFilters } from '@/hooks/useCustomerFilters';
-import { Customer } from '@/types/customer';
 
 const AdminCustomerManagement: React.FC = () => {
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const { data: customers, isLoading } = useCustomers();
   
-  // Transform Customer[] to CustomerWithStats[] for the filters hook
-  const customersWithStats = React.useMemo(() => {
-    if (!customers) return [];
-    
-    return customers.map((customer: Customer) => ({
-      ...customer,
-      total_packages: 0, // These would need to be calculated from packages table
-      active_packages: 0,
-      completed_packages: 0,
-      total_spent: 0,
-      outstanding_balance: 0,
-      last_activity: customer.created_at,
-      registration_status: customer.customer_type === 'registered' ? 'registered' as const : 'guest' as const
-    }));
-  }, [customers]);
-
   const {
     searchTerm,
     setSearchTerm,
@@ -38,13 +21,12 @@ const AdminCustomerManagement: React.FC = () => {
     activityFilter,
     setActivityFilter,
     filteredCustomers
-  } = useCustomerFilters(customersWithStats);
+  } = useCustomerFilters(customers);
 
   const totalCustomers = customers?.length || 0;
   const registeredCustomers = customers?.filter(c => c.customer_type === 'registered').length || 0;
   const packageOnlyCustomers = customers?.filter(c => c.customer_type === 'package_only').length || 0;
-  // For now, assume all customers could be active since we don't have package stats
-  const activeCustomers = totalCustomers;
+  const activeCustomers = customers?.filter(c => c.active_packages > 0).length || 0;
 
   if (isLoading) {
     return <div>Loading customer data...</div>;

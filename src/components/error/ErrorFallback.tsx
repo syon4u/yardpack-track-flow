@@ -23,31 +23,28 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
   const defaultMessage = message || "We're sorry, but something unexpected happened. Please try again.";
   const isDevelopment = process.env.NODE_ENV === 'development';
 
-  // Add console log to check if this component is rendering
-  console.log('ErrorFallback rendering:', { title, message, error: error?.message });
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
-      <Card className="w-full max-w-md border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
-            <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+          <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <AlertTriangle className="w-6 h-6 text-red-600" />
           </div>
-          <CardTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <CardTitle className="text-xl font-semibold text-gray-900">
             {title}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-gray-600 dark:text-gray-300 text-center">
+          <p className="text-gray-600 text-center">
             {defaultMessage}
           </p>
 
           {isDevelopment && error && (
-            <details className="bg-gray-100 dark:bg-gray-700 p-3 rounded text-xs">
-              <summary className="cursor-pointer font-medium text-gray-800 dark:text-gray-200">
+            <details className="bg-gray-100 p-3 rounded text-xs">
+              <summary className="cursor-pointer font-medium">
                 Error Details (Development)
               </summary>
-              <pre className="mt-2 whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+              <pre className="mt-2 whitespace-pre-wrap">
                 {error.message}
                 {error.stack && `\n\n${error.stack}`}
               </pre>
