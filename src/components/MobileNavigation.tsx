@@ -30,6 +30,12 @@ const MobileNavigation: React.FC = () => {
     setOpenMobile(false);
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+    setOpenMobile(false);
+  };
+
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -125,8 +131,8 @@ const MobileNavigation: React.FC = () => {
       <SidebarFooter className="p-4 border-t">
         <Button
           variant="ghost"
-          className="w-full justify-start text-left"
-          onClick={signOut}
+          className="w-full justify-start text-left text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4 mr-2" />
           Sign Out

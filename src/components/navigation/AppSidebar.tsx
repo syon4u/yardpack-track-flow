@@ -11,7 +11,8 @@ import {
   Scan,
   FileText,
   User,
-  HelpCircle
+  HelpCircle,
+  LogOut
 } from 'lucide-react';
 import {
   Sidebar,
@@ -27,9 +28,10 @@ import {
   useSidebar
 } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 const AppSidebar: React.FC = () => {
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { setOpen } = useSidebar();
@@ -37,6 +39,12 @@ const AppSidebar: React.FC = () => {
   const handleNavigation = (path: string) => {
     navigate(path);
     // Close sidebar on mobile after navigation
+    setOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
     setOpen(false);
   };
 
@@ -114,7 +122,7 @@ const AppSidebar: React.FC = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t">
+      <SidebarFooter className="p-4 border-t space-y-3">
         {profile && (
           <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
             <div className="p-2 bg-gray-200 rounded-full">
@@ -132,6 +140,15 @@ const AppSidebar: React.FC = () => {
             </div>
           </div>
         )}
+        
+        <Button
+          variant="ghost"
+          onClick={handleSignOut}
+          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+        >
+          <LogOut className="h-4 w-4 mr-3" />
+          <span>Sign Out</span>
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );
