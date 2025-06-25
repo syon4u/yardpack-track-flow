@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
@@ -21,17 +22,17 @@ const CustomerDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const isMobile = useIsMobile();
   
-  // Use optimized packages hook for better performance
+  // Use optimized packages hook with proper customer ID reference
   const { data: packageData, isLoading } = useOptimizedPackages(
     { 
-      customerId: profile?.id
+      customerId: profile?.id // This will filter by customers.user_id = profile.id
     },
     { page: 1, limit: 1000 }
   );
 
   const packages = packageData?.data || [];
 
-  // Calculate statistics from real data
+  // Calculate statistics from real data with proper null checks
   const totalPackages = packages.length;
   const receivedPackages = packages.filter(p => p.status === 'received').length;
   const inTransitPackages = packages.filter(p => p.status === 'in_transit').length;

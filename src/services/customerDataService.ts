@@ -53,18 +53,16 @@ export class CustomerDataService {
         };
       }
 
-      // Get customers with active packages
+      // Get customers with active packages using the new foreign key relationship
       const { data: activeCustomers, error: activeError } = await supabase
         .from('customers')
         .select(`
           id,
-          packages!packages_customer_id_fkey(status)
+          packages!fk_packages_customer_id(status)
         `);
 
       if (activeError) {
         console.warn('Failed to fetch customers with packages, falling back to simple count:', activeError);
-        // Fallback: just count customers without package data
-        const active = 0; // We'll calculate this differently if needed
         
         const total = customers.length;
         const registered = customers.filter(c => c.customer_type === 'registered').length;
@@ -76,7 +74,7 @@ export class CustomerDataService {
           registered,
           guest,
           package_only: packageOnly,
-          active,
+          active: 0,
         };
       }
 
@@ -117,6 +115,7 @@ export class CustomerDataService {
 
       if (!customer) return null;
 
+      // Use the new foreign key relationship to fetch packages
       const { data: packages, error: packagesError } = await supabase
         .from('packages')
         .select('*')
@@ -145,7 +144,7 @@ export class CustomerDataService {
 
       if (profileError) throw profileError;
 
-      // Create customer record
+      // Create customer record with proper foreign key reference
       const { data: customer, error: customerError } = await supabase
         .from('customers')
         .insert([{
@@ -154,7 +153,7 @@ export class CustomerDataService {
           phone_number: profile.phone_number,
           address: profile.address,
           customer_type: 'registered' as const,
-          user_id: userId,
+          user_id: userId, // This will now be properly constrained by FK
         }])
         .select()
         .single();

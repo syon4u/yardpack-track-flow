@@ -38,13 +38,14 @@ interface TransformedPackage {
   delivery_estimate: string | null;
   created_at: string;
   updated_at: string;
-  profiles: {
+  customers: {
     id: string;
-    email: string;
     full_name: string;
+    email: string | null;
     phone_number: string | null;
     address: string | null;
-    role: Database['public']['Enums']['app_role'];
+    customer_type: Database['public']['Enums']['customer_type'];
+    user_id: string | null;
     created_at: string;
     updated_at: string;
   } | null;
@@ -79,14 +80,14 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
         .from('packages')
         .select(`
           *,
-          profiles:customer_id(*),
+          customers(*),
           invoices(*)
         `)
         .order('created_at', { ascending: false });
 
-      // If customer, only show their packages
+      // If customer, only show packages for customers linked to their user account
       if (profile?.role === 'customer') {
-        query = query.eq('customer_id', user.id);
+        query = query.eq('customers.user_id', user.id);
       }
 
       // Apply search filter
@@ -114,8 +115,8 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
       // Transform data to include computed properties that PackageList expects
       const transformedData: TransformedPackage[] = (data || []).map(pkg => ({
         ...pkg,
-        customer_name: pkg.profiles?.full_name || 'Unknown Customer',
-        customer_email: pkg.profiles?.email || null,
+        customer_name: pkg.customers?.full_name || 'Unknown Customer',
+        customer_email: pkg.customers?.email || null,
         invoices: pkg.invoices || [],
         invoice_uploaded: pkg.invoices && pkg.invoices.length > 0,
         duty_assessed: pkg.duty_amount !== null,
