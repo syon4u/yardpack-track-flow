@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -32,6 +33,13 @@ const queryClient = new QueryClient({
 const AppContent: React.FC = () => {
   const { user, profile, isLoading } = useAuth();
 
+  // Debug logging
+  console.log('🔍 AppContent render - Auth state:', { 
+    user: user?.email || 'no user', 
+    profile: profile?.role || 'no profile', 
+    isLoading 
+  });
+
   // Validate environment on component mount
   useEffect(() => {
     EnvironmentValidationService.logValidationResults();
@@ -61,7 +69,18 @@ const AppContent: React.FC = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <AuthPage />} />
+        <Route path="/auth" element={
+          user ? (
+            <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700">
+              DEBUG: User is authenticated, would redirect to /dashboard
+              <br />User: {user.email}
+              <br />Profile: {profile?.role || 'Loading...'}
+              {/* <Navigate to="/dashboard" replace /> */}
+            </div>
+          ) : (
+            <AuthPage />
+          )
+        } />
         
         {/* Protected routes */}
         {user ? (
@@ -92,7 +111,12 @@ const AppContent: React.FC = () => {
                     <Layout><Dashboard /></Layout>
                   </RouteErrorBoundary>
                 ) : (
-                  <Navigate to="/dashboard" replace />
+                  <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700">
+                    DEBUG: Non-admin user accessing /admin, would redirect to /dashboard
+                    <br />User: {user.email}
+                    <br />Role: {profile.role}
+                    {/* <Navigate to="/dashboard" replace /> */}
+                  </div>
                 )
               } 
             />
@@ -112,16 +136,34 @@ const AppContent: React.FC = () => {
                     <Layout><WarehousePage /></Layout>
                   </RouteErrorBoundary>
                 ) : (
-                  <Navigate to="/dashboard" replace />
+                  <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700">
+                    DEBUG: Non-admin user accessing /warehouse, would redirect to /dashboard
+                    <br />User: {user.email}
+                    <br />Role: {profile.role}
+                    {/* <Navigate to="/dashboard" replace /> */}
+                  </div>
                 )
               } 
             />
             {/* Catch-all for authenticated users - redirect to dashboard */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={
+              <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700">
+                DEBUG: Authenticated user on unknown route, would redirect to /dashboard
+                <br />User: {user.email}
+                <br />Current path: {window.location.hash}
+                {/* <Navigate to="/dashboard" replace /> */}
+              </div>
+            } />
           </>
         ) : (
           /* Unauthenticated users get redirected to auth */
-          <Route path="*" element={<Navigate to="/auth" replace />} />
+          <Route path="*" element={
+            <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700">
+              DEBUG: Unauthenticated user, would redirect to /auth
+              <br />Current path: {window.location.hash}
+              {/* <Navigate to="/auth" replace /> */}
+            </div>
+          } />
         )}
       </Routes>
     </HashRouter>
