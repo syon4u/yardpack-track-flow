@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { 
   UnifiedCustomer, 
@@ -94,7 +95,7 @@ export class OptimizedDataService {
       }
 
       // Execute query with timeout
-      const { data, error, count } = await createQueryWithTimeout(query);
+      const { data, error, count } = await createQueryWithTimeout(query, 8000);
       if (error) throw error;
 
       // Get total count with timeout
@@ -115,7 +116,7 @@ export class OptimizedDataService {
         countQuery = countQuery.eq('status', filters.statusFilter as PackageStatus);
       }
 
-      const { count: totalCount, error: countError } = await createQueryWithTimeout(countQuery);
+      const { count: totalCount, error: countError } = await createQueryWithTimeout(countQuery, 5000);
       if (countError) throw countError;
 
       const total = totalCount || 0;
@@ -305,10 +306,7 @@ export class OptimizedDataService {
   // Highly optimized stats fetching using database aggregation
   static async fetchOptimizedStats(): Promise<UnifiedStats> {
     try {
-      // Use database aggregation to avoid pulling all data to client
-      const statsQuery = supabase.rpc('get_dashboard_stats');
-      
-      // Fallback to manual aggregation if RPC doesn't exist
+      // Use manual aggregation since RPC doesn't exist
       const [packageStatsResult, customerStatsResult, financialStatsResult] = await Promise.all([
         createQueryWithTimeout(
           supabase
