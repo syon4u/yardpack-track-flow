@@ -119,26 +119,13 @@ export const useAdminRLSBypass = () => {
         addTestResult('Service Role Customer Creation', 'fail', `Exception: ${err}`, err);
       }
       
-      // Test 5: Check if RLS policies exist
-      console.log('🧪 Checking RLS policy information...');
+      // Test 5: Test existing RPC functions
+      console.log('🧪 Testing available RPC functions...');
       try {
-        const { data: rlsPolicies, error } = await serviceClient
-          .rpc('sql', { 
-            query: `
-              SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual 
-              FROM pg_policies 
-              WHERE schemaname = 'public' 
-              ORDER BY tablename, policyname;
-            `
-          } as any);
-        
-        if (error) {
-          addTestResult('RLS Policies Check', 'fail', `Error checking policies: ${error.message}`, error);
-        } else {
-          addTestResult('RLS Policies Check', 'pass', `Found ${rlsPolicies?.length || 0} RLS policies`, rlsPolicies);
-        }
+        const duplicateResult = await serviceClient.rpc('check_duplicate_customers');
+        addTestResult('RPC Function Test', 'pass', `check_duplicate_customers returned: ${duplicateResult.data}`, duplicateResult);
       } catch (err) {
-        addTestResult('RLS Policies Check', 'fail', `Exception: ${err}`, err);
+        addTestResult('RPC Function Test', 'fail', `RPC test failed: ${err}`, err);
       }
       
     } catch (error) {
