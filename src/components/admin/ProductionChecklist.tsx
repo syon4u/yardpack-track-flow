@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, AlertTriangle, XCircle, Play } from 'lucide-react';
 import { ProductionConfigService } from '@/services/productionConfigService';
 import { DataIntegrityService } from '@/services/dataIntegrityService';
 import { AutomatedTestRunner } from '@/tests/utils/testRunner';
+import { ProductionValidator } from './ProductionValidator';
 
 interface ChecklistItem {
   id: string;
@@ -21,10 +23,10 @@ export const ProductionChecklist: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [overallStatus, setOverallStatus] = useState<'ready' | 'warning' | 'not-ready'>('pending');
 
-  const runProductionCheck = async () => {
+  const runQuickCheck = async () => {
     setIsRunning(true);
     try {
-      // Run comprehensive checks
+      // Run basic checks for the checklist view
       const [configCheck, dataCheck, testResults] = await Promise.all([
         ProductionConfigService.validateProductionReadiness(),
         DataIntegrityService.runFullDataValidation(),
@@ -133,68 +135,81 @@ export const ProductionChecklist: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Production Readiness Checklist</CardTitle>
-            <div className="flex items-center gap-4">
-              {overallStatus !== 'pending' && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Status:</span>
-                  <Badge 
-                    variant={
-                      overallStatus === 'ready' ? 'default' : 
-                      overallStatus === 'warning' ? 'secondary' : 'destructive'
-                    }
-                  >
-                    {overallStatus === 'ready' ? '✅ Ready' : 
-                     overallStatus === 'warning' ? '⚠️ Ready with Warnings' : '❌ Not Ready'}
-                  </Badge>
-                </div>
-              )}
-              <Button 
-                onClick={runProductionCheck} 
-                disabled={isRunning}
-                size="sm"
-              >
-                {isRunning ? (
-                  <>Running Checks...</>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    Run Production Check
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {checklist.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                Click "Run Production Check" to validate your application's readiness for production deployment.
-              </div>
-            ) : (
-              checklist.map((item) => (
-                <div key={item.id} className="flex items-start gap-4 p-4 border rounded-lg">
-                  {getStatusIcon(item.status)}
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium">{item.title}</h4>
-                      {getStatusBadge(item.status)}
+      <Tabs defaultValue="checklist" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="checklist">Quick Checklist</TabsTrigger>
+          <TabsTrigger value="validator">Full Validation</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="checklist">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Production Readiness Checklist</CardTitle>
+                <div className="flex items-center gap-4">
+                  {overallStatus !== 'pending' && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Status:</span>
+                      <Badge 
+                        variant={
+                          overallStatus === 'ready' ? 'default' : 
+                          overallStatus === 'warning' ? 'secondary' : 'destructive'
+                        }
+                      >
+                        {overallStatus === 'ready' ? '✅ Ready' : 
+                         overallStatus === 'warning' ? '⚠️ Ready with Warnings' : '❌ Not Ready'}
+                      </Badge>
                     </div>
-                    <p className="text-sm text-gray-600">{item.description}</p>
-                    {item.action && item.status !== 'complete' && (
-                      <p className="text-sm text-blue-600 mt-2">{item.action}</p>
+                  )}
+                  <Button 
+                    onClick={runQuickCheck} 
+                    disabled={isRunning}
+                    size="sm"
+                  >
+                    {isRunning ? (
+                      <>Running Checks...</>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        Run Quick Check
+                      </>
                     )}
-                  </div>
+                  </Button>
                 </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {checklist.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Click "Run Quick Check" to validate your application's readiness for production deployment.
+                  </div>
+                ) : (
+                  checklist.map((item) => (
+                    <div key={item.id} className="flex items-start gap-4 p-4 border rounded-lg">
+                      {getStatusIcon(item.status)}
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium">{item.title}</h4>
+                          {getStatusBadge(item.status)}
+                        </div>
+                        <p className="text-sm text-gray-600">{item.description}</p>
+                        {item.action && item.status !== 'complete' && (
+                          <p className="text-sm text-blue-600 mt-2">{item.action}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="validator">
+          <ProductionValidator />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
