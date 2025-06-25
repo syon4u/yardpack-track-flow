@@ -25,7 +25,9 @@ export const useAdminTestRunner = ({ authLoading, userRole, onTestUpdate }: Admi
   };
 
   const runTests = async () => {
-    console.log('Starting Admin Dashboard Tests...');
+    if (import.meta.env.DEV) {
+      console.log('Starting Admin Dashboard Tests...');
+    }
 
     // Test 1: Auth Loading State
     const authResult = await AdminTestUtils.runAuthLoadingTest(authLoading);
@@ -51,7 +53,9 @@ export const useAdminTestRunner = ({ authLoading, userRole, onTestUpdate }: Admi
     const errorResult = await AdminTestUtils.runErrorHandlingTest();
     updateTest(4, errorResult);
 
-    console.log('Admin Dashboard Tests Completed');
+    if (import.meta.env.DEV) {
+      console.log('Admin Dashboard Tests Completed');
+    }
   };
 
   useEffect(() => {

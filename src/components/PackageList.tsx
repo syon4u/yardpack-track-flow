@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
 import { useUploadInvoice, useDownloadInvoice } from '@/hooks/useInvoices';
@@ -39,7 +38,9 @@ const PackageList: React.FC<PackageListProps> = ({
       await updateStatusMutation.mutateAsync({ packageId, status });
     } catch (error) {
       // Error handling is now done in the mutation hook
-      console.error('Error updating status:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error updating status:', error);
+      }
     }
   };
 
@@ -54,7 +55,9 @@ const PackageList: React.FC<PackageListProps> = ({
           await uploadInvoiceMutation.mutateAsync({ packageId, file });
         } catch (error) {
           // Error handling is now done in the mutation hook
-          console.error('Error uploading invoice:', error);
+          if (import.meta.env.DEV) {
+            console.error('Error uploading invoice:', error);
+          }
         }
       }
     };
@@ -68,7 +71,9 @@ const PackageList: React.FC<PackageListProps> = ({
         await downloadInvoiceMutation.mutateAsync(pkg.invoices[0].file_path);
       } catch (error) {
         // Error handling is now done in the mutation hook
-        console.error('Error downloading invoice:', error);
+        if (import.meta.env.DEV) {
+          console.error('Error downloading invoice:', error);
+        }
       }
     } else {
       toast({
