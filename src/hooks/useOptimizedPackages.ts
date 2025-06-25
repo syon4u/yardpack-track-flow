@@ -8,6 +8,10 @@ type CustomerRow = Database['public']['Tables']['customers']['Row'];
 
 interface OptimizedPackageData extends PackageRow {
   customers: CustomerRow | null;
+  customer_name: string;
+  customer_email: string | null;
+  invoice_uploaded: boolean;
+  duty_assessed: boolean;
   invoices: Array<{
     id: string;
     package_id: string;
@@ -75,7 +79,7 @@ export const useOptimizedPackages = (
         ];
         
         if (validStatuses.includes(statusFilter as Database['public']['Enums']['package_status'])) {
-          query = query.eq('status', statusFilter);
+          query = query.eq('status', statusFilter as Database['public']['Enums']['package_status']);
         }
       }
 
@@ -95,10 +99,19 @@ export const useOptimizedPackages = (
       const total = count || 0;
       const hasMore = offset + limit < total;
 
-      console.log(`Fetched ${data?.length || 0} packages out of ${total} total`);
+      // Transform data to include computed properties
+      const transformedData = (data || []).map((pkg: any): OptimizedPackageData => ({
+        ...pkg,
+        customer_name: pkg.customers?.full_name || 'Unknown Customer',
+        customer_email: pkg.customers?.email || null,
+        invoice_uploaded: (pkg.invoices || []).length > 0,
+        duty_assessed: pkg.duty_amount !== null,
+      }));
+
+      console.log(`Fetched ${transformedData.length} packages out of ${total} total`);
 
       return {
-        data: data || [],
+        data: transformedData,
         total,
         hasMore,
       };

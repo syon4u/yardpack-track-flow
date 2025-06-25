@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Package, Truck, MapPin, CheckCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,13 @@ const TrackingResults: React.FC<TrackingResultsProps> = ({ trackingNumber, onBac
           return;
         }
 
-        setPackageData(data);
+        // Handle the fact that profiles might be returned as an array from the join
+        const transformedData = {
+          ...data,
+          profiles: Array.isArray(data.profiles) ? data.profiles[0] || null : data.profiles
+        };
+
+        setPackageData(transformedData);
       } catch (err) {
         setError('Failed to fetch package information.');
       } finally {

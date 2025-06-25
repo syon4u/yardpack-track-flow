@@ -149,7 +149,10 @@ export class UnifiedDataService {
       return (data || []).map(pkg => {
         // Handle the case where profiles might be null or have errors
         const profileData = pkg.profiles && typeof pkg.profiles === 'object' && !('error' in pkg.profiles) 
-          ? pkg.profiles 
+          ? {
+              ...pkg.profiles,
+              role: pkg.profiles.role || 'customer' as const
+            } 
           : null;
           
         return transformPackageToUnified({
