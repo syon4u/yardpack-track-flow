@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { EnvironmentService } from './environmentService';
 
 export interface EnvironmentValidationResult {

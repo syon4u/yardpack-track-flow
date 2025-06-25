@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -19,7 +18,7 @@ import { ConfigService } from '@/services/configService';
 import { MonitoringService } from '@/services/monitoringService';
 import { ProductionConfigService } from '@/services/productionConfigService';
 import { DataIntegrityService } from '@/services/dataIntegrityService';
-import { EnvironmentValidationService } from '@/services/environmentValidationService';
+import { EnvironmentValidationService } from '@/services/environmentValidationService.tsx';
 
 const queryClient = new QueryClient({
   defaultOptions: {
