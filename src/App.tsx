@@ -19,6 +19,7 @@ import { MonitoringService } from '@/services/monitoringService';
 import { ProductionConfigService } from '@/services/productionConfigService';
 import { DataIntegrityService } from '@/services/dataIntegrityService';
 import { EnvironmentValidationService } from '@/services/environmentValidationService.tsx';
+import { useDebugQueries } from '@/hooks/useDebugQueries';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +32,9 @@ const queryClient = new QueryClient({
 
 const AppContent: React.FC = () => {
   const { user, profile, isLoading } = useAuth();
+  
+  // Add debug hooks
+  useDebugQueries();
 
   // Debug logging
   console.log('🔍 AppContent render - Auth state:', { 
@@ -102,6 +106,13 @@ const AppContent: React.FC = () => {
               <strong>Loading State:</strong>
               <br />
               isLoading: {isLoading ? 'true' : 'false'}
+              <br />
+              <button 
+                onClick={() => (window as any).testSupabaseQuery?.()}
+                className="mt-1 px-2 py-1 bg-blue-500 text-white text-xs rounded"
+              >
+                Test Query
+              </button>
             </div>
             <div>
               <strong>Current Route:</strong>
@@ -110,14 +121,19 @@ const AppContent: React.FC = () => {
               <br />
               Hash: {window.location.hash}
               <br />
-              Full URL: {window.location.href}
+              <button 
+                onClick={() => (window as any).checkSupabaseHeaders?.()}
+                className="mt-1 px-2 py-1 bg-green-500 text-white text-xs rounded"
+              >
+                Check Headers
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       {/* Add top padding to account for debug panel */}
-      <div style={{ paddingTop: '120px' }}>
+      <div style={{ paddingTop: '140px' }}>
         <HashRouter>
           <Routes>
             {/* Public routes */}
