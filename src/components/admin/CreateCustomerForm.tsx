@@ -43,17 +43,19 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
       return;
     }
 
-    try {
-      if (formData.customer_type === 'registered') {
-        if (!formData.email || !formData.password) {
-          toast({
-            title: "Error",
-            description: "Email and password are required for registered customers",
-            variant: "destructive",
-          });
-          return;
-        }
+    let authUser = null;
 
+    if (formData.customer_type === 'registered') {
+      if (!formData.email || !formData.password) {
+        toast({
+          title: "Error",
+          description: "Email and password are required for registered customers",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
         // Create user account first
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
@@ -68,42 +70,54 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
         });
 
         if (authError) throw authError;
+        authUser = authData.user;
 
-        if (authData.user) {
-          // Create customer record linked to user
-          await createCustomerMutation.mutateAsync({
-            full_name: formData.full_name,
-            email: formData.email,
-            phone_number: formData.phone_number || null,
-            address: formData.address || null,
-            customer_type: 'registered' as const,
-            user_id: authData.user.id,
-            preferred_contact_method: formData.preferred_contact_method,
-            notes: formData.notes || null,
-          });
+        if (authUser) {
+          try {
+            // Create customer record linked to user
+            await createCustomerMutation.mutateAsync({
+              full_name: formData.full_name,
+              email: formData.email,
+              phone_number: formData.phone_number || null,
+              address: formData.address || null,
+              customer_type: 'registered' as const,
+              user_id: authUser.id,
+              preferred_contact_method: formData.preferred_contact_method,
+              notes: formData.notes || null,
+            });
+            
+            onClose();
+          } catch (customerError) {
+            // Rollback: Delete the auth user if customer creation failed
+            console.error('Customer creation failed, rolling back auth user');
+            try {
+              await supabase.auth.admin.deleteUser(authUser.id);
+            } catch (rollbackError) {
+              console.error('Failed to rollback auth user:', rollbackError);
+            }
+            throw customerError;
+          }
         }
-      } else {
-        // Create customer record without user account
-        await createCustomerMutation.mutateAsync({
-          full_name: formData.full_name,
-          email: formData.email || null,
-          phone_number: formData.phone_number || null,
-          address: formData.address || null,
-          customer_type: formData.customer_type as 'guest' | 'package_only',
-          user_id: null,
-          preferred_contact_method: formData.preferred_contact_method,
-          notes: formData.notes || null,
-        });
+      } catch (error: any) {
+        console.error('Registration error:', error);
+        // Toast is handled by the mutation hook
       }
-
-      onClose();
-    } catch (error: any) {
-      console.error('Customer creation error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create customer",
-        variant: "destructive",
+    } else {
+      // Create customer record without user account
+      createCustomerMutation.mutate({
+        full_name: formData.full_name,
+        email: formData.email || null,
+        phone_number: formData.phone_number || null,
+        address: formData.address || null,
+        customer_type: formData.customer_type as 'guest' | 'package_only',
+        user_id: null,
+        preferred_contact_method: formData.preferred_contact_method,
+        notes: formData.notes || null,
       });
+
+      if (!createCustomerMutation.isError) {
+        onClose();
+      }
     }
   };
 
