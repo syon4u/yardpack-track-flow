@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import PackageList from './PackageList';
@@ -6,12 +5,14 @@ import CreatePackageForm from './CreatePackageForm';
 import AdminDashboardHeader from './admin/AdminDashboardHeader';
 import AdminDashboardStats from './admin/AdminDashboardStats';
 import AdminPackageFilters from './admin/AdminPackageFilters';
+import AdminDashboardTester from './admin/AdminDashboardTester';
 
 const AdminDashboard: React.FC = () => {
   const { profile, isLoading } = useAuth();
   const [showCreatePackage, setShowCreatePackage] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showTester, setShowTester] = useState(false);
 
   // Show loading while auth is still being determined
   if (isLoading) {
@@ -49,6 +50,18 @@ const AdminDashboard: React.FC = () => {
       <AdminDashboardHeader onCreatePackage={() => setShowCreatePackage(true)} />
 
       <AdminDashboardStats />
+
+      {/* Add test suite toggle */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setShowTester(!showTester)}
+          className="text-sm text-blue-600 hover:text-blue-800 underline"
+        >
+          {showTester ? 'Hide' : 'Show'} Performance Tests
+        </button>
+      </div>
+
+      {showTester && <AdminDashboardTester />}
 
       <div className="space-y-4 sm:space-y-6">
         <AdminPackageFilters
