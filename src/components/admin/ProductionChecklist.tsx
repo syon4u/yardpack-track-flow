@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ interface ChecklistItem {
 export const ProductionChecklist: React.FC = () => {
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [isRunning, setIsRunning] = useState(false);
-  const [overallStatus, setOverallStatus] = useState<'ready' | 'warning' | 'not-ready'>('pending');
+  const [overallStatus, setOverallStatus] = useState<'ready' | 'warning' | 'not-ready'>('not-ready');
 
   const runQuickCheck = async () => {
     setIsRunning(true);
@@ -147,7 +146,7 @@ export const ProductionChecklist: React.FC = () => {
               <div className="flex items-center justify-between">
                 <CardTitle>Production Readiness Checklist</CardTitle>
                 <div className="flex items-center gap-4">
-                  {overallStatus !== 'pending' && (
+                  {overallStatus !== 'not-ready' && (
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">Status:</span>
                       <Badge 

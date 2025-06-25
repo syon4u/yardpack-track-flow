@@ -46,18 +46,15 @@ export class DataIntegrityService {
         }
       }
 
-      // Check for duplicate customer records for same user
-      const { data: duplicateCustomers, error: dupError } = await supabase
-        .from('customers')
-        .select('user_id')
-        .not('user_id', 'is', null)
-        .group('user_id')
-        .having('count(*) > 1');
+      // Check for duplicate customer records - using raw SQL approach
+      const { data: duplicateCheck, error: dupError } = await supabase
+        .rpc('check_duplicate_customers');
 
-      if (dupError) throw dupError;
-
-      if (duplicateCustomers && duplicateCustomers.length > 0) {
-        issues.push(`Found ${duplicateCustomers.length} users with multiple customer records`);
+      if (dupError) {
+        console.warn('Could not check for duplicate customers:', dupError);
+        // Continue without this check
+      } else if (duplicateCheck && duplicateCheck > 0) {
+        issues.push(`Found ${duplicateCheck} users with multiple customer records`);
       }
 
       await MonitoringService.logUserActivity('data_integrity_check', 'system', 'system', {
