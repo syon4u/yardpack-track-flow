@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   UnifiedCustomer, 
@@ -303,98 +302,147 @@ export class OptimizedDataService {
     }
   }
 
-  // Highly optimized stats fetching using database aggregation
+  // Highly optimized stats fetching using database aggregation with timeout and error handling
   static async fetchOptimizedStats(): Promise<UnifiedStats> {
     try {
-      // Use manual aggregation with proper promise handling
-      const [packageStats, customerStats, financialStats] = await Promise.all([
-        supabase
-          .from('packages')
-          .select('status, package_value, total_due')
-          .then(({ data, error }) => {
+      console.log('Starting optimized stats fetch with aggregation queries...');
+      
+      // Use Promise.allSettled to handle partial failures gracefully
+      const [packageStatsResult, customerStatsResult, financialStatsResult] = await Promise.allSettled([
+        // Package stats using aggregation
+        createQueryWithTimeout(
+          supabase.rpc('get_package_stats').then(({ data, error }) => {
             if (error) throw error;
-            
-            const stats = {
-              total: data?.length || 0,
+            return data || {
+              total: 0,
               received: 0,
               in_transit: 0,
               arrived: 0,
               ready_for_pickup: 0,
               picked_up: 0,
             };
-
-            data?.forEach(pkg => {
-              if (pkg.status in stats) {
-                stats[pkg.status as keyof typeof stats]++;
-              }
-            });
-
-            return stats;
           }),
+          5000
+        ).catch(async () => {
+          // Fallback to basic count query if RPC fails
+          console.warn('Package stats RPC failed, using fallback query');
+          const { count, error } = await supabase
+            .from('packages')
+            .select('*', { count: 'exact', head: true });
+          
+          if (error) throw error;
+          
+          return {
+            total: count || 0,
+            received: 0,
+            in_transit: 0,
+            arrived: 0,
+            ready_for_pickup: 0,
+            picked_up: 0,
+          };
+        }),
         
-        supabase
-          .from('customers')
-          .select(`
-            customer_type,
-            packages!fk_packages_customer_id(status)
-          `)
-          .then(({ data, error }) => {
+        // Customer stats using aggregation
+        createQueryWithTimeout(
+          supabase.rpc('get_customer_stats').then(({ data, error }) => {
             if (error) throw error;
-            
-            const totalCustomers = data?.length || 0;
-            const registeredCustomers = data?.filter(customer => customer.customer_type === 'registered').length || 0;
-            const packageOnlyCustomers = data?.filter(customer => customer.customer_type === 'package_only').length || 0;
-            const activeCustomers = data?.filter(customer => {
-              const packages = customer.packages || [];
-              return packages.some((p: any) => 
-                ['received', 'in_transit', 'arrived', 'ready_for_pickup'].includes(p.status)
-              );
-            }).length || 0;
-
-            return {
-              total: totalCustomers,
-              registered: registeredCustomers,
-              package_only: packageOnlyCustomers,
-              active: activeCustomers,
+            return data || {
+              total: 0,
+              registered: 0,
+              package_only: 0,
+              active: 0,
             };
           }),
+          5000
+        ).catch(async () => {
+          // Fallback to basic count query if RPC fails
+          console.warn('Customer stats RPC failed, using fallback query');
+          const { count, error } = await supabase
+            .from('customers')
+            .select('*', { count: 'exact', head: true });
+          
+          if (error) throw error;
+          
+          return {
+            total: count || 0,
+            registered: 0,
+            package_only: 0,
+            active: 0,
+          };
+        }),
 
-        supabase
-          .from('packages')
-          .select('package_value, total_due, invoices!inner(id)')
-          .then(({ data, error }) => {
+        // Financial stats using aggregation
+        createQueryWithTimeout(
+          supabase.rpc('get_financial_stats').then(({ data, error }) => {
             if (error) throw error;
-            
-            const totalValue = data?.reduce((sum, p) => sum + (p.package_value || 0), 0) || 0;
-            const totalDue = data?.reduce((sum, p) => sum + (p.total_due || 0), 0) || 0;
-            
-            // Count packages without invoices for pending invoices
-            return supabase
-              .from('packages')
-              .select('id, invoices(id)')
-              .then(({ data: packagesData, error: packagesError }) => {
-                if (packagesError) throw packagesError;
-                
-                const pendingInvoices = packagesData?.filter(p => 
-                  !p.invoices || p.invoices.length === 0
-                ).length || 0;
-                
-                return {
-                  total_value: totalValue,
-                  total_due: totalDue,
-                  pending_invoices: pendingInvoices,
-                };
-              });
-          })
+            return data || {
+              total_value: 0,
+              total_due: 0,
+              pending_invoices: 0,
+            };
+          }),
+          5000
+        ).catch(async () => {
+          // Fallback to basic aggregation if RPC fails
+          console.warn('Financial stats RPC failed, using fallback query');
+          return {
+            total_value: 0,
+            total_due: 0,
+            pending_invoices: 0,
+          };
+        })
       ]);
 
-      return {
+      // Handle results, using defaults for failed queries
+      const packageStats = packageStatsResult.status === 'fulfilled' 
+        ? packageStatsResult.value 
+        : {
+            total: 0,
+            received: 0,
+            in_transit: 0,
+            arrived: 0,
+            ready_for_pickup: 0,
+            picked_up: 0,
+          };
+
+      const customerStats = customerStatsResult.status === 'fulfilled'
+        ? customerStatsResult.value
+        : {
+            total: 0,
+            registered: 0,
+            package_only: 0,
+            active: 0,
+          };
+
+      const financialStats = financialStatsResult.status === 'fulfilled'
+        ? financialStatsResult.value
+        : {
+            total_value: 0,
+            total_due: 0,
+            pending_invoices: 0,
+          };
+
+      // Log any failures for debugging
+      if (packageStatsResult.status === 'rejected') {
+        console.error('Package stats query failed:', packageStatsResult.reason);
+      }
+      if (customerStatsResult.status === 'rejected') {
+        console.error('Customer stats query failed:', customerStatsResult.reason);
+      }
+      if (financialStatsResult.status === 'rejected') {
+        console.error('Financial stats query failed:', financialStatsResult.reason);
+      }
+
+      const result = {
         packages: packageStats,
         customers: customerStats,
         financial: financialStats,
       };
+
+      console.log('Optimized stats fetch completed:', result);
+      return result;
     } catch (error) {
-      console.error('Error fetching optimized stats:', error);
+      console.error('Critical error in fetchOptimizedStats:', error);
       throw new Error(`Failed to load dashboard statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

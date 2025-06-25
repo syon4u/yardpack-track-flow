@@ -1,18 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import { useOptimizedStats } from '@/hooks/useOptimizedStats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Package, Users, TrendingUp, Clock, Plus, Scan, AlertCircle, RefreshCw } from 'lucide-react';
+import { Package, Users, TrendingUp, Clock, Plus, Scan, AlertCircle, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ComponentErrorBoundary from '@/components/error/ComponentErrorBoundary';
 
 const AdminOverview: React.FC = () => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const { data: stats, isLoading, error, refetch, isRefetching } = useOptimizedStats({
     maxRetries: 2,
-    timeout: 10000
+    timeout: 8000
   });
 
   // Implement loading timeout safeguard
@@ -23,7 +23,7 @@ const AdminOverview: React.FC = () => {
       timeoutId = setTimeout(() => {
         setLoadingTimeout(true);
         console.warn('Admin overview loading exceeded timeout threshold');
-      }, 15000); // 15 second timeout
+      }, 12000); // 12 second timeout
     } else if (!isLoading) {
       setLoadingTimeout(false);
     }
@@ -47,9 +47,27 @@ const AdminOverview: React.FC = () => {
     }
   }, [stats, isLoading, error, loadingTimeout]);
 
-  // Show error state with retry option
-  if (error || loadingTimeout) {
-    console.error('AdminOverview - Rendering error/timeout state');
+  const handleRetry = () => {
+    setLoadingTimeout(false);
+    setRetryCount(prev => prev + 1);
+    refetch();
+  };
+
+  // Enhanced error handling with specific error types
+  const renderError = () => {
+    const isTimeout = error?.isTimeout || loadingTimeout;
+    const isNetworkError = error?.isNetworkError;
+    
+    let errorMessage = "Failed to load dashboard data.";
+    let errorIcon = AlertCircle;
+    
+    if (isTimeout) {
+      errorMessage = "Dashboard is taking longer than expected to load. This may indicate server performance issues.";
+    } else if (isNetworkError) {
+      errorMessage = "Network connection issue. Please check your internet connection.";
+      errorIcon = WifiOff;
+    }
+
     return (
       <div className="space-y-6">
         <div>
@@ -57,31 +75,36 @@ const AdminOverview: React.FC = () => {
           <p className="text-gray-600 mt-1">Manage packages, customers, and system operations</p>
         </div>
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <errorIcon className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
-            <span>
-              {loadingTimeout 
-                ? "Dashboard data is taking longer than expected to load." 
-                : "Failed to load dashboard data."
-              }
-            </span>
+            <div className="flex-1">
+              <div className="font-medium mb-1">{errorMessage}</div>
+              {retryCount > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  Retry attempt: {retryCount}
+                </div>
+              )}
+            </div>
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => {
-                setLoadingTimeout(false);
-                refetch();
-              }}
+              onClick={handleRetry}
               disabled={isRefetching}
-              className="ml-4"
+              className="ml-4 flex-shrink-0"
             >
               <RefreshCw className={`h-4 w-4 mr-1 ${isRefetching ? 'animate-spin' : ''}`} />
-              Try Again
+              {isRefetching ? 'Retrying...' : 'Try Again'}
             </Button>
           </AlertDescription>
         </Alert>
       </div>
     );
+  };
+
+  // Show error state with retry option
+  if (error || loadingTimeout) {
+    console.error('AdminOverview - Rendering error/timeout state');
+    return renderError();
   }
 
   // Show loading state
@@ -95,12 +118,24 @@ const AdminOverview: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+            <div key={i} className="relative h-32 bg-gray-200 rounded-lg animate-pulse">
+              <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
+                <div className="flex items-center text-sm text-gray-500">
+                  <Wifi className="h-4 w-4 mr-1 animate-pulse" />
+                  Loading...
+                </div>
+              </div>
+            </div>
           ))}
         </div>
         {loadingTimeout && (
-          <div className="text-center text-sm text-gray-500">
-            Loading is taking longer than expected...
+          <div className="text-center">
+            <div className="text-sm text-amber-600 font-medium">
+              Loading is taking longer than expected...
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              The server may be experiencing high load
+            </div>
           </div>
         )}
       </div>
