@@ -1,77 +1,60 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCustomerByUserId } from '@/hooks/customer/useCustomerByUserId';
 import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Package, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Package, TrendingUp, Clock, CheckCircle, AlertCircle, LogIn } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import ComponentErrorBoundary from '@/components/error/ComponentErrorBoundary';
 
 const CustomerOverview: React.FC = () => {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  
+  // Get the customer record linked to this user
+  const { data: customerRecord } = useCustomerByUserId(user?.id);
+  
+  // Use the customer ID for fetching packages
   const { data: packageData, isLoading, error } = useOptimizedPackages(
-    { customerId: profile?.id },
+    customerRecord ? { customerId: customerRecord.id } : {},
     { page: 1, limit: 10 }
   );
 
   React.useEffect(() => {
-    console.log("Is loading:", isLoading, "Data:", packageData, "Error:", error);
-    console.log('CustomerOverview - Effect running', { 
-      profileId: profile?.id, 
+    console.log("CustomerOverview Debug:", { 
+      userId: user?.id,
+      profile: profile?.role,
+      customerRecord,
       packageData, 
       isLoading, 
       error 
     });
-    
-    // Add error handling for potential runtime issues
-    if (error) {
-      console.error('CustomerOverview - Query error:', error);
-    }
-    
-    if (packageData) {
-      console.log('CustomerOverview - Package data loaded:', packageData);
-    }
-  }, [profile?.id, packageData, isLoading, error]);
+  }, [user?.id, profile, customerRecord, packageData, isLoading, error]);
 
-  if (error) {
-    console.error('CustomerOverview - Rendering error state');
+  // Show authentication required message
+  if (!user) {
     return (
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back, {profile?.full_name?.split(' ')[0]}!
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Here's what's happening with your packages
-          </p>
+      <ComponentErrorBoundary componentName="CustomerOverview">
+        <div className="space-y-8">
+          <div className="text-center py-12">
+            <LogIn className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Authentication Required</h2>
+            <p className="text-gray-600 mb-6">
+              Please sign in to view your package dashboard
+            </p>
+            <Button onClick={() => window.location.hash = '/auth'}>
+              Sign In
+            </Button>
+          </div>
         </div>
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load your package data. Please try refreshing the page.
-          </AlertDescription>
-        </Alert>
-      </div>
+      </ComponentErrorBoundary>
     );
   }
 
-  const packages = packageData?.data || [];
-
-  // Calculate stats
-  const stats = {
-    total: packages.length,
-    received: packages.filter(p => p.status === 'received').length,
-    inTransit: packages.filter(p => p.status === 'in_transit').length,
-    readyForPickup: packages.filter(p => p.status === 'ready_for_pickup').length,
-    pickedUp: packages.filter(p => p.status === 'picked_up').length,
-  };
-
-  const recentPackages = packages.slice(0, 5);
-
+  // Show loading state
   if (isLoading) {
-    console.log('CustomerOverview - Rendering loading state');
     return (
       <div className="space-y-6">
         <div className="animate-pulse">
@@ -87,7 +70,86 @@ const CustomerOverview: React.FC = () => {
     );
   }
 
-  console.log('CustomerOverview - Rendering with data:', { stats, recentPackages });
+  // Handle errors with proper fallback UI
+  if (error) {
+    console.error('CustomerOverview - Rendering error state:', error);
+    
+    const isAuthError = error.message?.includes('Authentication') || 
+                       error.message?.includes('auth') || 
+                       error.message?.includes('JWT');
+    
+    return (
+      <ComponentErrorBoundary componentName="CustomerOverview">
+        <div className="space-y-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Welcome back, {profile?.full_name?.split(' ')[0]}!
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Here's what's happening with your packages
+            </p>
+          </div>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {isAuthError ? (
+                <>
+                  You don't have permission to view this data. Please sign in again.
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="ml-4"
+                    onClick={() => window.location.hash = '/auth'}
+                  >
+                    Sign In
+                  </Button>
+                </>
+              ) : (
+                'Failed to load your package data. Please try refreshing the page.'
+              )}
+            </AlertDescription>
+          </Alert>
+        </div>
+      </ComponentErrorBoundary>
+    );
+  }
+
+  // Show message if no customer record exists
+  if (!customerRecord) {
+    return (
+      <ComponentErrorBoundary componentName="CustomerOverview">
+        <div className="space-y-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Welcome, {profile?.full_name?.split(' ')[0]}!
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Setting up your customer profile...
+            </p>
+          </div>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Your customer profile is being set up. Please contact support if this message persists.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </ComponentErrorBoundary>
+    );
+  }
+
+  const packages = packageData?.data || [];
+
+  // Calculate stats
+  const stats = {
+    total: packages.length,
+    received: packages.filter(p => p.status === 'received').length,
+    inTransit: packages.filter(p => p.status === 'in_transit').length,
+    readyForPickup: packages.filter(p => p.status === 'ready_for_pickup').length,
+    pickedUp: packages.filter(p => p.status === 'picked_up').length,
+  };
+
+  const recentPackages = packages.slice(0, 5);
 
   return (
     <ComponentErrorBoundary componentName="CustomerOverview">

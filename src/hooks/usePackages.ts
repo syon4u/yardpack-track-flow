@@ -67,13 +67,15 @@ interface TransformedPackage {
 }
 
 export const usePackages = (options: UsePackagesOptions = {}) => {
-  const { user, profile } = useAuth();
+  const { user, profile, session } = useAuth();
   const { searchTerm, statusFilter } = options;
   
   return useQuery({
     queryKey: ['packages', user?.id, profile?.role, searchTerm, statusFilter],
     queryFn: async (): Promise<TransformedPackage[]> => {
-      if (!user) return [];
+      if (!user || !session) {
+        throw new Error('Authentication required');
+      }
       
       console.log('Fetching packages for user:', user.id, 'with role:', profile?.role);
       
@@ -109,7 +111,10 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
 
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching packages:', error);
+        throw error;
+      }
       
       console.log('Fetched packages:', data);
       
@@ -125,13 +130,21 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
       
       return transformedData;
     },
-    enabled: !!user,
+    enabled: !!user && !!session && !!profile,
+    retry: (failureCount, error) => {
+      // Don't retry auth errors
+      if (error.message?.includes('auth') || error.message?.includes('JWT') || error.message?.includes('Authentication')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 };
 
 export const useUpdatePackageStatus = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user, session } = useAuth();
 
   const statusLabels = {
     received: 'Received at Miami',
@@ -143,6 +156,10 @@ export const useUpdatePackageStatus = () => {
   
   return useMutation({
     mutationFn: async ({ packageId, status }: { packageId: string; status: PackageStatus }) => {
+      if (!user || !session) {
+        throw new Error('Authentication required');
+      }
+
       console.log('Updating package status:', packageId, status);
       
       const { error } = await supabase
@@ -165,9 +182,13 @@ export const useUpdatePackageStatus = () => {
     onError: (error: Error, variables) => {
       console.error('Package status update failed:', error);
       const statusLabel = statusLabels[variables.status] || variables.status;
+      const isAuthError = error.message?.includes('auth') || error.message?.includes('Authentication');
+      
       toast({
         title: 'Status update failed',
-        description: `Failed to update package status to "${statusLabel}". ${error.message || 'Please try again.'}`,
+        description: isAuthError 
+          ? 'Authentication required. Please sign in again.'
+          : `Failed to update package status to "${statusLabel}". ${error.message || 'Please try again.'}`,
         variant: 'destructive',
       });
     },
@@ -177,6 +198,7 @@ export const useUpdatePackageStatus = () => {
 export const useCreatePackage = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user, session } = useAuth();
   
   return useMutation({
     mutationFn: async (packageData: {
@@ -193,6 +215,10 @@ export const useCreatePackage = () => {
       carrier?: string;
       external_tracking_number?: string;
     }) => {
+      if (!user || !session) {
+        throw new Error('Authentication required');
+      }
+
       console.log('Creating new package:', packageData);
       
       const { data, error } = await supabase
@@ -213,9 +239,13 @@ export const useCreatePackage = () => {
     },
     onError: (error: Error) => {
       console.error('Package creation failed:', error);
+      const isAuthError = error.message?.includes('auth') || error.message?.includes('Authentication');
+      
       toast({
         title: 'Package creation failed',
-        description: error.message || 'There was an error creating the package. Please try again.',
+        description: isAuthError 
+          ? 'Authentication required. Please sign in again.'
+          : error.message || 'There was an error creating the package. Please try again.',
         variant: 'destructive',
       });
     },
