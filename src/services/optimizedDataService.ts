@@ -95,7 +95,7 @@ export class OptimizedDataService {
       }
 
       // Execute the main query with timeout
-      const { data, error } = await createQueryWithTimeout(query.then(), 8000);
+      const { data, error } = await createQueryWithTimeout(Promise.resolve(query), 8000);
       if (error) throw error;
 
       // Get total count with a separate query
@@ -116,7 +116,7 @@ export class OptimizedDataService {
         countQuery = countQuery.eq('status', filters.statusFilter as PackageStatus);
       }
 
-      const { count: totalCount, error: countError } = await createQueryWithTimeout(countQuery.then(), 5000);
+      const { count: totalCount, error: countError } = await createQueryWithTimeout(Promise.resolve(countQuery), 5000);
       if (countError) throw countError;
 
       const total = totalCount || 0;
