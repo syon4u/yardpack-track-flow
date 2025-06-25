@@ -176,9 +176,9 @@ export class OptimizedDataService {
       const { page, limit } = pagination;
       const offset = (page - 1) * limit;
 
-      // Fetch customers with package statistics
+      // Fetch customers from the customers table which includes both registered and package_only customers
       let query = supabase
-        .from('profiles')
+        .from('customers')
         .select(`
           *,
           packages(
@@ -189,8 +189,7 @@ export class OptimizedDataService {
             created_at
           )
         `)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
+        .order('created_at', { ascending: false });
 
       // Apply filters
       if (filters.searchTerm && filters.searchTerm.trim()) {
@@ -198,7 +197,19 @@ export class OptimizedDataService {
         query = query.or(`full_name.ilike.%${searchLower}%,email.ilike.%${searchLower}%,address.ilike.%${searchLower}%`);
       }
 
-      const { data, error, count } = await query;
+      if (filters.customerTypeFilter && filters.customerTypeFilter !== 'all') {
+        query = query.eq('customer_type', filters.customerTypeFilter);
+      }
+
+      // Get total count for pagination (before applying range)
+      const { count: totalCount, error: countError } = await supabase
+        .from('customers')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) throw countError;
+
+      // Apply pagination
+      const { data, error } = await query.range(offset, offset + limit - 1);
       if (error) throw error;
 
       // Transform to unified customer format with calculated stats
@@ -217,7 +228,7 @@ export class OptimizedDataService {
 
         return {
           id: customer.id,
-          type: 'registered' as const,
+          type: customer.customer_type as 'registered' | 'guest' | 'package_only',
           full_name: customer.full_name,
           email: customer.email,
           phone_number: customer.phone_number,
@@ -229,16 +240,12 @@ export class OptimizedDataService {
           total_spent: totalSpent,
           outstanding_balance: outstandingBalance,
           last_activity: lastActivity,
-          registration_status: 'registered' as const
+          registration_status: customer.customer_type as 'registered' | 'guest' | 'package_only'
         };
       });
 
-      // Apply client-side filters
+      // Apply client-side filters for activity
       let filteredCustomers = unifiedCustomers;
-
-      if (filters.customerTypeFilter && filters.customerTypeFilter !== 'all') {
-        filteredCustomers = filteredCustomers.filter(c => c.type === filters.customerTypeFilter);
-      }
 
       if (filters.activityFilter && filters.activityFilter !== 'all') {
         const isActive = (c: UnifiedCustomer) => c.active_packages > 0;
@@ -249,7 +256,7 @@ export class OptimizedDataService {
         }
       }
 
-      const total = count || filteredCustomers.length;
+      const total = totalCount || 0;
       const totalPages = Math.ceil(total / limit);
 
       return {
@@ -297,7 +304,7 @@ export class OptimizedDataService {
           }),
         
         supabase
-          .from('profiles')
+          .from('customers')
           .select(`
             *,
             packages(
@@ -307,6 +314,8 @@ export class OptimizedDataService {
           `)
           .then(({ data }) => {
             const totalCustomers = data?.length || 0;
+            const registeredCustomers = data?.filter(customer => customer.customer_type === 'registered').length || 0;
+            const packageOnlyCustomers = data?.filter(customer => customer.customer_type === 'package_only').length || 0;
             const activeCustomers = data?.filter(customer => {
               const packages = customer.packages || [];
               return packages.some((p: any) => 
@@ -316,8 +325,8 @@ export class OptimizedDataService {
 
             return {
               total: totalCustomers,
-              registered: totalCustomers,
-              package_only: 0,
+              registered: registeredCustomers,
+              package_only: packageOnlyCustomers,
               active: activeCustomers,
             };
           })
