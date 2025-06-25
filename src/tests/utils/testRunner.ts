@@ -3,6 +3,7 @@ import { PerformanceTestRunner } from '@/utils/performanceTests';
 import { DataIntegrityService } from '@/services/dataIntegrityService';
 import { ProductionConfigService } from '@/services/productionConfigService';
 import { MonitoringService } from '@/services/monitoringService';
+import { SecurityService } from '@/services/securityService';
 
 export class AutomatedTestRunner {
   static async runCriticalUserFlows(): Promise<{
@@ -43,7 +44,7 @@ export class AutomatedTestRunner {
     try {
       // Test rate limiting
       const rateLimitResult = SecurityService.checkRateLimit('login', 'test@example.com');
-      if (!rateLimitResult.allowed === false) return false;
+      if (!rateLimitResult.allowed) return false;
 
       // Test CSRF token generation
       const csrfToken = SecurityService.generateCSRFToken();

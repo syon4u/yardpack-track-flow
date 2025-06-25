@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { usePackages } from '@/hooks/usePackages';
 import { AuthProvider } from '@/contexts/AuthContext';
+import React from 'react';
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
