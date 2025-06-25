@@ -151,7 +151,7 @@ export class UnifiedDataService {
         const profileData = pkg.profiles && typeof pkg.profiles === 'object' && !('error' in pkg.profiles) 
           ? {
               ...pkg.profiles,
-              role: pkg.profiles.role || 'customer' as const
+              role: 'customer' as const // Default role since profiles table has role
             } 
           : null;
           
