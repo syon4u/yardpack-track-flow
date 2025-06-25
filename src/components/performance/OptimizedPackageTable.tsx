@@ -7,13 +7,26 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter } from 'lucide-react';
-import { UnifiedPackage } from '@/types/unified';
 import { getStatusConfig } from '@/utils/dataTransforms';
 import { useDebounce } from '@/hooks/useDebounce';
 
+// Define the expected data type for the table
+interface OptimizedPackageData {
+  id: string;
+  tracking_number: string;
+  customer_name: string;
+  customer_email: string | null;
+  description: string;
+  status: string;
+  package_value: number | null;
+  date_received: string;
+  invoice_uploaded: boolean;
+  duty_assessed: boolean;
+}
+
 interface OptimizedPackageTableProps {
   customerId?: string;
-  onPackageClick?: (packageItem: UnifiedPackage) => void;
+  onPackageClick?: (packageItem: OptimizedPackageData) => void;
 }
 
 export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
@@ -53,7 +66,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       key: 'tracking_number',
       header: 'Tracking Number',
       width: 150,
-      render: (pkg: UnifiedPackage) => (
+      render: (pkg: OptimizedPackageData) => (
         <span className="font-mono text-sm font-medium">{pkg.tracking_number}</span>
       ),
     },
@@ -61,7 +74,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       key: 'customer_name',
       header: 'Customer',
       width: 200,
-      render: (pkg: UnifiedPackage) => (
+      render: (pkg: OptimizedPackageData) => (
         <div>
           <div className="font-medium">{pkg.customer_name}</div>
           {pkg.customer_email && (
@@ -74,7 +87,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       key: 'description',
       header: 'Description',
       width: 250,
-      render: (pkg: UnifiedPackage) => (
+      render: (pkg: OptimizedPackageData) => (
         <span className="text-sm">{pkg.description}</span>
       ),
     },
@@ -82,8 +95,8 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       key: 'status',
       header: 'Status',
       width: 150,
-      render: (pkg: UnifiedPackage) => {
-        const statusConfig = getStatusConfig(pkg.status);
+      render: (pkg: OptimizedPackageData) => {
+        const statusConfig = getStatusConfig(pkg.status as any);
         return (
           <Badge 
             variant="outline"
@@ -98,7 +111,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       key: 'package_value',
       header: 'Value',
       width: 100,
-      render: (pkg: UnifiedPackage) => (
+      render: (pkg: OptimizedPackageData) => (
         <span className="text-sm font-medium">
           {pkg.package_value ? `$${pkg.package_value.toFixed(2)}` : '-'}
         </span>
@@ -108,7 +121,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       key: 'date_received',
       header: 'Date Received',
       width: 120,
-      render: (pkg: UnifiedPackage) => (
+      render: (pkg: OptimizedPackageData) => (
         <span className="text-sm">
           {new Date(pkg.date_received).toLocaleDateString()}
         </span>

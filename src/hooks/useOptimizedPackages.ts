@@ -19,6 +19,11 @@ interface OptimizedPackageData extends PackageRow {
     uploaded_by: string;
     uploaded_at: string;
   }>;
+  // Add computed properties to match UnifiedPackage interface
+  customer_name: string;
+  customer_email: string | null;
+  invoice_uploaded: boolean;
+  duty_assessed: boolean;
 }
 
 interface UseOptimizedPackagesFilters {
@@ -80,12 +85,10 @@ export const useOptimizedPackages = (
 
       // Apply status filter with proper type casting
       if (statusFilter && statusFilter !== 'all') {
-        const validStatuses: Database['public']['Enums']['package_status'][] = [
-          'received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'
-        ];
+        const validStatuses = ['received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'];
         
-        if (validStatuses.includes(statusFilter as Database['public']['Enums']['package_status'])) {
-          query = query.eq('status', statusFilter as Database['public']['Enums']['package_status']);
+        if (validStatuses.includes(statusFilter)) {
+          query = query.eq('status', statusFilter);
         }
       }
 
@@ -108,8 +111,17 @@ export const useOptimizedPackages = (
 
       console.log(`Fetched ${data?.length || 0} packages out of ${total} total`);
 
+      // Transform data to include computed properties
+      const transformedData = (data || []).map(pkg => ({
+        ...pkg,
+        customer_name: pkg.customers?.full_name || 'Unknown Customer',
+        customer_email: pkg.customers?.email || null,
+        invoice_uploaded: (pkg.invoices || []).length > 0,
+        duty_assessed: pkg.duty_amount !== null,
+      }));
+
       return {
-        data: data || [],
+        data: transformedData,
         total,
         hasMore,
         pagination: {
@@ -131,15 +143,55 @@ export const useOptimizedPackages = (
     if (query.data?.pagination.hasNext) {
       const nextPagination = { ...pagination, page: pagination.page + 1 };
       queryClient.prefetchQuery({
-        queryKey: ['optimized-packages', filters, nextPagination],
-        queryFn: () => {
-          // Use the same logic but for next page
-          return query.queryFn();
+        queryKey: ['optimized-packages', customerId, searchTerm, statusFilter, nextPagination.page, nextPagination.limit],
+        queryFn: async () => {
+          // Create a new query for the next page - can't reuse the existing queryFn
+          const nextFilters = { customerId, searchTerm, statusFilter };
+          
+          let nextQuery = supabase
+            .from('packages')
+            .select(`
+              *,
+              customers!fk_packages_customer_id(*),
+              invoices!fk_invoices_package_id(*)
+            `, { count: 'exact' });
+
+          if (customerId) {
+            nextQuery = nextQuery.eq('customer_id', customerId);
+          }
+
+          if (searchTerm && searchTerm.trim()) {
+            nextQuery = nextQuery.or(`tracking_number.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,external_tracking_number.ilike.%${searchTerm}%`);
+          }
+
+          if (statusFilter && statusFilter !== 'all') {
+            const validStatuses = ['received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'];
+            if (validStatuses.includes(statusFilter)) {
+              nextQuery = nextQuery.eq('status', statusFilter);
+            }
+          }
+
+          const nextOffset = (nextPagination.page - 1) * nextPagination.limit;
+          nextQuery = nextQuery
+            .order('created_at', { ascending: false })
+            .range(nextOffset, nextOffset + nextPagination.limit - 1);
+
+          const { data, error } = await nextQuery;
+
+          if (error) throw error;
+
+          return (data || []).map(pkg => ({
+            ...pkg,
+            customer_name: pkg.customers?.full_name || 'Unknown Customer',
+            customer_email: pkg.customers?.email || null,
+            invoice_uploaded: (pkg.invoices || []).length > 0,
+            duty_assessed: pkg.duty_amount !== null,
+          }));
         },
         staleTime: 30 * 1000,
       });
     }
-  }, [query.data?.pagination.hasNext, pagination, filters, queryClient]);
+  }, [query.data?.pagination.hasNext, pagination, customerId, searchTerm, statusFilter, queryClient]);
 
   useEffect(() => {
     if (query.data && !query.isFetching) {
