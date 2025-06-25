@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
@@ -20,16 +19,12 @@ import ErrorBoundary from './error/ErrorBoundary';
 const CustomerDashboard: React.FC = () => {
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const isMobile = useIsMobile();
   
   // Use optimized packages hook for better performance
   const { data: packageData, isLoading } = useOptimizedPackages(
     { 
-      customerId: profile?.id,
-      searchTerm: searchTerm || undefined,
-      statusFilter: statusFilter !== 'all' ? statusFilter : undefined
+      customerId: profile?.id
     },
     { page: 1, limit: 1000 }
   );
@@ -115,12 +110,7 @@ const CustomerDashboard: React.FC = () => {
 
           <TabsContent value="packages" className="space-y-4 sm:space-y-6">
             <ErrorBoundary>
-              <CustomerPackagesTab
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-              />
+              <CustomerPackagesTab />
             </ErrorBoundary>
           </TabsContent>
 
