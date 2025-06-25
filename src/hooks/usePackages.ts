@@ -2,7 +2,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
@@ -67,17 +66,12 @@ interface TransformedPackage {
 }
 
 export const usePackages = (options: UsePackagesOptions = {}) => {
-  const { user, profile, session } = useAuth();
   const { searchTerm, statusFilter } = options;
   
   return useQuery({
-    queryKey: ['packages', user?.id, profile?.role, searchTerm, statusFilter],
+    queryKey: ['packages', searchTerm, statusFilter],
     queryFn: async (): Promise<TransformedPackage[]> => {
-      if (!user || !session) {
-        throw new Error('Authentication required');
-      }
-      
-      console.log('Fetching packages for user:', user.id, 'with role:', profile?.role);
+      console.log('Fetching packages');
       
       let query = supabase
         .from('packages')
@@ -88,10 +82,7 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
         `)
         .order('created_at', { ascending: false });
 
-      // If customer, only show packages for customers linked to their user account
-      if (profile?.role === 'customer') {
-        query = query.eq('customers.user_id', user.id);
-      }
+      // Remove all role-based filtering - show all packages
 
       // Apply search filter
       if (searchTerm && searchTerm.trim()) {
@@ -130,12 +121,8 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
       
       return transformedData;
     },
-    enabled: !!user && !!session && !!profile,
+    enabled: true, // Always enabled, no auth checks
     retry: (failureCount, error) => {
-      // Don't retry auth errors
-      if (error.message?.includes('auth') || error.message?.includes('JWT') || error.message?.includes('Authentication')) {
-        return false;
-      }
       return failureCount < 2;
     },
   });
@@ -144,7 +131,6 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
 export const useUpdatePackageStatus = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user, session } = useAuth();
 
   const statusLabels = {
     received: 'Received at Miami',
@@ -156,10 +142,6 @@ export const useUpdatePackageStatus = () => {
   
   return useMutation({
     mutationFn: async ({ packageId, status }: { packageId: string; status: PackageStatus }) => {
-      if (!user || !session) {
-        throw new Error('Authentication required');
-      }
-
       console.log('Updating package status:', packageId, status);
       
       const { error } = await supabase
@@ -182,13 +164,10 @@ export const useUpdatePackageStatus = () => {
     onError: (error: Error, variables) => {
       console.error('Package status update failed:', error);
       const statusLabel = statusLabels[variables.status] || variables.status;
-      const isAuthError = error.message?.includes('auth') || error.message?.includes('Authentication');
       
       toast({
         title: 'Status update failed',
-        description: isAuthError 
-          ? 'Authentication required. Please sign in again.'
-          : `Failed to update package status to "${statusLabel}". ${error.message || 'Please try again.'}`,
+        description: `Failed to update package status to "${statusLabel}". ${error.message || 'Please try again.'}`,
         variant: 'destructive',
       });
     },
@@ -198,7 +177,6 @@ export const useUpdatePackageStatus = () => {
 export const useCreatePackage = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user, session } = useAuth();
   
   return useMutation({
     mutationFn: async (packageData: {
@@ -215,10 +193,6 @@ export const useCreatePackage = () => {
       carrier?: string;
       external_tracking_number?: string;
     }) => {
-      if (!user || !session) {
-        throw new Error('Authentication required');
-      }
-
       console.log('Creating new package:', packageData);
       
       const { data, error } = await supabase
@@ -239,13 +213,10 @@ export const useCreatePackage = () => {
     },
     onError: (error: Error) => {
       console.error('Package creation failed:', error);
-      const isAuthError = error.message?.includes('auth') || error.message?.includes('Authentication');
       
       toast({
         title: 'Package creation failed',
-        description: isAuthError 
-          ? 'Authentication required. Please sign in again.'
-          : error.message || 'There was an error creating the package. Please try again.',
+        description: error.message || 'There was an error creating the package. Please try again.',
         variant: 'destructive',
       });
     },

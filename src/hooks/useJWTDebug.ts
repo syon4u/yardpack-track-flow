@@ -1,73 +1,32 @@
 
 import { useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useQueryWithRetry } from './useQueryWithRetry';
 
 export const useJWTDebug = () => {
-  const { refreshJWT, forceReauth, session } = useAuth();
-  const { executeWithRetry } = useQueryWithRetry();
-
   useEffect(() => {
-    // Add JWT test functions to window for manual testing
+    // Add disabled JWT test functions to window
     (window as any).testJWTRefresh = async () => {
-      console.log('🔄 Testing JWT refresh...');
-      const result = await refreshJWT();
-      console.log('JWT refresh result:', result);
-      return result;
+      console.log('🚫 JWT refresh disabled');
+      return { session: null, error: 'JWT disabled' };
     };
 
     (window as any).testForceReauth = async () => {
-      console.log('🚪 Testing force re-authentication...');
-      await forceReauth();
-      console.log('Force re-auth completed');
+      console.log('🚫 Force re-authentication disabled');
     };
 
     (window as any).testQueryWithRetry = async () => {
-      console.log('🧪 Testing query with retry logic...');
-      
-      const result = await executeWithRetry(async () => {
-        return await supabase
-          .from('profiles')
-          .select('id, email, role')
-          .limit(3);
-      });
-      
-      console.log('Query with retry result:', result);
-      return result;
+      console.log('🚫 Query with retry disabled');
+      return { data: null, error: 'JWT disabled' };
     };
 
     (window as any).checkJWTExpiry = () => {
-      if (!session?.access_token) {
-        console.log('❌ No JWT token available');
-        return;
-      }
-
-      try {
-        const base64Payload = session.access_token.split('.')[1];
-        const payload = JSON.parse(atob(base64Payload));
-        const now = Math.floor(Date.now() / 1000);
-        const expiresAt = payload.exp;
-        const timeUntilExpiry = expiresAt - now;
-        
-        console.log('🕐 JWT Expiry Info:', {
-          currentTime: now,
-          expiresAt: expiresAt,
-          timeUntilExpiry: timeUntilExpiry,
-          timeUntilExpiryMinutes: Math.floor(timeUntilExpiry / 60),
-          isExpired: timeUntilExpiry <= 0,
-          willExpireSoon: timeUntilExpiry < 600 // Less than 10 minutes
-        });
-      } catch (error) {
-        console.error('❌ Failed to decode JWT:', error);
-      }
+      console.log('🚫 JWT expiry check disabled');
     };
 
-    console.log('🛠️ JWT debug functions added to window:');
-    console.log('- Call window.testJWTRefresh() to test token refresh');
-    console.log('- Call window.testForceReauth() to test forced logout');
-    console.log('- Call window.testQueryWithRetry() to test query retry logic');
-    console.log('- Call window.checkJWTExpiry() to check token expiry');
+    console.log('🛠️ JWT debug functions (all disabled):');
+    console.log('- JWT refresh: DISABLED');
+    console.log('- Force reauth: DISABLED'); 
+    console.log('- Query retry: DISABLED');
+    console.log('- JWT expiry check: DISABLED');
 
     // Cleanup
     return () => {
@@ -76,5 +35,5 @@ export const useJWTDebug = () => {
       delete (window as any).testQueryWithRetry;
       delete (window as any).checkJWTExpiry;
     };
-  }, [refreshJWT, forceReauth, executeWithRetry, session]);
+  }, []);
 };

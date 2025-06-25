@@ -1,6 +1,4 @@
 
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
 
 interface QueryRetryOptions {
@@ -9,8 +7,6 @@ interface QueryRetryOptions {
 }
 
 export const useQueryWithRetry = () => {
-  const { refreshJWT, forceReauth } = useAuth();
-
   const executeWithRetry = async <T>(
     queryFn: () => Promise<{ data: T | null; error: PostgrestError | null }>,
     options: QueryRetryOptions = {}
@@ -19,7 +15,7 @@ export const useQueryWithRetry = () => {
     let lastError: PostgrestError | null = null;
     
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      console.log(`🔄 Query attempt ${attempt + 1}/${maxRetries + 1}`);
+      console.log(`🔄 Query attempt ${attempt + 1}/${maxRetries + 1} (JWT disabled)`);
       
       try {
         const result = await queryFn();
@@ -35,25 +31,9 @@ export const useQueryWithRetry = () => {
         lastError = result.error;
         console.error(`❌ Query failed on attempt ${attempt + 1}:`, result.error);
         
-        // Check if it's an auth-related error
-        const isAuthError = result.error.code === 'PGRST301' || 
-                           result.error.message?.includes('JWT') ||
-                           result.error.message?.includes('auth') ||
-                           result.error.message?.includes('permission');
-        
-        if (isAuthError && attempt < maxRetries) {
-          console.log('🔑 Auth error detected, attempting JWT refresh...');
-          
-          // Try to refresh the JWT token
-          const refreshResult = await refreshJWT();
-          
-          if (refreshResult.error) {
-            console.error('❌ JWT refresh failed, forcing re-authentication...');
-            await forceReauth();
-            return { data: null, error: result.error };
-          }
-          
-          console.log('✅ JWT refreshed, retrying query...');
+        // Since JWT is disabled, just retry without auth refresh
+        if (attempt < maxRetries) {
+          console.log('🔄 Retrying query without JWT refresh...');
           
           // Wait before retrying
           if (retryDelay > 0) {
@@ -63,7 +43,7 @@ export const useQueryWithRetry = () => {
           continue; // Retry the query
         }
         
-        // If not an auth error or max retries reached, return the error
+        // If max retries reached, return the error
         break;
         
       } catch (exception) {

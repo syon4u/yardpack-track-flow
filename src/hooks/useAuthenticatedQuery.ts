@@ -1,6 +1,5 @@
 
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
 import { PostgrestError } from '@supabase/supabase-js';
 
 interface AuthenticatedQueryOptions<T> extends Omit<UseQueryOptions<T, PostgrestError>, 'queryKey' | 'queryFn'> {
@@ -12,30 +11,18 @@ interface AuthenticatedQueryOptions<T> extends Omit<UseQueryOptions<T, Postgrest
 export const useAuthenticatedQuery = <T>({
   queryKey,
   queryFn,
-  requireAuth = true,
+  requireAuth = false, // Disabled by default
   ...options
 }: AuthenticatedQueryOptions<T>) => {
-  const { user, session, isLoading: authLoading } = useAuth();
-
   return useQuery({
-    queryKey: [...queryKey, user?.id],
+    queryKey: [...queryKey],
     queryFn: async () => {
-      if (requireAuth && !user) {
-        throw new Error('Authentication required');
-      }
-      
-      if (requireAuth && !session?.access_token) {
-        throw new Error('Valid session required');
-      }
-      
+      // Remove all authentication checks
       return queryFn();
     },
-    enabled: requireAuth ? !!user && !!session && !authLoading : !authLoading,
+    enabled: true, // Always enabled, no auth checks
     retry: (failureCount, error) => {
-      // Don't retry auth errors
-      if (error.message?.includes('auth') || error.message?.includes('JWT')) {
-        return false;
-      }
+      // Don't retry on any specific errors
       return failureCount < 2;
     },
     ...options,

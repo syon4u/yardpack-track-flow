@@ -2,7 +2,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { Database } from '@/integrations/supabase/types';
 
 type PackageRow = Database['public']['Tables']['packages']['Row'];
@@ -58,18 +57,13 @@ export const useOptimizedPackages = (
   pagination: PaginationOptions = { page: 1, limit: 50 }
 ) => {
   const queryClient = useQueryClient();
-  const { user, profile, session } = useAuth();
   const { customerId, searchTerm, statusFilter } = filters;
   const { page, limit } = pagination;
 
   const query = useQuery({
-    queryKey: ['optimized-packages', user?.id, customerId, searchTerm, statusFilter, page, limit],
+    queryKey: ['optimized-packages', customerId, searchTerm, statusFilter, page, limit],
     queryFn: async (): Promise<OptimizedPackagesResult> => {
-      if (!user || !session) {
-        throw new Error('Authentication required');
-      }
-
-      console.log('Fetching optimized packages with filters:', filters, 'User role:', profile?.role);
+      console.log('Fetching optimized packages with filters:', filters);
 
       // Build the base query with proper joins using the new FK constraints
       let query = supabase
@@ -80,11 +74,7 @@ export const useOptimizedPackages = (
           invoices!fk_invoices_package_id(*)
         `, { count: 'exact' });
 
-      // Apply role-based filtering
-      if (profile?.role === 'customer') {
-        // For customers, only show packages for customers linked to their user account
-        query = query.eq('customers.user_id', user.id);
-      }
+      // Remove all role-based filtering - show all packages
 
       // Apply customer filter using the new FK relationship
       if (customerId) {
@@ -147,24 +137,20 @@ export const useOptimizedPackages = (
         },
       };
     },
-    enabled: !!user && !!session && !!profile,
+    enabled: true, // Always enabled, no auth checks
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error) => {
-      // Don't retry auth errors
-      if (error.message?.includes('auth') || error.message?.includes('JWT') || error.message?.includes('Authentication')) {
-        return false;
-      }
       return failureCount < 2;
     },
   });
 
   // Prefetch next page
   const prefetchNextPage = useCallback(() => {
-    if (query.data?.pagination.hasNext && user && session) {
+    if (query.data?.pagination.hasNext) {
       const nextPagination = { ...pagination, page: pagination.page + 1 };
       queryClient.prefetchQuery({
-        queryKey: ['optimized-packages', user.id, customerId, searchTerm, statusFilter, nextPagination.page, nextPagination.limit],
+        queryKey: ['optimized-packages', customerId, searchTerm, statusFilter, nextPagination.page, nextPagination.limit],
         queryFn: async () => {
           // Create a new query for the next page
           const nextFilters = { customerId, searchTerm, statusFilter };
@@ -176,10 +162,6 @@ export const useOptimizedPackages = (
               customers!fk_packages_customer_id(*),
               invoices!fk_invoices_package_id(*)
             `, { count: 'exact' });
-
-          if (profile?.role === 'customer') {
-            nextQuery = nextQuery.eq('customers.user_id', user.id);
-          }
 
           if (customerId) {
             nextQuery = nextQuery.eq('customer_id', customerId);
@@ -216,7 +198,7 @@ export const useOptimizedPackages = (
         staleTime: 30 * 1000,
       });
     }
-  }, [query.data?.pagination.hasNext, pagination, customerId, searchTerm, statusFilter, queryClient, user, session, profile]);
+  }, [query.data?.pagination.hasNext, pagination, customerId, searchTerm, statusFilter, queryClient]);
 
   useEffect(() => {
     if (query.data && !query.isFetching) {
