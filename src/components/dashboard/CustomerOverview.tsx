@@ -4,15 +4,37 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Package, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const CustomerOverview: React.FC = () => {
   const { profile } = useAuth();
-  const { data: packageData, isLoading } = useOptimizedPackages(
+  const { data: packageData, isLoading, error } = useOptimizedPackages(
     { customerId: profile?.id },
     { page: 1, limit: 10 }
   );
+
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Welcome back, {profile?.full_name?.split(' ')[0]}!
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Here's what's happening with your packages
+          </p>
+        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load your package data. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   const packages = packageData?.data || [];
 

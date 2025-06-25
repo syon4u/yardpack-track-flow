@@ -3,11 +3,29 @@ import React from 'react';
 import { useOptimizedStats } from '@/hooks/useOptimizedCustomers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, Users, TrendingUp, Clock, Plus, Scan } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Package, Users, TrendingUp, Clock, Plus, Scan, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminOverview: React.FC = () => {
-  const { data: stats, isLoading } = useOptimizedStats();
+  const { data: stats, isLoading, error } = useOptimizedStats();
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-1">Manage packages, customers, and system operations</p>
+        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load dashboard data. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

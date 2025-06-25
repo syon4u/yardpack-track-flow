@@ -1,11 +1,23 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, Users, TrendingUp, Clock } from 'lucide-react';
+import { Package, Users, TrendingUp, Clock, AlertCircle } from 'lucide-react';
 import { useOptimizedStats } from '@/hooks/useOptimizedCustomers';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const AdminDashboardStats: React.FC = () => {
-  const { data: stats, isLoading } = useOptimizedStats();
+  const { data: stats, isLoading, error } = useOptimizedStats();
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Failed to load dashboard statistics. Please try refreshing the page.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   if (isLoading) {
     return (
