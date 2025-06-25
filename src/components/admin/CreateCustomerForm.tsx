@@ -90,11 +90,21 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
             onClose();
           } catch (customerError) {
             // Rollback: Delete the auth user if customer creation failed
-            console.error('Customer creation failed, rolling back auth user');
+            console.error('Customer creation failed, attempting rollback of auth user');
             try {
               await supabase.auth.admin.deleteUser(authUser.id);
+              toast({
+                title: "Rollback Successful",
+                description: "Customer creation failed, but the user account was successfully cleaned up.",
+                variant: "destructive",
+              });
             } catch (rollbackError) {
               console.error('Failed to rollback auth user:', rollbackError);
+              toast({
+                title: "Manual Cleanup Required",
+                description: `Customer creation failed and automatic cleanup failed. Please manually delete user account: ${authUser.email}`,
+                variant: "destructive",
+              });
             }
             throw customerError;
           }
