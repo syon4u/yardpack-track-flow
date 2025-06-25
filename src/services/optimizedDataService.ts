@@ -308,7 +308,7 @@ export class OptimizedDataService {
     try {
       // Use manual aggregation since RPC doesn't exist
       const [packageStatsResult, customerStatsResult, financialStatsResult] = await Promise.all([
-        createQueryWithTimeout(
+        Promise.resolve(
           supabase
             .from('packages')
             .select('status, package_value, total_due')
@@ -331,11 +331,10 @@ export class OptimizedDataService {
               });
 
               return stats;
-            }),
-          8000 // 8 second timeout for stats
+            })
         ),
         
-        createQueryWithTimeout(
+        Promise.resolve(
           supabase
             .from('customers')
             .select(`
@@ -361,11 +360,10 @@ export class OptimizedDataService {
                 package_only: packageOnlyCustomers,
                 active: activeCustomers,
               };
-            }),
-          8000 // 8 second timeout
+            })
         ),
 
-        createQueryWithTimeout(
+        Promise.resolve(
           supabase
             .from('packages')
             .select('package_value, total_due, invoices!inner(id)')
@@ -392,8 +390,7 @@ export class OptimizedDataService {
                     pending_invoices: pendingInvoices,
                   };
                 });
-            }),
-          8000 // 8 second timeout
+            })
         )
       ]);
 
