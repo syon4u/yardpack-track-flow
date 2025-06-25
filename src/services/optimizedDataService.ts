@@ -302,95 +302,83 @@ export class OptimizedDataService {
     }
   }
 
-  // Highly optimized stats fetching using database aggregation with timeout and error handling
+  // Highly optimized stats fetching using direct aggregation queries with timeout and error handling
   static async fetchOptimizedStats(): Promise<UnifiedStats> {
     try {
-      console.log('Starting optimized stats fetch with aggregation queries...');
+      console.log('Starting optimized stats fetch with direct aggregation queries...');
       
       // Use Promise.allSettled to handle partial failures gracefully
       const [packageStatsResult, customerStatsResult, financialStatsResult] = await Promise.allSettled([
-        // Package stats using aggregation
+        // Package stats using direct aggregation
         createQueryWithTimeout(
-          supabase.rpc('get_package_stats').then(({ data, error }) => {
-            if (error) throw error;
-            return data || {
-              total: 0,
-              received: 0,
-              in_transit: 0,
-              arrived: 0,
-              ready_for_pickup: 0,
-              picked_up: 0,
-            };
-          }),
-          5000
-        ).catch(async () => {
-          // Fallback to basic count query if RPC fails
-          console.warn('Package stats RPC failed, using fallback query');
-          const { count, error } = await supabase
+          supabase
             .from('packages')
-            .select('*', { count: 'exact', head: true });
-          
-          if (error) throw error;
-          
-          return {
-            total: count || 0,
-            received: 0,
-            in_transit: 0,
-            arrived: 0,
-            ready_for_pickup: 0,
-            picked_up: 0,
-          };
-        }),
+            .select('status', { count: 'exact' })
+            .then(({ data, error, count }) => {
+              if (error) throw error;
+              
+              // Count packages by status
+              const statusCounts = (data || []).reduce((acc: any, pkg: any) => {
+                acc[pkg.status] = (acc[pkg.status] || 0) + 1;
+                return acc;
+              }, {});
+              
+              return {
+                total: count || 0,
+                received: statusCounts.received || 0,
+                in_transit: statusCounts.in_transit || 0,
+                arrived: statusCounts.arrived || 0,
+                ready_for_pickup: statusCounts.ready_for_pickup || 0,
+                picked_up: statusCounts.picked_up || 0,
+              };
+            }),
+          5000
+        ),
         
-        // Customer stats using aggregation
+        // Customer stats using direct aggregation
         createQueryWithTimeout(
-          supabase.rpc('get_customer_stats').then(({ data, error }) => {
-            if (error) throw error;
-            return data || {
-              total: 0,
-              registered: 0,
-              package_only: 0,
-              active: 0,
-            };
-          }),
-          5000
-        ).catch(async () => {
-          // Fallback to basic count query if RPC fails
-          console.warn('Customer stats RPC failed, using fallback query');
-          const { count, error } = await supabase
+          supabase
             .from('customers')
-            .select('*', { count: 'exact', head: true });
-          
-          if (error) throw error;
-          
-          return {
-            total: count || 0,
-            registered: 0,
-            package_only: 0,
-            active: 0,
-          };
-        }),
-
-        // Financial stats using aggregation
-        createQueryWithTimeout(
-          supabase.rpc('get_financial_stats').then(({ data, error }) => {
-            if (error) throw error;
-            return data || {
-              total_value: 0,
-              total_due: 0,
-              pending_invoices: 0,
-            };
-          }),
+            .select('customer_type', { count: 'exact' })
+            .then(({ data, error, count }) => {
+              if (error) throw error;
+              
+              // Count customers by type
+              const typeCounts = (data || []).reduce((acc: any, customer: any) => {
+                acc[customer.customer_type] = (acc[customer.customer_type] || 0) + 1;
+                return acc;
+              }, {});
+              
+              return {
+                total: count || 0,
+                registered: typeCounts.registered || 0,
+                package_only: (typeCounts.package_only || 0) + (typeCounts.guest || 0),
+                active: count || 0, // For now, consider all customers as potentially active
+              };
+            }),
           5000
-        ).catch(async () => {
-          // Fallback to basic aggregation if RPC fails
-          console.warn('Financial stats RPC failed, using fallback query');
-          return {
-            total_value: 0,
-            total_due: 0,
-            pending_invoices: 0,
-          };
-        })
+        ),
+
+        // Financial stats using direct aggregation
+        createQueryWithTimeout(
+          supabase
+            .from('packages')
+            .select('package_value, total_due')
+            .then(({ data, error }) => {
+              if (error) throw error;
+              
+              const packages = data || [];
+              const totalValue = packages.reduce((sum, pkg) => sum + (pkg.package_value || 0), 0);
+              const totalDue = packages.reduce((sum, pkg) => sum + (pkg.total_due || 0), 0);
+              
+              return {
+                total_value: totalValue,
+                total_due: totalDue,
+                pending_invoices: packages.filter(pkg => pkg.total_due && pkg.total_due > 0).length,
+              };
+            }),
+          5000
+        )
       ]);
 
       // Handle results, using defaults for failed queries
@@ -433,7 +421,7 @@ export class OptimizedDataService {
         console.error('Financial stats query failed:', financialStatsResult.reason);
       }
 
-      const result = {
+      const result: UnifiedStats = {
         packages: packageStats,
         customers: customerStats,
         financial: financialStats,

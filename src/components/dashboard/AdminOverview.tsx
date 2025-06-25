@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useOptimizedStats } from '@/hooks/useOptimizedStats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,13 +60,13 @@ const AdminOverview: React.FC = () => {
     const isNetworkError = error?.isNetworkError;
     
     let errorMessage = "Failed to load dashboard data.";
-    let errorIcon = AlertCircle;
+    let ErrorIcon = AlertCircle;
     
     if (isTimeout) {
       errorMessage = "Dashboard is taking longer than expected to load. This may indicate server performance issues.";
     } else if (isNetworkError) {
       errorMessage = "Network connection issue. Please check your internet connection.";
-      errorIcon = WifiOff;
+      ErrorIcon = WifiOff;
     }
 
     return (
@@ -75,7 +76,7 @@ const AdminOverview: React.FC = () => {
           <p className="text-gray-600 mt-1">Manage packages, customers, and system operations</p>
         </div>
         <Alert variant="destructive">
-          <errorIcon className="h-4 w-4" />
+          <ErrorIcon className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
             <div className="flex-1">
               <div className="font-medium mb-1">{errorMessage}</div>
