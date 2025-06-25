@@ -38,6 +38,11 @@ export interface PaginatedResponse<T> {
 
 type PackageStatus = Database['public']['Enums']['package_status'];
 
+// Helper function to sanitize search terms for Supabase queries
+function sanitizeSearchTerm(term: string): string {
+  return term.replace(/[%_]/g, '\\$&').replace(/[,]/g, '\\,');
+}
+
 export class OptimizedDataService {
   // Optimized package fetching with pagination
   static async fetchPackagesPaginated(
@@ -71,7 +76,9 @@ export class OptimizedDataService {
       }
 
       if (filters.searchTerm && filters.searchTerm.trim()) {
-        query = query.or(`tracking_number.ilike.%${filters.searchTerm}%,description.ilike.%${filters.searchTerm}%,external_tracking_number.ilike.%${filters.searchTerm}%`);
+        const safeTerm = sanitizeSearchTerm(filters.searchTerm);
+        // Use individual .or() calls to avoid comma parsing issues
+        query = query.or(`tracking_number.ilike.%${safeTerm}%,description.ilike.%${safeTerm}%,external_tracking_number.ilike.%${safeTerm}%`);
       }
 
       if (filters.statusFilter && filters.statusFilter !== 'all') {
@@ -92,7 +99,8 @@ export class OptimizedDataService {
       }
 
       if (filters.searchTerm && filters.searchTerm.trim()) {
-        countQuery = countQuery.or(`tracking_number.ilike.%${filters.searchTerm}%,description.ilike.%${filters.searchTerm}%,external_tracking_number.ilike.%${filters.searchTerm}%`);
+        const safeTerm = sanitizeSearchTerm(filters.searchTerm);
+        countQuery = countQuery.or(`tracking_number.ilike.%${safeTerm}%,description.ilike.%${safeTerm}%,external_tracking_number.ilike.%${safeTerm}%`);
       }
 
       if (filters.statusFilter && filters.statusFilter !== 'all') {
@@ -193,8 +201,8 @@ export class OptimizedDataService {
 
       // Apply filters
       if (filters.searchTerm && filters.searchTerm.trim()) {
-        const searchLower = filters.searchTerm.toLowerCase();
-        query = query.or(`full_name.ilike.%${searchLower}%,email.ilike.%${searchLower}%,address.ilike.%${searchLower}%`);
+        const safeTerm = sanitizeSearchTerm(filters.searchTerm.toLowerCase());
+        query = query.or(`full_name.ilike.%${safeTerm}%,email.ilike.%${safeTerm}%,address.ilike.%${safeTerm}%`);
       }
 
       if (filters.customerTypeFilter && filters.customerTypeFilter !== 'all') {
@@ -202,10 +210,21 @@ export class OptimizedDataService {
       }
 
       // Get total count for pagination (before applying range)
-      const { count: totalCount, error: countError } = await supabase
+      let countQuery = supabase
         .from('customers')
         .select('*', { count: 'exact', head: true });
 
+      // Apply same filters to count query
+      if (filters.searchTerm && filters.searchTerm.trim()) {
+        const safeTerm = sanitizeSearchTerm(filters.searchTerm.toLowerCase());
+        countQuery = countQuery.or(`full_name.ilike.%${safeTerm}%,email.ilike.%${safeTerm}%,address.ilike.%${safeTerm}%`);
+      }
+
+      if (filters.customerTypeFilter && filters.customerTypeFilter !== 'all') {
+        countQuery = countQuery.eq('customer_type', filters.customerTypeFilter);
+      }
+
+      const { count: totalCount, error: countError } = await countQuery;
       if (countError) throw countError;
 
       // Apply pagination
@@ -228,7 +247,7 @@ export class OptimizedDataService {
 
         return {
           id: customer.id,
-          type: customer.customer_type as 'registered' | 'guest' | 'package_only',
+          type: (customer.customer_type === 'guest' ? 'package_only' : customer.customer_type) as 'registered' | 'package_only',
           full_name: customer.full_name,
           email: customer.email,
           phone_number: customer.phone_number,
@@ -240,7 +259,7 @@ export class OptimizedDataService {
           total_spent: totalSpent,
           outstanding_balance: outstandingBalance,
           last_activity: lastActivity,
-          registration_status: customer.customer_type as 'registered' | 'guest' | 'package_only'
+          registration_status: (customer.customer_type === 'guest' ? 'package_only' : customer.customer_type) as 'registered' | 'package_only'
         };
       });
 
