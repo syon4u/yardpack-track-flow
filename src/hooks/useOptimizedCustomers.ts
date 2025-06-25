@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { OptimizedDataService } from '@/services/optimizedDataService';
 import { useToast } from '@/hooks/use-toast';
@@ -71,3 +70,6 @@ export const useOptimizedCustomers = (filters = {}, pagination = { page: 1, limi
     retry: 2,
   });
 };
+
+// Re-export the optimized stats hook for backward compatibility
+export { useOptimizedStats } from './useOptimizedStats';

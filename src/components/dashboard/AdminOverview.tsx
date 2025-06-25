@@ -1,21 +1,43 @@
 
-import React from 'react';
-import { useOptimizedStats } from '@/hooks/useOptimizedCustomers';
+import React, { useState, useEffect } from 'react';
+import { useOptimizedStats } from '@/hooks/useOptimizedStats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Package, Users, TrendingUp, Clock, Plus, Scan, AlertCircle } from 'lucide-react';
+import { Package, Users, TrendingUp, Clock, Plus, Scan, AlertCircle, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ComponentErrorBoundary from '@/components/error/ComponentErrorBoundary';
 
 const AdminOverview: React.FC = () => {
-  const { data: stats, isLoading, error } = useOptimizedStats();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const { data: stats, isLoading, error, refetch, isRefetching } = useOptimizedStats({
+    maxRetries: 2,
+    timeout: 10000
+  });
+
+  // Implement loading timeout safeguard
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    if (isLoading && !loadingTimeout) {
+      timeoutId = setTimeout(() => {
+        setLoadingTimeout(true);
+        console.warn('Admin overview loading exceeded timeout threshold');
+      }, 15000); // 15 second timeout
+    } else if (!isLoading) {
+      setLoadingTimeout(false);
+    }
+    
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [isLoading, loadingTimeout]);
 
   React.useEffect(() => {
-    console.log("Is loading:", isLoading, "Data:", stats, "Error:", error);
-    console.log('AdminOverview - Effect running', { stats, isLoading, error });
+    console.log("AdminOverview - State:", { stats, isLoading, error, loadingTimeout });
     
-    // Add error handling for potential runtime issues
     if (error) {
       console.error('AdminOverview - Query error:', error);
     }
@@ -23,10 +45,11 @@ const AdminOverview: React.FC = () => {
     if (stats) {
       console.log('AdminOverview - Stats loaded:', stats);
     }
-  }, [stats, isLoading, error]);
+  }, [stats, isLoading, error, loadingTimeout]);
 
-  if (error) {
-    console.error('AdminOverview - Rendering error state');
+  // Show error state with retry option
+  if (error || loadingTimeout) {
+    console.error('AdminOverview - Rendering error/timeout state');
     return (
       <div className="space-y-6">
         <div>
@@ -35,14 +58,33 @@ const AdminOverview: React.FC = () => {
         </div>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load dashboard data. Please try refreshing the page.
+          <AlertDescription className="flex items-center justify-between">
+            <span>
+              {loadingTimeout 
+                ? "Dashboard data is taking longer than expected to load." 
+                : "Failed to load dashboard data."
+              }
+            </span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                setLoadingTimeout(false);
+                refetch();
+              }}
+              disabled={isRefetching}
+              className="ml-4"
+            >
+              <RefreshCw className={`h-4 w-4 mr-1 ${isRefetching ? 'animate-spin' : ''}`} />
+              Try Again
+            </Button>
           </AlertDescription>
         </Alert>
       </div>
     );
   }
 
+  // Show loading state
   if (isLoading) {
     console.log('AdminOverview - Rendering loading state');
     return (
@@ -56,6 +98,11 @@ const AdminOverview: React.FC = () => {
             <div key={i} className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
           ))}
         </div>
+        {loadingTimeout && (
+          <div className="text-center text-sm text-gray-500">
+            Loading is taking longer than expected...
+          </div>
+        )}
       </div>
     );
   }
