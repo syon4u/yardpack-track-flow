@@ -206,7 +206,7 @@ export class OptimizedDataService {
       }
 
       if (filters.customerTypeFilter && filters.customerTypeFilter !== 'all') {
-        query = query.eq('customer_type', filters.customerTypeFilter);
+        query = query.eq('customer_type', filters.customerTypeFilter as 'registered' | 'guest' | 'package_only');
       }
 
       // Get total count for pagination (before applying range)
@@ -221,7 +221,7 @@ export class OptimizedDataService {
       }
 
       if (filters.customerTypeFilter && filters.customerTypeFilter !== 'all') {
-        countQuery = countQuery.eq('customer_type', filters.customerTypeFilter);
+        countQuery = countQuery.eq('customer_type', filters.customerTypeFilter as 'registered' | 'guest' | 'package_only');
       }
 
       const { count: totalCount, error: countError } = await countQuery;
@@ -232,7 +232,7 @@ export class OptimizedDataService {
       if (error) throw error;
 
       // Transform to unified customer format with calculated stats
-      const unifiedCustomers = (data || []).map((customer: any) => {
+      const unifiedCustomers: UnifiedCustomer[] = (data || []).map((customer: any) => {
         const packages = customer.packages || [];
         const totalPackages = packages.length;
         const activePackages = packages.filter((p: any) => 
@@ -259,7 +259,7 @@ export class OptimizedDataService {
           total_spent: totalSpent,
           outstanding_balance: outstandingBalance,
           last_activity: lastActivity,
-          registration_status: (customer.customer_type === 'guest' ? 'package_only' : customer.customer_type) as 'registered' | 'package_only'
+          registration_status: (customer.customer_type === 'package_only' || customer.customer_type === 'guest' ? 'guest' : 'registered') as 'registered' | 'guest'
         };
       });
 
