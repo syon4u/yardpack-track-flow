@@ -1,5 +1,5 @@
-
 import { MonitoringService } from './monitoringService';
+import { EnvironmentService } from './environmentService';
 
 export interface AppConfig {
   environment: 'development' | 'staging' | 'production';
@@ -37,16 +37,19 @@ export class ConfigService {
 
   static async initializeConfig(): Promise<AppConfig> {
     try {
-      // Detect environment
-      const hostname = window.location.hostname;
-      const environment = this.detectEnvironment(hostname);
+      // Use the new environment service
+      const envConfig = EnvironmentService.getEnvironmentConfig();
+      const environment = EnvironmentService.getEnvironmentName();
+      
+      // Log environment info
+      EnvironmentService.logEnvironmentInfo();
 
       // Base configuration
       const config: AppConfig = {
         environment,
         apiUrl: this.getApiUrl(environment),
-        supabaseUrl: 'https://lkvelwwrztkmnvgeknpa.supabase.co',
-        supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrdmVsd3dyenRrbW52Z2VrbnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MDU5MDksImV4cCI6MjA2NjI4MTkwOX0.FYncO6mPqw5mJr4ek8kQdgvdo15nXU42vqq-TUtwuts',
+        supabaseUrl: envConfig.supabaseUrl,
+        supabaseAnonKey: envConfig.supabaseAnonKey,
         features: {
           enableAnalytics: environment === 'production',
           enableErrorReporting: true,
@@ -84,6 +87,7 @@ export class ConfigService {
 
       await MonitoringService.logUserActivity('config_initialized', 'system', 'config', {
         environment,
+        appUrl: envConfig.appUrl,
         features: Object.keys(config.features).filter(key => config.features[key as keyof typeof config.features])
       });
 
@@ -153,13 +157,8 @@ export class ConfigService {
   }
 
   private static detectEnvironment(hostname: string): 'development' | 'staging' | 'production' {
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('localhost')) {
-      return 'development';
-    }
-    if (hostname.includes('staging') || hostname.includes('preview')) {
-      return 'staging';
-    }
-    return 'production';
+    // Use the new environment service
+    return EnvironmentService.getEnvironmentName();
   }
 
   private static getApiUrl(environment: string): string {
@@ -167,9 +166,9 @@ export class ConfigService {
       case 'development':
         return 'http://localhost:54321';
       case 'staging':
-        return 'https://staging-api.yardpack.com';
+        return 'https://lkvelwwrztkmnvgeknpa.supabase.co';
       case 'production':
-        return 'https://api.yardpack.com';
+        return 'https://lkvelwwrztkmnvgeknpa.supabase.co';
       default:
         return 'https://lkvelwwrztkmnvgeknpa.supabase.co';
     }

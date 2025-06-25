@@ -1,10 +1,10 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { SecurityService } from '@/services/securityService';
 import { MonitoringService } from '@/services/monitoringService';
+import { EnvironmentService } from '@/services/environmentService';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -123,7 +123,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { error };
       }
 
-      const redirectUrl = `${window.location.origin}/`;
+      // Use environment-aware redirect URL
+      const redirectUrl = EnvironmentService.getRedirectUrl('/');
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -143,10 +144,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (error) {
         await MonitoringService.logError(error, { 
           operation: 'signup_failed', 
-          email 
+          email,
+          redirectUrl 
         });
       } else {
-        await MonitoringService.logUserActivity('signup_attempted', 'auth', undefined, { email });
+        await MonitoringService.logUserActivity('signup_attempted', 'auth', undefined, { 
+          email,
+          redirectUrl 
+        });
       }
       
       return { error };
