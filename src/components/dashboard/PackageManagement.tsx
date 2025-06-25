@@ -1,49 +1,58 @@
 
 import React, { useState } from 'react';
-import { usePackages } from '@/hooks/usePackages';
+import { useAuth } from '@/contexts/AuthContext';
 import PackageList from '../PackageList';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search } from 'lucide-react';
+import CreatePackageForm from '../CreatePackageForm';
+import AdminDashboardHeader from '../admin/AdminDashboardHeader';
+import AdminDashboardStats from '../admin/AdminDashboardStats';
+import AdminPackageFilters from '../admin/AdminPackageFilters';
+import CustomerPackagesTab from '../customer/CustomerPackagesTab';
 
 const PackageManagement: React.FC = () => {
+  const { profile } = useAuth();
+  const [showCreatePackage, setShowCreatePackage] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // Admin view with full package management features
+  if (profile?.role === 'admin') {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Package Management</h1>
+          <p className="text-gray-600 mt-1">Manage all packages in the system</p>
+        </div>
+
+        <AdminDashboardHeader onCreatePackage={() => setShowCreatePackage(true)} />
+
+        <AdminDashboardStats />
+
+        <div className="space-y-4 sm:space-y-6">
+          <AdminPackageFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+          />
+
+          <PackageList searchTerm={searchTerm} statusFilter={statusFilter} />
+        </div>
+
+        {showCreatePackage && (
+          <CreatePackageForm onClose={() => setShowCreatePackage(false)} />
+        )}
+      </div>
+    );
+  }
+
+  // Customer view with their packages
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Package Management</h1>
-        <p className="text-gray-600 mt-1">View and manage all packages</p>
+        <h1 className="text-2xl font-bold text-gray-900">My Packages</h1>
+        <p className="text-gray-600 mt-1">View and track your packages</p>
       </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search packages..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="received">Received</SelectItem>
-            <SelectItem value="in_transit">In Transit</SelectItem>
-            <SelectItem value="arrived">Arrived</SelectItem>
-            <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
-            <SelectItem value="picked_up">Picked Up</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <PackageList searchTerm={searchTerm} statusFilter={statusFilter} />
+      <CustomerPackagesTab />
     </div>
   );
 };
