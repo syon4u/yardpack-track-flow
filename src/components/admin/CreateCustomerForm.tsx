@@ -45,17 +45,17 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
 
     let authUser = null;
 
-    if (formData.customer_type === 'registered') {
-      if (!formData.email || !formData.password) {
-        toast({
-          title: "Error",
-          description: "Email and password are required for registered customers",
-          variant: "destructive",
-        });
-        return;
-      }
+    try {
+      if (formData.customer_type === 'registered') {
+        if (!formData.email || !formData.password) {
+          toast({
+            title: "Error",
+            description: "Email and password are required for registered customers",
+            variant: "destructive",
+          });
+          return;
+        }
 
-      try {
         // Create user account first
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
@@ -86,6 +86,7 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
               notes: formData.notes || null,
             });
             
+            // Only close modal on successful creation
             onClose();
           } catch (customerError) {
             // Rollback: Delete the auth user if customer creation failed
@@ -98,26 +99,26 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
             throw customerError;
           }
         }
-      } catch (error: any) {
-        console.error('Registration error:', error);
-        // Toast is handled by the mutation hook
-      }
-    } else {
-      // Create customer record without user account
-      createCustomerMutation.mutate({
-        full_name: formData.full_name,
-        email: formData.email || null,
-        phone_number: formData.phone_number || null,
-        address: formData.address || null,
-        customer_type: formData.customer_type as 'guest' | 'package_only',
-        user_id: null,
-        preferred_contact_method: formData.preferred_contact_method,
-        notes: formData.notes || null,
-      });
+      } else {
+        // Create customer record without user account
+        await createCustomerMutation.mutateAsync({
+          full_name: formData.full_name,
+          email: formData.email || null,
+          phone_number: formData.phone_number || null,
+          address: formData.address || null,
+          customer_type: formData.customer_type as 'guest' | 'package_only',
+          user_id: null,
+          preferred_contact_method: formData.preferred_contact_method,
+          notes: formData.notes || null,
+        });
 
-      if (!createCustomerMutation.isError) {
+        // Only close modal on successful creation
         onClose();
       }
+    } catch (error: any) {
+      console.error('Customer creation error:', error);
+      // Don't close modal on error - let the mutation hook handle the toast
+      // The form stays open so user can retry
     }
   };
 
