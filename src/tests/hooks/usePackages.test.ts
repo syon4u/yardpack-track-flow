@@ -1,5 +1,5 @@
 
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { usePackages } from '@/hooks/usePackages';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -30,9 +30,7 @@ describe('usePackages', () => {
       wrapper: createWrapper(),
     });
 
-    await waitFor(() => {
-      expect(result.current.data).toEqual([]);
-    });
+    expect(result.current.data).toEqual([]);
   });
 
   it('should handle search term filtering', async () => {
@@ -41,9 +39,7 @@ describe('usePackages', () => {
       { wrapper: createWrapper() }
     );
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
+    expect(result.current.isLoading).toBe(false);
   });
 
   it('should handle status filtering', async () => {
@@ -52,8 +48,6 @@ describe('usePackages', () => {
       { wrapper: createWrapper() }
     );
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
+    expect(result.current.isLoading).toBe(false);
   });
 });
