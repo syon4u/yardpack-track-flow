@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -7,19 +7,9 @@ import { Search, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import PackageList from '../PackageList';
 
-interface CustomerPackagesTabProps {
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  statusFilter: string;
-  setStatusFilter: (status: string) => void;
-}
-
-const CustomerPackagesTab: React.FC<CustomerPackagesTabProps> = ({
-  searchTerm,
-  setSearchTerm,
-  statusFilter,
-  setStatusFilter
-}) => {
+const CustomerPackagesTab: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const isMobile = useIsMobile();
 
   return (
