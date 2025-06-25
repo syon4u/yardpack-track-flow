@@ -6,6 +6,7 @@ import { Database } from '@/integrations/supabase/types';
 
 type PackageRow = Database['public']['Tables']['packages']['Row'];
 type CustomerRow = Database['public']['Tables']['customers']['Row'];
+type PackageStatus = Database['public']['Enums']['package_status'];
 
 interface OptimizedPackageData extends PackageRow {
   customers: CustomerRow | null;
@@ -88,7 +89,7 @@ export const useOptimizedPackages = (
         const validStatuses = ['received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'];
         
         if (validStatuses.includes(statusFilter)) {
-          query = query.eq('status', statusFilter);
+          query = query.eq('status', statusFilter as PackageStatus);
         }
       }
 
@@ -145,7 +146,7 @@ export const useOptimizedPackages = (
       queryClient.prefetchQuery({
         queryKey: ['optimized-packages', customerId, searchTerm, statusFilter, nextPagination.page, nextPagination.limit],
         queryFn: async () => {
-          // Create a new query for the next page - can't reuse the existing queryFn
+          // Create a new query for the next page
           const nextFilters = { customerId, searchTerm, statusFilter };
           
           let nextQuery = supabase
@@ -167,7 +168,7 @@ export const useOptimizedPackages = (
           if (statusFilter && statusFilter !== 'all') {
             const validStatuses = ['received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'];
             if (validStatuses.includes(statusFilter)) {
-              nextQuery = nextQuery.eq('status', statusFilter);
+              nextQuery = nextQuery.eq('status', statusFilter as PackageStatus);
             }
           }
 
