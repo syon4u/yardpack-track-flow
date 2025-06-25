@@ -94,11 +94,11 @@ export class OptimizedDataService {
         query = query.eq('status', filters.statusFilter as PackageStatus);
       }
 
-      // Execute query with timeout
-      const { data, error, count } = await createQueryWithTimeout(query, 8000);
+      // Execute the main query with timeout
+      const { data, error } = await createQueryWithTimeout(query, 8000);
       if (error) throw error;
 
-      // Get total count with timeout
+      // Get total count with a separate query
       let countQuery = supabase
         .from('packages')
         .select('*', { count: 'exact', head: true });
