@@ -40,7 +40,7 @@ const AppContent: React.FC = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <AuthPage />} />
+        <Route path="/auth" element={user ? <Navigate to={profile?.role === 'warehouse' ? "/warehouse" : "/dashboard"} replace /> : <AuthPage />} />
         
         {/* Protected routes */}
         {user ? (
@@ -48,11 +48,15 @@ const AppContent: React.FC = () => {
             <Route 
               path="/dashboard" 
               element={
-                <RouteErrorBoundary>
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                </RouteErrorBoundary>
+                profile?.role === 'warehouse' ? (
+                  <Navigate to="/warehouse" replace />
+                ) : (
+                  <RouteErrorBoundary>
+                    <Layout>
+                      <Dashboard />
+                    </Layout>
+                  </RouteErrorBoundary>
+                )
               } 
             />
             <Route 
@@ -63,14 +67,14 @@ const AppContent: React.FC = () => {
                     <Layout><Dashboard /></Layout>
                   </RouteErrorBoundary>
                 ) : (
-                  <Navigate to="/dashboard" replace />
+                  <Navigate to={profile?.role === 'warehouse' ? "/warehouse" : "/dashboard"} replace />
                 )
               } 
             />
             <Route 
               path="/warehouse" 
               element={
-                profile?.role === 'admin' ? (
+                (profile?.role === 'admin' || profile?.role === 'warehouse') ? (
                   <RouteErrorBoundary>
                     <Layout><WarehousePage /></Layout>
                   </RouteErrorBoundary>
@@ -79,8 +83,8 @@ const AppContent: React.FC = () => {
                 )
               } 
             />
-            {/* Catch-all for authenticated users - redirect to dashboard */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            {/* Catch-all for authenticated users - redirect based on role */}
+            <Route path="*" element={<Navigate to={profile?.role === 'warehouse' ? "/warehouse" : "/dashboard"} replace />} />
           </>
         ) : (
           /* Unauthenticated users get redirected to auth */

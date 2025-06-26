@@ -1,48 +1,58 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Upload, Eye, Package as PackageIcon } from 'lucide-react';
-import { UnifiedPackage } from '@/types/unified';
+import { Upload, Eye, Edit } from 'lucide-react';
+import { format } from 'date-fns';
+
+interface Package {
+  id: string;
+  tracking_number: string;
+  description: string;
+  status: 'received' | 'processing' | 'ready_for_pickup' | 'delivered' | 'returned';
+  date_received: string;
+  estimated_delivery?: string;
+  invoices?: any[];
+  total_due?: number;
+  customer_name?: string;
+}
 
 interface PackageTableProps {
-  packages: UnifiedPackage[];
-  userRole: string;
-  onStatusUpdate?: (packageId: string, status: UnifiedPackage['status']) => void;
+  packages: Package[];
+  userRole: 'customer' | 'admin' | 'warehouse';
   onUploadInvoice?: (packageId: string) => void;
   onViewInvoice?: (packageId: string) => void;
 }
 
-const getStatusColor = (status: UnifiedPackage['status']) => {
+const getStatusColor = (status: Package['status']) => {
   switch (status) {
     case 'received':
       return 'bg-blue-100 text-blue-800';
-    case 'in_transit':
+    case 'processing':
       return 'bg-yellow-100 text-yellow-800';
-    case 'arrived':
-      return 'bg-purple-100 text-purple-800';
     case 'ready_for_pickup':
       return 'bg-green-100 text-green-800';
-    case 'picked_up':
-      return 'bg-gray-100 text-gray-800';
+    case 'delivered':
+      return 'bg-purple-100 text-purple-800';
+    case 'returned':
+      return 'bg-red-100 text-red-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
 };
 
-const getStatusLabel = (status: UnifiedPackage['status']) => {
+const getStatusLabel = (status: Package['status']) => {
   switch (status) {
     case 'received':
       return 'Received';
-    case 'in_transit':
-      return 'In Transit';
-    case 'arrived':
-      return 'Arrived';
+    case 'processing':
+      return 'Processing';
     case 'ready_for_pickup':
       return 'Ready for Pickup';
-    case 'picked_up':
-      return 'Picked Up';
+    case 'delivered':
+      return 'Delivered';
+    case 'returned':
+      return 'Returned';
     default:
       return 'Unknown';
   }
@@ -63,6 +73,7 @@ const PackageTable: React.FC<PackageTableProps> = ({
             <TableHead>Description</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Date Received</TableHead>
+            <TableHead>Estimated Delivery</TableHead>
             <TableHead>Total Due</TableHead>
             <TableHead>Invoice</TableHead>
             <TableHead>Actions</TableHead>
@@ -73,7 +84,7 @@ const PackageTable: React.FC<PackageTableProps> = ({
             <TableRow key={pkg.id}>
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
-                  <PackageIcon className="h-4 w-4 text-gray-500" />
+                  <Edit className="h-4 w-4 text-gray-500" />
                   {pkg.tracking_number}
                 </div>
               </TableCell>
@@ -85,6 +96,9 @@ const PackageTable: React.FC<PackageTableProps> = ({
               </TableCell>
               <TableCell>
                 {pkg.date_received ? new Date(pkg.date_received).toLocaleDateString() : 'N/A'}
+              </TableCell>
+              <TableCell>
+                {pkg.estimated_delivery ? format(new Date(pkg.estimated_delivery), 'yyyy-MM-dd') : 'N/A'}
               </TableCell>
               <TableCell>
                 {pkg.total_due ? `$${pkg.total_due.toFixed(2)}` : 'N/A'}
