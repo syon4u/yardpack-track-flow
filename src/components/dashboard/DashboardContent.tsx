@@ -6,6 +6,7 @@ import CustomerOverview from './CustomerOverview';
 import AdminOverview from './AdminOverview';
 import PackageManagement from './PackageManagement';
 import CustomerManagement from './CustomerManagement';
+import SystemUserManagement from './SystemUserManagement';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import ProfileSettings from './ProfileSettings';
 import SystemSettings from './SystemSettings';
@@ -22,6 +23,8 @@ const DashboardContent: React.FC = () => {
         return <PackageManagement />;
       case 'customers':
         return profile?.role === 'admin' ? <CustomerManagement /> : <CustomerOverview />;
+      case 'users':
+        return profile?.role === 'admin' ? <SystemUserManagement /> : <CustomerOverview />;
       case 'analytics':
         return profile?.role === 'admin' ? <AnalyticsDashboard /> : <CustomerOverview />;
       case 'invoices':

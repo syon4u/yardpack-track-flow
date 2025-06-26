@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { AlertCircle } from 'lucide-react';
 
 interface CreateUserFormProps {
   onClose: () => void;
@@ -52,7 +53,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onClose }) => {
       
       toast({
         title: "Success",
-        description: `${formData.role} user ${formData.full_name} created successfully`,
+        description: `System user ${formData.full_name} created successfully`,
       });
 
       onClose();
@@ -60,7 +61,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onClose }) => {
       console.error('User creation error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create user",
+        description: error.message || "Failed to create system user",
         variant: "destructive",
       });
     }
@@ -84,6 +85,13 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onClose }) => {
       <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[90vh] overflow-y-auto' : 'max-w-md'}`}>
         <DialogHeader>
           <DialogTitle className={isMobile ? 'text-lg' : ''}>Create New System User</DialogTitle>
+          <div className="flex items-start space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg mt-2">
+            <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-blue-800">
+              <p className="font-medium">System User Account</p>
+              <p>This creates an account for staff members who will operate the YardPack system. For package recipients, use Customer Management instead.</p>
+            </div>
+          </div>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className={`space-y-4 ${isMobile ? 'px-1' : ''}`}>
@@ -93,7 +101,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onClose }) => {
               id="full_name"
               value={formData.full_name}
               onChange={(e) => handleInputChange('full_name', e.target.value)}
-              placeholder="Enter user's full name"
+              placeholder="Enter staff member's full name"
               required
               className={isMobile ? 'h-12 text-base' : ''}
             />
@@ -106,24 +114,27 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onClose }) => {
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              placeholder="Enter user's email"
+              placeholder="Enter work email address"
               required
               className={isMobile ? 'h-12 text-base' : ''}
             />
           </div>
 
           <div>
-            <Label htmlFor="role" className={isMobile ? 'text-sm' : ''}>Role *</Label>
+            <Label htmlFor="role" className={isMobile ? 'text-sm' : ''}>System Role *</Label>
             <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
               <SelectTrigger className={isMobile ? 'h-12 text-base' : ''}>
-                <SelectValue placeholder="Select user role" />
+                <SelectValue placeholder="Select system role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="customer">Customer</SelectItem>
-                <SelectItem value="warehouse">Warehouse</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="customer">Customer Service</SelectItem>
+                <SelectItem value="warehouse">Warehouse Staff</SelectItem>
+                <SelectItem value="admin">Administrator</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-gray-500 mt-1">
+              Determines system access and permissions
+            </p>
           </div>
 
           <div>
@@ -178,7 +189,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onClose }) => {
               disabled={createUserMutation.isPending}
               className={isMobile ? 'w-full h-12' : ''}
             >
-              {createUserMutation.isPending ? 'Creating...' : 'Create User'}
+              {createUserMutation.isPending ? 'Creating...' : 'Create System User'}
             </Button>
           </div>
         </form>

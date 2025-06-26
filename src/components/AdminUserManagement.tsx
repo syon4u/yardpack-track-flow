@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Mail, Phone, MapPin, Calendar, UserPlus } from 'lucide-react';
+import { Search, Mail, Phone, MapPin, Calendar, UserPlus, Shield, Users, UserCheck } from 'lucide-react';
 import CreateUserForm from './admin/CreateUserForm';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -34,94 +34,109 @@ const AdminUserManagement: React.FC = () => {
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getUserStats = (userId: string) => {
-    // This would typically be calculated from packages data
-    return {
-      totalPackages: Math.floor(Math.random() * 20) + 1,
-      activePackages: Math.floor(Math.random() * 5),
-      totalSpent: Math.floor(Math.random() * 2000) + 100
-    };
-  };
-
-  // Calculate role-based stats
+  // Calculate role-based stats for system users only
   const totalUsers = users?.length || 0;
   const adminUsers = users?.filter(u => u.role === 'admin').length || 0;
   const warehouseUsers = users?.filter(u => u.role === 'warehouse').length || 0;
-  const customerUsers = users?.filter(u => u.role === 'customer').length || 0;
+  const customerServiceUsers = users?.filter(u => u.role === 'customer').length || 0;
+
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'admin': return 'default';
+      case 'warehouse': return 'destructive';
+      case 'customer': return 'secondary';
+      default: return 'outline';
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin': return Shield;
+      case 'warehouse': return Users;
+      case 'customer': return UserCheck;
+      default: return Users;
+    }
+  };
 
   if (isLoading) {
-    return <div>Loading users...</div>;
+    return <div>Loading system users...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'justify-between items-center'}`}>
-        <h2 className="text-2xl font-semibold">User Management</h2>
         <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center space-x-4'}`}>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search users..."
+              placeholder="Search system users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={`pl-10 ${isMobile ? 'w-full' : 'w-64'}`}
             />
           </div>
-          <Button 
-            onClick={() => setShowCreateUser(true)}
-            className={`flex items-center gap-2 ${isMobile ? 'w-full' : ''}`}
-          >
-            <UserPlus className="h-4 w-4" />
-            Create User
-          </Button>
         </div>
+        <Button 
+          onClick={() => setShowCreateUser(true)}
+          className={`flex items-center gap-2 ${isMobile ? 'w-full' : ''}`}
+        >
+          <UserPlus className="h-4 w-4" />
+          Create System User
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Total Users</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total System Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{totalUsers}</div>
-            <div className="text-sm text-gray-600">System users</div>
+            <div className="text-2xl font-bold">{totalUsers}</div>
+            <div className="text-xs text-gray-600">Active system accounts</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Admins</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Administrators</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{adminUsers}</div>
-            <div className="text-sm text-gray-600">Administrator accounts</div>
+            <div className="text-2xl font-bold">{adminUsers}</div>
+            <div className="text-xs text-gray-600">Full system access</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Warehouse</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Warehouse Staff</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{warehouseUsers}</div>
-            <div className="text-sm text-gray-600">Warehouse staff</div>
+            <div className="text-2xl font-bold">{warehouseUsers}</div>
+            <div className="text-xs text-gray-600">Package processing</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Customers</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Customer Service</CardTitle>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{customerUsers}</div>
-            <div className="text-sm text-gray-600">Customer accounts</div>
+            <div className="text-2xl font-bold">{customerServiceUsers}</div>
+            <div className="text-xs text-gray-600">Customer support</div>
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>User Directory</CardTitle>
+          <CardTitle>System User Directory</CardTitle>
+          <p className="text-sm text-gray-600">
+            Manage admin, warehouse, and customer service staff accounts
+          </p>
         </CardHeader>
         <CardContent>
           <Table>
@@ -130,33 +145,32 @@ const AdminUserManagement: React.FC = () => {
                 <TableHead>User</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Contact</TableHead>
-                <TableHead>Stats</TableHead>
-                <TableHead>Joined</TableHead>
+                <TableHead>Account Status</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredUsers?.map((user) => {
-                const stats = getUserStats(user.id);
+                const RoleIcon = getRoleIcon(user.role);
                 return (
                   <TableRow key={user.id}>
                     <TableCell>
-                      <div>
-                        <div className="font-medium">{user.full_name}</div>
-                        <div className="text-sm text-gray-600 flex items-center">
-                          <Mail className="h-3 w-3 mr-1" />
-                          {user.email}
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-gray-100 rounded-full">
+                          <RoleIcon className="h-4 w-4 text-gray-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium">{user.full_name}</div>
+                          <div className="text-sm text-gray-600 flex items-center">
+                            <Mail className="h-3 w-3 mr-1" />
+                            {user.email}
+                          </div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge 
-                        variant={
-                          user.role === 'admin' ? 'default' : 
-                          user.role === 'warehouse' ? 'destructive' : 
-                          'secondary'
-                        }
-                      >
+                      <Badge variant={getRoleBadgeVariant(user.role)}>
                         {user.role}
                       </Badge>
                     </TableCell>
@@ -171,17 +185,15 @@ const AdminUserManagement: React.FC = () => {
                         {user.address && (
                           <div className="text-sm flex items-center">
                             <MapPin className="h-3 w-3 mr-1" />
-                            {user.address}
+                            {user.address.substring(0, 30)}...
                           </div>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm space-y-1">
-                        <div>{stats.totalPackages} total packages</div>
-                        <div>{stats.activePackages} active</div>
-                        <div className="font-medium">${stats.totalSpent} total spent</div>
-                      </div>
+                      <Badge variant="outline" className="text-green-600 border-green-300">
+                        Active
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm flex items-center">
@@ -192,11 +204,13 @@ const AdminUserManagement: React.FC = () => {
                     <TableCell>
                       <div className="flex space-x-2">
                         <Button variant="outline" size="sm">
-                          View
-                        </Button>
-                        <Button variant="outline" size="sm">
                           Edit
                         </Button>
+                        {user.role !== 'admin' && (
+                          <Button variant="outline" size="sm" className="text-red-600">
+                            Deactivate
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
