@@ -42,6 +42,15 @@ const CustomerDashboard: React.FC = () => {
   const totalDue = customerPackages.reduce((sum, p) => sum + (p.total_due || 0), 0);
   const pickedUpPackages = customerPackages.filter(p => p.status === 'picked_up').length;
 
+  // Calculate status breakdown
+  const receivedPackages = customerPackages.filter(p => p.status === 'received').length;
+  const inTransitPackages = customerPackages.filter(p => p.status === 'in_transit').length;
+  const arrivedPackages = customerPackages.filter(p => p.status === 'arrived').length;
+  const readyForPickup = customerPackages.filter(p => p.status === 'ready_for_pickup').length;
+
+  // Calculate pending invoices (packages without invoices)
+  const pendingInvoices = customerPackages.filter(p => !p.invoice_uploaded).length;
+
   if (isLoading) {
     return <DashboardSkeleton />;
   }
@@ -72,16 +81,28 @@ const CustomerDashboard: React.FC = () => {
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
-              <CustomerActionItems />
-              <CustomerStatusBreakdown />
+              <CustomerActionItems 
+                pendingInvoices={pendingInvoices}
+                readyForPickup={readyForPickup}
+              />
+              <CustomerStatusBreakdown 
+                receivedPackages={receivedPackages}
+                inTransitPackages={inTransitPackages}
+                arrivedPackages={arrivedPackages}
+                readyForPickup={readyForPickup}
+                pickedUpPackages={pickedUpPackages}
+              />
             </div>
             
             <div className="grid gap-6 md:grid-cols-2">
               <CustomerFinancialSummary
                 totalValue={totalValue}
                 totalDue={totalDue}
+                pendingInvoices={pendingInvoices}
               />
-              <CustomerRecentActivity />
+              <CustomerRecentActivity 
+                packages={customerPackages}
+              />
             </div>
           </TabsContent>
 
