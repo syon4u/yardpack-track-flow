@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
 import { useUploadInvoice, useDownloadInvoice } from '@/hooks/useInvoices';
@@ -96,13 +97,13 @@ const PackageList: React.FC<PackageListProps> = ({
   }
 
   if (!packages || packages.length === 0) {
-    const message = searchTerm || statusFilter !== 'all' 
-      ? 'No packages found matching your filters.' 
-      : 'No packages found.';
-    
     return (
       <div className="text-center py-8">
-        <p className="text-gray-600">{message}</p>
+        <p className="text-gray-600">
+          {searchTerm || statusFilter !== 'all' 
+            ? 'No packages found matching your filters.' 
+            : 'No packages found.'}
+        </p>
         {profile?.role === 'customer' && !searchTerm && statusFilter === 'all' && (
           <p className="text-sm text-gray-500 mt-2">
             Contact YardPack to add your first package.
@@ -157,7 +158,7 @@ const PackageList: React.FC<PackageListProps> = ({
                   totalDue: pkg.total_due || undefined,
                   customerName: pkg.customer_name,
                 }}
-                userRole={profile?.role || 'customer'}
+                userRole={profile?.role as 'customer' | 'admin' | 'warehouse' || 'customer'}
                 onStatusUpdate={handleStatusUpdate}
                 onUploadInvoice={handleUploadInvoice}
                 onViewInvoice={handleViewInvoice}
@@ -167,7 +168,7 @@ const PackageList: React.FC<PackageListProps> = ({
         ) : (
           <PackageTable
             packages={packages}
-            userRole={profile?.role || 'customer'}
+            userRole={profile?.role as 'customer' | 'admin' | 'warehouse' || 'customer'}
             onUploadInvoice={handleUploadInvoice}
             onViewInvoice={handleViewInvoice}
           />

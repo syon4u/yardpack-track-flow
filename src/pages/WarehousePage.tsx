@@ -14,12 +14,12 @@ const WarehousePage: React.FC = () => {
     );
   }
 
-  if (profile?.role !== 'admin') {
+  if (profile?.role !== 'admin' && profile?.role !== 'warehouse') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h1>
-          <p className="text-gray-600">Only warehouse staff can access this page.</p>
+          <p className="text-gray-600">Only warehouse staff and admins can access this page.</p>
         </div>
       </div>
     );
