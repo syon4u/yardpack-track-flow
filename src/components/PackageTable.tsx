@@ -1,15 +1,19 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Upload, Eye, Edit } from 'lucide-react';
 import { format } from 'date-fns';
+import { Database } from '@/integrations/supabase/types';
+
+type PackageStatus = Database['public']['Enums']['package_status'];
 
 interface Package {
   id: string;
   tracking_number: string;
   description: string;
-  status: 'received' | 'processing' | 'ready_for_pickup' | 'delivered' | 'returned';
+  status: PackageStatus;
   date_received: string;
   estimated_delivery?: string;
   invoices?: any[];
@@ -24,35 +28,35 @@ interface PackageTableProps {
   onViewInvoice?: (packageId: string) => void;
 }
 
-const getStatusColor = (status: Package['status']) => {
+const getStatusColor = (status: PackageStatus) => {
   switch (status) {
     case 'received':
       return 'bg-blue-100 text-blue-800';
-    case 'processing':
+    case 'in_transit':
       return 'bg-yellow-100 text-yellow-800';
-    case 'ready_for_pickup':
+    case 'arrived':
       return 'bg-green-100 text-green-800';
-    case 'delivered':
+    case 'ready_for_pickup':
       return 'bg-purple-100 text-purple-800';
-    case 'returned':
-      return 'bg-red-100 text-red-800';
+    case 'picked_up':
+      return 'bg-gray-100 text-gray-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
 };
 
-const getStatusLabel = (status: Package['status']) => {
+const getStatusLabel = (status: PackageStatus) => {
   switch (status) {
     case 'received':
       return 'Received';
-    case 'processing':
-      return 'Processing';
+    case 'in_transit':
+      return 'In Transit';
+    case 'arrived':
+      return 'Arrived';
     case 'ready_for_pickup':
       return 'Ready for Pickup';
-    case 'delivered':
-      return 'Delivered';
-    case 'returned':
-      return 'Returned';
+    case 'picked_up':
+      return 'Picked Up';
     default:
       return 'Unknown';
   }

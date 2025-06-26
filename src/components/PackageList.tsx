@@ -12,6 +12,9 @@ import { Package } from './PackageCard';
 import CardSkeleton from './loading/CardSkeleton';
 import TableSkeleton from './loading/TableSkeleton';
 import ErrorBoundary from './error/ErrorBoundary';
+import { Database } from '@/integrations/supabase/types';
+
+type PackageStatus = Database['public']['Enums']['package_status'];
 
 interface PackageListProps {
   searchTerm?: string;
@@ -32,7 +35,7 @@ const PackageList: React.FC<PackageListProps> = ({
   const uploadInvoiceMutation = useUploadInvoice();
   const downloadInvoiceMutation = useDownloadInvoice();
 
-  const handleStatusUpdate = async (packageId: string, status: Package['status']) => {
+  const handleStatusUpdate = async (packageId: string, status: PackageStatus) => {
     try {
       await updateStatusMutation.mutateAsync({ packageId, status });
     } catch (error) {
@@ -150,7 +153,7 @@ const PackageList: React.FC<PackageListProps> = ({
                   id: pkg.id,
                   trackingNumber: pkg.tracking_number,
                   description: pkg.description,
-                  status: pkg.status as Package['status'],
+                  status: pkg.status,
                   dateReceived: pkg.date_received,
                   estimatedDelivery: pkg.estimated_delivery || undefined,
                   invoiceUploaded: pkg.invoices && pkg.invoices.length > 0,

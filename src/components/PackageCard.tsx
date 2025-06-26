@@ -1,15 +1,20 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, Package, Upload, Eye, Edit } from 'lucide-react';
 import { format } from 'date-fns';
+import { Database } from '@/integrations/supabase/types';
+
+// Use the actual database enum type
+type PackageStatus = Database['public']['Enums']['package_status'];
 
 export interface Package {
   id: string;
   trackingNumber: string;
   description: string;
-  status: 'received' | 'processing' | 'ready_for_pickup' | 'delivered' | 'returned';
+  status: PackageStatus;
   dateReceived: string;
   estimatedDelivery?: string;
   invoiceUploaded: boolean;
@@ -21,7 +26,7 @@ export interface Package {
 interface PackageCardProps {
   package: Package;
   userRole: 'customer' | 'admin' | 'warehouse';
-  onStatusUpdate?: (packageId: string, status: Package['status']) => void;
+  onStatusUpdate?: (packageId: string, status: PackageStatus) => void;
   onUploadInvoice?: (packageId: string) => void;
   onViewInvoice?: (packageId: string) => void;
 }
@@ -35,19 +40,19 @@ const PackageCard: React.FC<PackageCardProps> = ({
 }) => {
   const statusColors = {
     received: 'bg-blue-100 text-blue-800',
-    processing: 'bg-yellow-100 text-yellow-800',
-    ready_for_pickup: 'bg-green-100 text-green-800',
-    delivered: 'bg-gray-100 text-gray-800',
-    returned: 'bg-red-100 text-red-800',
+    in_transit: 'bg-yellow-100 text-yellow-800',
+    arrived: 'bg-green-100 text-green-800',
+    ready_for_pickup: 'bg-purple-100 text-purple-800',
+    picked_up: 'bg-gray-100 text-gray-800',
   };
 
-  const getStatusLabel = (status: Package['status']) => {
+  const getStatusLabel = (status: PackageStatus) => {
     switch (status) {
       case 'received': return 'Received';
-      case 'processing': return 'Processing';
+      case 'in_transit': return 'In Transit';
+      case 'arrived': return 'Arrived';
       case 'ready_for_pickup': return 'Ready for Pickup';
-      case 'delivered': return 'Delivered';
-      case 'returned': return 'Returned';
+      case 'picked_up': return 'Picked Up';
       default: return 'Unknown';
     }
   };
@@ -93,13 +98,13 @@ const PackageCard: React.FC<PackageCardProps> = ({
             <select
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-auto p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               value={pkg.status}
-              onChange={(e) => onStatusUpdate(pkg.id, e.target.value as Package['status'])}
+              onChange={(e) => onStatusUpdate(pkg.id, e.target.value as PackageStatus)}
             >
               <option value="received">Received</option>
-              <option value="processing">Processing</option>
+              <option value="in_transit">In Transit</option>
+              <option value="arrived">Arrived</option>
               <option value="ready_for_pickup">Ready for Pickup</option>
-              <option value="delivered">Delivered</option>
-              <option value="returned">Returned</option>
+              <option value="picked_up">Picked Up</option>
             </select>
           )}
         </div>

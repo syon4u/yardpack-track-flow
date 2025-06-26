@@ -98,7 +98,7 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
         query = query.or(`tracking_number.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,external_tracking_number.ilike.%${searchTerm}%`);
       }
 
-      // Apply status filter
+      // Apply status filter with the correct enum values
       if (statusFilter && statusFilter !== 'all') {
         const validStatuses: PackageStatus[] = [
           'received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'
