@@ -31,6 +31,9 @@ const WarehousePage: React.FC = () => {
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Miami Warehouse</h1>
           <p className="text-gray-600">Scan packages as they arrive at the facility</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Automatic carrier detection and API synchronization enabled
+          </p>
         </div>
         
         <PackageScanner />

@@ -54,11 +54,27 @@ export const useUSPSTracking = () => {
     mutationFn: async ({ trackingNumber, packageId }: { trackingNumber: string; packageId?: string }) => {
       console.log('Calling USPS tracking for:', trackingNumber);
       
+      // Check if USPS API is configured
+      const { data: config, error: configError } = await supabase
+        .from('api_configurations')
+        .select('*')
+        .eq('carrier', 'USPS')
+        .eq('is_active', true)
+        .single();
+
+      if (configError || !config) {
+        throw new Error('USPS API configuration not found or inactive');
+      }
+
       const { data, error } = await supabase.functions.invoke('usps-tracking', {
         body: { trackingNumber, packageId }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('USPS API Error:', error);
+        throw error;
+      }
+      
       return data as TrackingAPIResponse;
     },
     onSuccess: (data) => {
@@ -79,11 +95,17 @@ export const useUSPSTracking = () => {
         });
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('USPS tracking error:', error);
+      
+      let errorMessage = "Failed to connect to tracking service";
+      if (error.message?.includes('configuration not found')) {
+        errorMessage = "USPS API not configured. Please configure API keys in System Settings.";
+      }
+      
       toast({
         title: "Tracking Error",
-        description: "Failed to connect to tracking service",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -122,4 +144,32 @@ export const useCarrierDetection = () => {
   };
 
   return { detectCarrier };
+};
+
+// New hook to check API configuration status
+export const useApiConfigurationStatus = () => {
+  return useQuery({
+    queryKey: ['api-configurations-status'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('api_configurations')
+        .select('carrier, is_active, api_key_name')
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      const status: Record<string, { configured: boolean; keyName: string }> = {};
+      
+      for (const config of data || []) {
+        // In a real implementation, we would check if the secret exists
+        // For now, we assume it's configured if the configuration exists
+        status[config.carrier] = {
+          configured: true, // This would be actual secret check
+          keyName: config.api_key_name
+        };
+      }
+
+      return status;
+    },
+  });
 };
