@@ -1,10 +1,11 @@
+
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Scan, Package, CheckCircle, AlertCircle, Loader2, Truck, RefreshCw, Key, Settings } from 'lucide-react';
-import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
+import { Scan, Package, CheckCircle, AlertCircle, Loader2, Truck, RefreshCw, Key, Settings, Plus, TestTube } from 'lucide-react';
+import { usePackages, useUpdatePackageStatus, useCreatePackage } from '@/hooks/usePackages';
 import { useUSPSTracking, useCarrierDetection } from '@/hooks/useTrackingAPI';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,10 +19,12 @@ const PackageScanner: React.FC = () => {
   } | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [apiStatus, setApiStatus] = useState<Record<string, 'connected' | 'error' | 'unconfigured'>>({});
+  const [showTestControls, setShowTestControls] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   
   const { data: packages, isLoading: packagesLoading, error: packagesError } = usePackages();
   const updateStatusMutation = useUpdatePackageStatus();
+  const createPackageMutation = useCreatePackage();
   const uspsTrackingMutation = useUSPSTracking();
   const { detectCarrier } = useCarrierDetection();
   const { toast } = useToast();
@@ -61,6 +64,59 @@ const PackageScanner: React.FC = () => {
       return true;
     } catch {
       return false;
+    }
+  };
+
+  const createTestPackage = async () => {
+    try {
+      // Get the first customer for testing
+      const { data: customers, error: customerError } = await supabase
+        .from('customers')
+        .select('*')
+        .limit(1);
+
+      if (customerError) throw customerError;
+      if (!customers || customers.length === 0) {
+        toast({
+          title: "No Customers Found",
+          description: "Please create a customer first before creating test packages",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const testTrackingNumber = `TEST-${Date.now()}`;
+      const testPackageData = {
+        tracking_number: testTrackingNumber,
+        customer_id: customers[0].id,
+        description: 'Test Package for Scanning',
+        delivery_address: customers[0].address || '123 Test Street, Miami, FL',
+        sender_name: 'Test Sender',
+        sender_address: '456 Sender Ave, New York, NY',
+        weight: 2.5,
+        package_value: 50.00,
+        carrier: 'USPS',
+        external_tracking_number: '9400109699938908123456',
+        status: 'received' as const
+      };
+
+      await createPackageMutation.mutateAsync(testPackageData);
+      
+      toast({
+        title: "Test Package Created",
+        description: `Created test package with tracking number: ${testTrackingNumber}`,
+      });
+
+      // Auto-fill the scanner with the test tracking number
+      setScannedCode(testTrackingNumber);
+      
+    } catch (error) {
+      console.error('Error creating test package:', error);
+      toast({
+        title: "Failed to Create Test Package",
+        description: "There was an error creating the test package",
+        variant: "destructive",
+      });
     }
   };
 
@@ -307,6 +363,46 @@ const PackageScanner: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Test Controls Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TestTube className="h-5 w-5" />
+              Testing & Development
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowTestControls(!showTestControls)}
+            >
+              {showTestControls ? 'Hide' : 'Show'} Test Tools
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        {showTestControls && (
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Button
+                onClick={createTestPackage}
+                disabled={createPackageMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                {createPackageMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                Create Test Package
+              </Button>
+            </div>
+            <p className="text-sm text-gray-600">
+              Create a test package to verify scanning functionality. The tracking number will be automatically filled in the scanner below.
+            </p>
+          </CardContent>
+        )}
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -445,6 +541,7 @@ const PackageScanner: React.FC = () => {
           <p>• Package status will be updated in real-time for customers</p>
           <p>• Only packages not already marked as "Arrived" can be processed</p>
           <p>• Configure API keys in System Settings for full carrier integration</p>
+          <p>• Use the test tools above to create sample packages for testing</p>
         </CardContent>
       </Card>
       

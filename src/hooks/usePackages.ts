@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
@@ -79,12 +78,13 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
       
       console.log('Fetching packages for user:', user.id, 'with role:', profile?.role);
       
+      // Fix the ambiguous foreign key issue by specifying the correct relationship
       let query = supabase
         .from('packages')
         .select(`
           *,
           customers(*),
-          invoices(*)
+          invoices!invoices_package_id_fkey(*)
         `)
         .order('created_at', { ascending: false });
 
