@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
 import CustomerHeader from './customer/CustomerHeader';
@@ -17,6 +16,7 @@ import CustomerHelpSection from './customer/CustomerHelpSection';
 import DashboardSkeleton from './loading/DashboardSkeleton';
 import ErrorBoundary from './error/ErrorBoundary';
 import { useCustomers } from '@/hooks/useCustomers';
+import { usePackages } from '@/hooks/usePackages';
 
 const CustomerDashboard: React.FC = () => {
   const { profile } = useAuth();
@@ -27,19 +27,20 @@ const CustomerDashboard: React.FC = () => {
   const { data: customers } = useCustomers();
   const customerRecord = customers?.find(c => c.user_id === profile?.id);
   
-  // Use optimized packages hook with proper customer ID reference
-  const { data: packageData, isLoading } = useOptimizedPackages(
-    { customerId: customerRecord?.id },
-    { page: 1, limit: 1000 }
-  );
+  // Get packages for this customer
+  const { data: packages, isLoading } = usePackages({
+    searchTerm: '',
+    statusFilter: 'all'
+  });
 
-  const packages = packageData?.data || [];
+  // Filter packages for current customer
+  const customerPackages = packages?.filter(p => p.customer_id === customerRecord?.id) || [];
 
   // Calculate statistics from packages
-  const totalPackages = packages.length;
-  const totalValue = packages.reduce((sum, p) => sum + (p.package_value || 0), 0);
-  const totalDue = packages.reduce((sum, p) => sum + (p.total_due || 0), 0);
-  const pickedUpPackages = packages.filter(p => p.status === 'picked_up').length;
+  const totalPackages = customerPackages.length;
+  const totalValue = customerPackages.reduce((sum, p) => sum + (p.package_value || 0), 0);
+  const totalDue = customerPackages.reduce((sum, p) => sum + (p.total_due || 0), 0);
+  const pickedUpPackages = customerPackages.filter(p => p.status === 'picked_up').length;
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -71,17 +72,16 @@ const CustomerDashboard: React.FC = () => {
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
-              <CustomerActionItems packages={packages} />
-              <CustomerStatusBreakdown packages={packages} />
+              <CustomerActionItems />
+              <CustomerStatusBreakdown />
             </div>
             
             <div className="grid gap-6 md:grid-cols-2">
               <CustomerFinancialSummary
                 totalValue={totalValue}
                 totalDue={totalDue}
-                packages={packages}
               />
-              <CustomerRecentActivity packages={packages} />
+              <CustomerRecentActivity />
             </div>
           </TabsContent>
 
@@ -92,7 +92,7 @@ const CustomerDashboard: React.FC = () => {
           {!isMobile && (
             <>
               <TabsContent value="invoices">
-                <CustomerInvoicesTab packages={packages} />
+                <CustomerInvoicesTab />
               </TabsContent>
 
               <TabsContent value="profile">

@@ -22,7 +22,7 @@ export interface UnifiedCustomer {
   
   // Activity tracking
   last_activity: string | null;
-  registration_status: 'registered' | 'guest';
+  registration_status: 'registered' | 'guest' | 'package_only';
 }
 
 // Unified Package interface that works across all components
