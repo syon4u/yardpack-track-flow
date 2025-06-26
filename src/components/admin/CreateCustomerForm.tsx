@@ -54,20 +54,37 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
           return;
         }
 
+        // Check if user already exists
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', formData.email)
+          .maybeSingle();
+
+        if (existingUser) {
+          toast({
+            title: "Error",
+            description: "A user with this email already exists",
+            variant: "destructive",
+          });
+          return;
+        }
+
         // Create user account first
-        const { data: authData, error: authError } = await supabase.auth.signUp({
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
           email: formData.email,
           password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              full_name: formData.full_name,
-              phone_number: formData.phone_number
-            }
+          email_confirm: true,
+          user_metadata: {
+            full_name: formData.full_name,
+            phone_number: formData.phone_number
           }
         });
 
-        if (authError) throw authError;
+        if (authError) {
+          console.error('Auth error:', authError);
+          throw new Error(authError.message);
+        }
 
         if (authData.user) {
           // Create customer record linked to user
@@ -81,6 +98,11 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
             preferred_contact_method: formData.preferred_contact_method,
             notes: formData.notes || null,
           });
+
+          toast({
+            title: "Success",
+            description: `Registered user ${formData.full_name} created successfully`,
+          });
         }
       } else {
         // Create customer record without user account
@@ -93,6 +115,11 @@ const CreateCustomerForm: React.FC<CreateCustomerFormProps> = ({ onClose }) => {
           user_id: null,
           preferred_contact_method: formData.preferred_contact_method,
           notes: formData.notes || null,
+        });
+
+        toast({
+          title: "Success",
+          description: `${formData.customer_type} customer ${formData.full_name} created successfully`,
         });
       }
 

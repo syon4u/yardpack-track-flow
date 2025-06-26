@@ -58,11 +58,14 @@ const CustomerBasicInfo: React.FC<CustomerBasicInfoProps> = ({
             type="password"
             value={formData.password}
             onChange={(e) => onChange('password', e.target.value)}
-            placeholder="Enter temporary password"
+            placeholder="Enter temporary password (min 6 characters)"
             required
             minLength={6}
             className={isMobile ? 'h-12 text-base' : ''}
           />
+          <p className="text-xs text-gray-500 mt-1">
+            User will be able to change this password after first login
+          </p>
         </div>
       )}
 
