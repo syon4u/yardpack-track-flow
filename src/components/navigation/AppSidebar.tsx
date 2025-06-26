@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -61,8 +60,8 @@ const AppSidebar: React.FC = () => {
   const adminNavItems = [
     { title: 'Dashboard', url: '/dashboard', icon: Home },
     { title: 'Packages', url: '/dashboard?tab=packages', icon: Package },
-    { title: 'Customers', url: '/dashboard?tab=customers', icon: Users, description: 'Manage package recipients' },
-    { title: 'System Users', url: '/dashboard?tab=users', icon: UserCog, description: 'Manage system operators' },
+    { title: 'Customers', url: '/dashboard?tab=customers', icon: Users },
+    { title: 'System Users', url: '/dashboard?tab=users', icon: UserCog },
     { title: 'Analytics', url: '/dashboard?tab=analytics', icon: BarChart3 },
     { title: 'Scanner', url: '/warehouse', icon: Scan },
     { title: 'Settings', url: '/dashboard?tab=settings', icon: Settings },
@@ -97,7 +96,6 @@ const AppSidebar: React.FC = () => {
                     onClick={() => handleNavigation(item.url)}
                     isActive={isActive(item.url.split('?')[0])}
                     className="w-full justify-start px-3 py-2.5 text-sm font-medium rounded-lg transition-colors"
-                    title={item.description}
                   >
                     <item.icon className="h-4 w-4 mr-3" />
                     <span>{item.title}</span>

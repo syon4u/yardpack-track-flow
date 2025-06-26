@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,11 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Mail, Phone, MapPin, Calendar, UserPlus, Shield, Users, UserCheck } from 'lucide-react';
 import CreateUserForm from './admin/CreateUserForm';
+import EditUserDialog from './admin/EditUserDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const AdminUserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateUser, setShowCreateUser] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
   const isMobile = useIsMobile();
 
   const { data: users, isLoading } = useQuery({
@@ -203,7 +204,11 @@ const AdminUserManagement: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setEditingUser(user)}
+                        >
                           Edit
                         </Button>
                         {user.role !== 'admin' && (
@@ -223,6 +228,13 @@ const AdminUserManagement: React.FC = () => {
 
       {showCreateUser && (
         <CreateUserForm onClose={() => setShowCreateUser(false)} />
+      )}
+
+      {editingUser && (
+        <EditUserDialog 
+          user={editingUser} 
+          onClose={() => setEditingUser(null)} 
+        />
       )}
     </div>
   );
