@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,6 +57,15 @@ const AdminUserManagement: React.FC = () => {
       case 'warehouse': return Users;
       case 'customer': return UserCheck;
       default: return Users;
+    }
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Administrator';
+      case 'warehouse': return 'Warehouse Staff';
+      case 'customer': return 'Customer Service';
+      default: return role;
     }
   };
 
@@ -127,7 +137,7 @@ const AdminUserManagement: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{customerServiceUsers}</div>
-            <div className="text-xs text-gray-600">Customer support</div>
+            <div className="text-xs text-gray-600">Customer support staff</div>
           </CardContent>
         </Card>
       </div>
@@ -172,7 +182,7 @@ const AdminUserManagement: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Badge variant={getRoleBadgeVariant(user.role)}>
-                        {user.role}
+                        {getRoleDisplayName(user.role)}
                       </Badge>
                     </TableCell>
                     <TableCell>
