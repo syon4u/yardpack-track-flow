@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useCreatePackage } from '@/hooks/usePackages';
 import { useCarrierDetection } from '@/hooks/useTrackingAPI';
@@ -55,12 +54,12 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
       return;
     }
 
-    // Find the selected customer to get their user_id
+    // Find the selected customer
     const selectedCustomer = customers?.find(c => c.id === formData.customer_id);
-    if (!selectedCustomer?.user_id) {
+    if (!selectedCustomer) {
       toast({
         title: "Error",
-        description: "Selected customer must be registered",
+        description: "Selected customer not found",
         variant: "destructive",
       });
       return;
@@ -69,7 +68,7 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
     try {
       await createPackageMutation.mutateAsync({
         ...formData,
-        customer_id: selectedCustomer.user_id, // Use the user_id for packages table
+        customer_id: selectedCustomer.id, // Use the customer table ID directly
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
         package_value: formData.package_value ? parseFloat(formData.package_value) : undefined,
         carrier: formData.carrier || undefined,
