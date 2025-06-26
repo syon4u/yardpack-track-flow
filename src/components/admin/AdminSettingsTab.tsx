@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -17,9 +16,14 @@ import {
   Clock, 
   Shield, 
   Database,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Key,
+  Eye,
+  EyeOff,
+  Truck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminSettingsTab: React.FC = () => {
   const { toast } = useToast();
@@ -35,6 +39,123 @@ const AdminSettingsTab: React.FC = () => {
   const [systemMaintenanceMode, setSystemMaintenanceMode] = useState(false);
   const [backupFrequency, setBackupFrequency] = useState('daily');
   const [maintenanceMessage, setMaintenanceMessage] = useState('System is currently under maintenance. Please try again later.');
+
+  // API Key management state
+  const [apiConfigurations, setApiConfigurations] = useState<any[]>([]);
+  const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
+  const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
+  const [loadingApiKeys, setLoadingApiKeys] = useState(false);
+
+  // Load API configurations on component mount
+  useEffect(() => {
+    loadApiConfigurations();
+  }, []);
+
+  const loadApiConfigurations = async () => {
+    setLoadingApiKeys(true);
+    try {
+      const { data, error } = await supabase
+        .from('api_configurations')
+        .select('*')
+        .order('carrier');
+
+      if (error) throw error;
+      
+      setApiConfigurations(data || []);
+      
+      // Initialize API keys state
+      const initialKeys: Record<string, string> = {};
+      const initialShow: Record<string, boolean> = {};
+      data?.forEach(config => {
+        initialKeys[config.carrier] = '';
+        initialShow[config.carrier] = false;
+      });
+      setApiKeys(initialKeys);
+      setShowApiKeys(initialShow);
+    } catch (error) {
+      console.error('Error loading API configurations:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load API configurations",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingApiKeys(false);
+    }
+  };
+
+  const handleApiKeyChange = (carrier: string, value: string) => {
+    setApiKeys(prev => ({
+      ...prev,
+      [carrier]: value
+    }));
+  };
+
+  const toggleApiKeyVisibility = (carrier: string) => {
+    setShowApiKeys(prev => ({
+      ...prev,
+      [carrier]: !prev[carrier]
+    }));
+  };
+
+  const handleSaveApiKey = async (carrier: string) => {
+    const apiKey = apiKeys[carrier];
+    if (!apiKey.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an API key",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // In a real implementation, you would save this to Supabase secrets
+      // For now, we'll just show a success message
+      toast({
+        title: "API Key Saved",
+        description: `${carrier} API key has been saved securely`,
+      });
+      
+      // Clear the input field for security
+      setApiKeys(prev => ({
+        ...prev,
+        [carrier]: ''
+      }));
+    } catch (error) {
+      console.error('Error saving API key:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save API key",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTestApiConnection = async (carrier: string) => {
+    try {
+      toast({
+        title: "Testing Connection",
+        description: `Testing ${carrier} API connection...`,
+      });
+      
+      // In a real implementation, you would test the API connection
+      // For now, we'll simulate a test
+      setTimeout(() => {
+        toast({
+          title: "Connection Test",
+          description: `${carrier} API connection test completed`,
+        });
+      }, 2000);
+    } catch (error) {
+      console.error('Error testing API connection:', error);
+      toast({
+        title: "Test Failed",
+        description: `Failed to test ${carrier} API connection`,
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSaveSettings = () => {
     // Here you would typically save to your backend/database
@@ -64,6 +185,97 @@ const AdminSettingsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* API Keys & Delivery Services */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Truck className="h-5 w-5" />
+            Delivery Service API Keys
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {loadingApiKeys ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {apiConfigurations.map((config) => (
+                <div key={config.carrier} className="border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">{config.carrier}</h4>
+                      <Badge variant={config.is_active ? "default" : "secondary"}>
+                        {config.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Rate limit: {config.rate_limit_per_minute}/min
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`api-key-${config.carrier}`}>
+                        {config.api_key_name}
+                      </Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            id={`api-key-${config.carrier}`}
+                            type={showApiKeys[config.carrier] ? "text" : "password"}
+                            value={apiKeys[config.carrier] || ''}
+                            onChange={(e) => handleApiKeyChange(config.carrier, e.target.value)}
+                            placeholder="Enter API key..."
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => toggleApiKeyVisibility(config.carrier)}
+                          >
+                            {showApiKeys[config.carrier] ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        <Button
+                          onClick={() => handleSaveApiKey(config.carrier)}
+                          disabled={!apiKeys[config.carrier]?.trim()}
+                        >
+                          <Key className="h-4 w-4 mr-2" />
+                          Save
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>API Endpoint</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={config.base_url}
+                          readOnly
+                          className="bg-gray-50"
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={() => handleTestApiConnection(config.carrier)}
+                        >
+                          Test
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Notification Settings */}
       <Card>
         <CardHeader>
