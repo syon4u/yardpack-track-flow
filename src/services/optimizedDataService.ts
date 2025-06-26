@@ -48,19 +48,21 @@ export class OptimizedDataService {
       const { page, limit } = pagination;
       const offset = (page - 1) * limit;
 
-      // Build the query with proper joins
+      // Build the query with proper joins using customers table
       let query = supabase
         .from('packages')
         .select(`
           *,
-          profiles!packages_customer_id_fkey(
+          customers(
             id,
             full_name,
             email,
             phone_number,
-            address
+            address,
+            customer_type,
+            user_id
           ),
-          invoices(id)
+          invoices!invoices_package_id_fkey(id)
         `)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
@@ -75,7 +77,6 @@ export class OptimizedDataService {
       }
 
       if (filters.statusFilter && filters.statusFilter !== 'all') {
-        // Cast to the correct enum type
         query = query.eq('status', filters.statusFilter as PackageStatus);
       }
 
@@ -96,7 +97,6 @@ export class OptimizedDataService {
       }
 
       if (filters.statusFilter && filters.statusFilter !== 'all') {
-        // Cast to the correct enum type
         countQuery = countQuery.eq('status', filters.statusFilter as PackageStatus);
       }
 
@@ -120,8 +120,8 @@ export class OptimizedDataService {
         delivery_estimate: pkg.delivery_estimate,
         actual_delivery: pkg.actual_delivery,
         customer_id: pkg.customer_id,
-        customer_name: pkg.profiles?.full_name || 'Unknown Customer',
-        customer_email: pkg.profiles?.email || null,
+        customer_name: pkg.customers?.full_name || 'Unknown Customer',
+        customer_email: pkg.customers?.email || null,
         sender_name: pkg.sender_name,
         sender_address: pkg.sender_address,
         delivery_address: pkg.delivery_address,
@@ -138,13 +138,13 @@ export class OptimizedDataService {
         notes: pkg.notes,
         api_sync_status: pkg.api_sync_status,
         last_api_sync: pkg.last_api_sync,
-        profiles: pkg.profiles ? {
-          full_name: pkg.profiles.full_name,
-          email: pkg.profiles.email,
-          address: pkg.profiles.address,
+        profiles: pkg.customers?.user_id ? {
+          full_name: pkg.customers.full_name,
+          email: pkg.customers.email,
+          address: pkg.customers.address,
           created_at: pkg.created_at,
-          id: pkg.customer_id,
-          phone_number: pkg.profiles.phone_number,
+          id: pkg.customers.user_id,
+          phone_number: pkg.customers.phone_number,
           role: 'customer' as const,
           updated_at: pkg.updated_at
         } : null,
@@ -167,7 +167,7 @@ export class OptimizedDataService {
     }
   }
 
-  // Optimized customer fetching with pagination
+  // Optimized customer fetching with pagination using customers table
   static async fetchCustomersPaginated(
     filters: CustomerFilters = {},
     pagination: PaginationOptions = { page: 1, limit: 50 }
@@ -176,9 +176,9 @@ export class OptimizedDataService {
       const { page, limit } = pagination;
       const offset = (page - 1) * limit;
 
-      // Fetch customers with package statistics
+      // Fetch customers with package statistics from customers table
       let query = supabase
-        .from('profiles')
+        .from('customers')
         .select(`
           *,
           packages(
@@ -217,7 +217,7 @@ export class OptimizedDataService {
 
         return {
           id: customer.id,
-          type: 'registered' as const,
+          type: customer.customer_type === 'registered' ? 'registered' as const : 'package_only' as const,
           full_name: customer.full_name,
           email: customer.email,
           phone_number: customer.phone_number,
@@ -229,7 +229,7 @@ export class OptimizedDataService {
           total_spent: totalSpent,
           outstanding_balance: outstandingBalance,
           last_activity: lastActivity,
-          registration_status: 'registered' as const
+          registration_status: customer.customer_type as 'registered' | 'guest' | 'package_only'
         };
       });
 
@@ -237,7 +237,11 @@ export class OptimizedDataService {
       let filteredCustomers = unifiedCustomers;
 
       if (filters.customerTypeFilter && filters.customerTypeFilter !== 'all') {
-        filteredCustomers = filteredCustomers.filter(c => c.type === filters.customerTypeFilter);
+        if (filters.customerTypeFilter === 'registered') {
+          filteredCustomers = filteredCustomers.filter(c => c.type === 'registered');
+        } else if (filters.customerTypeFilter === 'package_only') {
+          filteredCustomers = filteredCustomers.filter(c => c.type === 'package_only');
+        }
       }
 
       if (filters.activityFilter && filters.activityFilter !== 'all') {
@@ -272,11 +276,11 @@ export class OptimizedDataService {
   // Optimized stats fetching
   static async fetchOptimizedStats(): Promise<UnifiedStats> {
     try {
-      // Use efficient aggregate queries
+      // Use efficient aggregate queries with correct table relationships
       const [packageStats, customerStats] = await Promise.all([
         supabase
           .from('packages')
-          .select('status, package_value, total_due, invoices(id)')
+          .select('status, package_value, total_due, invoices!invoices_package_id_fkey(id)')
           .then(({ data }) => {
             const stats = {
               total: data?.length || 0,
@@ -297,7 +301,7 @@ export class OptimizedDataService {
           }),
         
         supabase
-          .from('profiles')
+          .from('customers')
           .select(`
             *,
             packages(
@@ -307,6 +311,8 @@ export class OptimizedDataService {
           `)
           .then(({ data }) => {
             const totalCustomers = data?.length || 0;
+            const registeredCustomers = data?.filter(c => c.customer_type === 'registered').length || 0;
+            const packageOnlyCustomers = data?.filter(c => c.customer_type === 'package_only').length || 0;
             const activeCustomers = data?.filter(customer => {
               const packages = customer.packages || [];
               return packages.some((p: any) => 
@@ -316,8 +322,8 @@ export class OptimizedDataService {
 
             return {
               total: totalCustomers,
-              registered: totalCustomers,
-              package_only: 0,
+              registered: registeredCustomers,
+              package_only: packageOnlyCustomers,
               active: activeCustomers,
             };
           })
@@ -326,7 +332,7 @@ export class OptimizedDataService {
       // Calculate financial stats efficiently
       const { data: financialData } = await supabase
         .from('packages')
-        .select('package_value, total_due, invoices(id)');
+        .select('package_value, total_due, invoices!invoices_package_id_fkey(id)');
 
       const financialStats = {
         total_value: financialData?.reduce((sum, p) => sum + (p.package_value || 0), 0) || 0,

@@ -16,32 +16,30 @@ import CustomerProfileTab from './customer/CustomerProfileTab';
 import CustomerHelpSection from './customer/CustomerHelpSection';
 import DashboardSkeleton from './loading/DashboardSkeleton';
 import ErrorBoundary from './error/ErrorBoundary';
+import { useCustomers } from '@/hooks/useCustomers';
 
 const CustomerDashboard: React.FC = () => {
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const isMobile = useIsMobile();
   
+  // Get customer record for this user
+  const { data: customers } = useCustomers();
+  const customerRecord = customers?.find(c => c.user_id === profile?.id);
+  
   // Use optimized packages hook with proper customer ID reference
   const { data: packageData, isLoading } = useOptimizedPackages(
-    { 
-      customerId: profile?.id // This will filter by customers.user_id = profile.id
-    },
+    { customerId: customerRecord?.id },
     { page: 1, limit: 1000 }
   );
 
   const packages = packageData?.data || [];
 
-  // Calculate statistics from real data with proper null checks
+  // Calculate statistics from packages
   const totalPackages = packages.length;
-  const receivedPackages = packages.filter(p => p.status === 'received').length;
-  const inTransitPackages = packages.filter(p => p.status === 'in_transit').length;
-  const arrivedPackages = packages.filter(p => p.status === 'arrived').length;
-  const readyForPickup = packages.filter(p => p.status === 'ready_for_pickup').length;
-  const pickedUpPackages = packages.filter(p => p.status === 'picked_up').length;
-  const pendingInvoices = packages.filter(p => !p.invoices || p.invoices.length === 0).length;
   const totalValue = packages.reduce((sum, p) => sum + (p.package_value || 0), 0);
   const totalDue = packages.reduce((sum, p) => sum + (p.total_due || 0), 0);
+  const pickedUpPackages = packages.filter(p => p.status === 'picked_up').length;
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -49,92 +47,70 @@ const CustomerDashboard: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="space-y-4 sm:space-y-6">
-        <CustomerHeader fullName={profile?.full_name} />
-
+      <div className={`space-y-4 sm:space-y-6 ${isMobile ? 'px-4 py-4' : 'p-6'}`}>
+        <CustomerHeader />
+        
         <CustomerStats />
 
-        <CustomerActionItems
-          pendingInvoices={pendingInvoices}
-          readyForPickup={readyForPickup}
-        />
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className={`${isMobile ? 'grid w-full grid-cols-2 h-auto' : 'grid w-full grid-cols-4'}`}>
-            <TabsTrigger value="overview" className={isMobile ? 'text-xs py-3' : ''}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2' : 'grid-cols-5'} mb-6`}>
+            <TabsTrigger value="overview" className={isMobile ? 'text-xs' : ''}>
               {isMobile ? 'Overview' : 'Overview'}
             </TabsTrigger>
-            <TabsTrigger value="packages" className={isMobile ? 'text-xs py-3' : ''}>
+            <TabsTrigger value="packages" className={isMobile ? 'text-xs' : ''}>
               {isMobile ? 'Packages' : 'My Packages'}
             </TabsTrigger>
             {!isMobile && (
               <>
                 <TabsTrigger value="invoices">Invoices</TabsTrigger>
                 <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="help">Help</TabsTrigger>
               </>
             )}
           </TabsList>
 
-          {/* Mobile: Additional tabs in second row */}
-          {isMobile && (
-            <TabsList className="grid w-full grid-cols-2 h-auto mt-2">
-              <TabsTrigger value="invoices" className="text-xs py-3">
-                Invoices
-              </TabsTrigger>
-              <TabsTrigger value="profile" className="text-xs py-3">
-                Profile
-              </TabsTrigger>
-            </TabsList>
-          )}
-
-          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-            <ErrorBoundary>
-              <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 gap-6'}`}>
-                <CustomerStatusBreakdown
-                  receivedPackages={receivedPackages}
-                  inTransitPackages={inTransitPackages}
-                  arrivedPackages={arrivedPackages}
-                  readyForPickup={readyForPickup}
-                  pickedUpPackages={pickedUpPackages}
-                />
-
-                <CustomerFinancialSummary
-                  totalValue={totalValue}
-                  totalDue={totalDue}
-                  pendingInvoices={pendingInvoices}
-                />
-              </div>
-
-              <CustomerRecentActivity packages={packages} />
-            </ErrorBoundary>
-          </TabsContent>
-
-          <TabsContent value="packages" className="space-y-4 sm:space-y-6">
-            <ErrorBoundary>
-              <CustomerPackagesTab />
-            </ErrorBoundary>
-          </TabsContent>
-
-          <TabsContent value="invoices" className="space-y-4 sm:space-y-6">
-            <ErrorBoundary>
-              <CustomerInvoicesTab />
-            </ErrorBoundary>
-          </TabsContent>
-
-          <TabsContent value="profile" className="space-y-4 sm:space-y-6">
-            <ErrorBoundary>
-              <CustomerProfileTab
-                profile={profile}
-                totalPackages={totalPackages}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <CustomerActionItems packages={packages} />
+              <CustomerStatusBreakdown packages={packages} />
+            </div>
+            
+            <div className="grid gap-6 md:grid-cols-2">
+              <CustomerFinancialSummary
                 totalValue={totalValue}
                 totalDue={totalDue}
-                pickedUpPackages={pickedUpPackages}
+                packages={packages}
               />
-            </ErrorBoundary>
+              <CustomerRecentActivity packages={packages} />
+            </div>
           </TabsContent>
-        </Tabs>
 
-        <CustomerHelpSection />
+          <TabsContent value="packages">
+            <CustomerPackagesTab />
+          </TabsContent>
+
+          {!isMobile && (
+            <>
+              <TabsContent value="invoices">
+                <CustomerInvoicesTab packages={packages} />
+              </TabsContent>
+
+              <TabsContent value="profile">
+                <CustomerProfileTab
+                  profile={profile}
+                  totalPackages={totalPackages}
+                  totalValue={totalValue}
+                  totalDue={totalDue}
+                  pickedUpPackages={pickedUpPackages}
+                />
+              </TabsContent>
+
+              <TabsContent value="help">
+                <CustomerHelpSection />
+              </TabsContent>
+            </>
+          )}
+        </Tabs>
       </div>
     </ErrorBoundary>
   );

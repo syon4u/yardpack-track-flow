@@ -53,12 +53,12 @@ export class CustomerDataService {
         };
       }
 
-      // Get customers with active packages using the new foreign key relationship
+      // Get customers with active packages using the customers table
       const { data: activeCustomers, error: activeError } = await supabase
         .from('customers')
         .select(`
           id,
-          packages!fk_packages_customer_id(status)
+          packages(status)
         `);
 
       if (activeError) {
@@ -115,7 +115,7 @@ export class CustomerDataService {
 
       if (!customer) return null;
 
-      // Use the new foreign key relationship to fetch packages
+      // Use the customers table relationship to fetch packages
       const { data: packages, error: packagesError } = await supabase
         .from('packages')
         .select('*')

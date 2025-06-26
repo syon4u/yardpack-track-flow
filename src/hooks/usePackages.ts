@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
@@ -78,7 +79,7 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
       
       console.log('Fetching packages for user:', user.id, 'with role:', profile?.role);
       
-      // Fix the ambiguous foreign key issue by specifying the correct relationship
+      // Use customers table instead of profiles for package relationships
       let query = supabase
         .from('packages')
         .select(`
@@ -90,7 +91,19 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
 
       // If customer, only show packages for customers linked to their user account
       if (profile?.role === 'customer') {
-        query = query.eq('customers.user_id', user.id);
+        // First get the customer record for this user
+        const { data: customerRecord } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (customerRecord) {
+          query = query.eq('customer_id', customerRecord.id);
+        } else {
+          // No customer record found, return empty array
+          return [];
+        }
       }
 
       // Apply search filter
