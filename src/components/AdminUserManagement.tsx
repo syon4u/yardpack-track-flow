@@ -7,10 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Mail, Phone, MapPin, Calendar } from 'lucide-react';
+import { Search, Mail, Phone, MapPin, Calendar, UserPlus } from 'lucide-react';
+import CreateUserForm from './admin/CreateUserForm';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const AdminUserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const isMobile = useIsMobile();
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -39,57 +43,78 @@ const AdminUserManagement: React.FC = () => {
     };
   };
 
+  // Calculate role-based stats
+  const totalUsers = users?.length || 0;
+  const adminUsers = users?.filter(u => u.role === 'admin').length || 0;
+  const warehouseUsers = users?.filter(u => u.role === 'warehouse').length || 0;
+  const customerUsers = users?.filter(u => u.role === 'customer').length || 0;
+
   if (isLoading) {
     return <div>Loading users...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'justify-between items-center'}`}>
         <h2 className="text-2xl font-semibold">User Management</h2>
-        <div className="flex items-center space-x-4">
+        <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center space-x-4'}`}>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-64"
+              className={`pl-10 ${isMobile ? 'w-full' : 'w-64'}`}
             />
           </div>
+          <Button 
+            onClick={() => setShowCreateUser(true)}
+            className={`flex items-center gap-2 ${isMobile ? 'w-full' : ''}`}
+          >
+            <UserPlus className="h-4 w-4" />
+            Create User
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Total Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{users?.length || 0}</div>
-            <div className="text-sm text-gray-600">
-              {users?.filter(u => u.role === 'customer').length || 0} customers, {users?.filter(u => u.role === 'admin').length || 0} admins
-            </div>
+            <div className="text-3xl font-bold">{totalUsers}</div>
+            <div className="text-sm text-gray-600">System users</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Active This Month</CardTitle>
+            <CardTitle className="text-lg">Admins</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{Math.floor((users?.length || 0) * 0.7)}</div>
-            <div className="text-sm text-gray-600">Users with recent activity</div>
+            <div className="text-3xl font-bold">{adminUsers}</div>
+            <div className="text-sm text-gray-600">Administrator accounts</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">New This Month</CardTitle>
+            <CardTitle className="text-lg">Warehouse</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{Math.floor((users?.length || 0) * 0.2)}</div>
-            <div className="text-sm text-gray-600">New registrations</div>
+            <div className="text-3xl font-bold">{warehouseUsers}</div>
+            <div className="text-sm text-gray-600">Warehouse staff</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Customers</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{customerUsers}</div>
+            <div className="text-sm text-gray-600">Customer accounts</div>
           </CardContent>
         </Card>
       </div>
@@ -125,7 +150,13 @@ const AdminUserManagement: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                      <Badge 
+                        variant={
+                          user.role === 'admin' ? 'default' : 
+                          user.role === 'warehouse' ? 'destructive' : 
+                          'secondary'
+                        }
+                      >
                         {user.role}
                       </Badge>
                     </TableCell>
@@ -164,7 +195,7 @@ const AdminUserManagement: React.FC = () => {
                           View
                         </Button>
                         <Button variant="outline" size="sm">
-                          Contact
+                          Edit
                         </Button>
                       </div>
                     </TableCell>
@@ -175,6 +206,10 @@ const AdminUserManagement: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {showCreateUser && (
+        <CreateUserForm onClose={() => setShowCreateUser(false)} />
+      )}
     </div>
   );
 };

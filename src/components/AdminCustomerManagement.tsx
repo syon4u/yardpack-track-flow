@@ -30,6 +30,12 @@ const AdminCustomerManagement: React.FC = () => {
     return matchesSearch && matchesType;
   });
 
+  // Calculate stats from customers data
+  const totalCustomers = customers?.length || 0;
+  const registeredCustomers = customers?.filter(c => c.customer_type === 'registered').length || 0;
+  const packageOnlyCustomers = customers?.filter(c => c.customer_type === 'package_only').length || 0;
+  const activeCustomers = customers?.filter(c => c.active_packages > 0).length || 0;
+
   if (isLoading) {
     return <div className="flex justify-center py-8">Loading customers...</div>;
   }
@@ -75,7 +81,12 @@ const AdminCustomerManagement: React.FC = () => {
         </Button>
       </div>
 
-      <AdminCustomerStats customers={customers || []} />
+      <AdminCustomerStats 
+        totalCustomers={totalCustomers}
+        registeredCustomers={registeredCustomers}
+        packageOnlyCustomers={packageOnlyCustomers}
+        activeCustomers={activeCustomers}
+      />
 
       <AdminCustomerTable customers={filteredCustomers || []} />
 
