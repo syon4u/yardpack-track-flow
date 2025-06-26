@@ -15,42 +15,31 @@ export const useCreateUser = () => {
 
   return useMutation({
     mutationFn: async (userData: CreateUserData) => {
-      // Create the user account with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: userData.email,
-        password: userData.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: userData.full_name,
-          role: userData.role,
-          username: userData.username
+      // Get the current session for authorization
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Authentication required');
+      }
+
+      // Call the edge function to create the user
+      const { data, error } = await supabase.functions.invoke('create-system-user', {
+        body: userData,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
-      if (authError) {
-        console.error('Auth creation error:', authError);
-        throw new Error(authError.message);
+      if (error) {
+        console.error('Function invocation error:', error);
+        throw new Error(error.message || 'Failed to create system user');
       }
 
-      if (!authData.user) {
-        throw new Error('Failed to create user account');
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create system user');
       }
 
-      // Update the user's profile with the role
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          role: userData.role,
-          full_name: userData.full_name
-        })
-        .eq('id', authData.user.id);
-
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-        throw new Error('Failed to update user profile');
-      }
-
-      return authData.user;
+      return data.user;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
