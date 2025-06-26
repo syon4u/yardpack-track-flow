@@ -102,6 +102,39 @@ export type Database = {
           },
         ]
       }
+      email_templates: {
+        Row: {
+          created_at: string
+          html_content: string
+          id: string
+          is_active: boolean | null
+          subject: string
+          template_name: string
+          text_content: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          html_content: string
+          id?: string
+          is_active?: boolean | null
+          subject: string
+          template_name: string
+          text_content?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          html_content?: string
+          id?: string
+          is_active?: boolean | null
+          subject?: string
+          template_name?: string
+          text_content?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           file_name: string
@@ -247,6 +280,10 @@ export type Database = {
           external_tracking_number: string | null
           id: string
           last_api_sync: string | null
+          last_notification_sent_at: string | null
+          last_notification_status:
+            | Database["public"]["Enums"]["package_status"]
+            | null
           notes: string | null
           package_value: number | null
           sender_address: string | null
@@ -274,6 +311,10 @@ export type Database = {
           external_tracking_number?: string | null
           id?: string
           last_api_sync?: string | null
+          last_notification_sent_at?: string | null
+          last_notification_status?:
+            | Database["public"]["Enums"]["package_status"]
+            | null
           notes?: string | null
           package_value?: number | null
           sender_address?: string | null
@@ -301,6 +342,10 @@ export type Database = {
           external_tracking_number?: string | null
           id?: string
           last_api_sync?: string | null
+          last_notification_sent_at?: string | null
+          last_notification_status?:
+            | Database["public"]["Enums"]["package_status"]
+            | null
           notes?: string | null
           package_value?: number | null
           sender_address?: string | null
