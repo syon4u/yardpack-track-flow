@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSendNotification } from '@/hooks/useNotifications';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
 
@@ -36,6 +37,8 @@ interface TransformedPackage {
   api_sync_status: string | null;
   last_api_sync: string | null;
   delivery_estimate: string | null;
+  last_notification_status: PackageStatus | null;
+  last_notification_sent_at: string | null;
   created_at: string;
   updated_at: string;
   customers: {
@@ -130,6 +133,7 @@ export const usePackages = (options: UsePackagesOptions = {}) => {
 
 export const useUpdatePackageStatus = () => {
   const queryClient = useQueryClient();
+  const { mutate: sendNotification } = useSendNotification();
   
   return useMutation({
     mutationFn: async ({ packageId, status }: { packageId: string; status: PackageStatus }) => {
@@ -141,6 +145,15 @@ export const useUpdatePackageStatus = () => {
         .eq('id', packageId);
       
       if (error) throw error;
+      
+      // Automatically trigger notification when status is updated
+      try {
+        await sendNotification({ packageId, status });
+        console.log('Notification triggered for package:', packageId);
+      } catch (notificationError) {
+        console.error('Failed to send notification:', notificationError);
+        // Don't fail the status update if notification fails
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['packages'] });
