@@ -303,6 +303,85 @@ export type Database = {
           },
         ]
       }
+      package_pickup_records: {
+        Row: {
+          authorized_by_staff: string
+          created_at: string
+          customer_satisfied: boolean | null
+          dispute_reported: boolean | null
+          id: string
+          package_condition: string | null
+          package_id: string
+          pickup_notes: string | null
+          pickup_person_name: string
+          pickup_person_phone: string | null
+          pickup_person_relationship: string | null
+          pickup_timestamp: string
+          updated_at: string
+          verification_data: Json | null
+          verification_method_id: string
+          verification_successful: boolean
+        }
+        Insert: {
+          authorized_by_staff: string
+          created_at?: string
+          customer_satisfied?: boolean | null
+          dispute_reported?: boolean | null
+          id?: string
+          package_condition?: string | null
+          package_id: string
+          pickup_notes?: string | null
+          pickup_person_name: string
+          pickup_person_phone?: string | null
+          pickup_person_relationship?: string | null
+          pickup_timestamp?: string
+          updated_at?: string
+          verification_data?: Json | null
+          verification_method_id: string
+          verification_successful?: boolean
+        }
+        Update: {
+          authorized_by_staff?: string
+          created_at?: string
+          customer_satisfied?: boolean | null
+          dispute_reported?: boolean | null
+          id?: string
+          package_condition?: string | null
+          package_id?: string
+          pickup_notes?: string | null
+          pickup_person_name?: string
+          pickup_person_phone?: string | null
+          pickup_person_relationship?: string | null
+          pickup_timestamp?: string
+          updated_at?: string
+          verification_data?: Json | null
+          verification_method_id?: string
+          verification_successful?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_pickup_records_authorized_by_staff_fkey"
+            columns: ["authorized_by_staff"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_pickup_records_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_pickup_records_verification_method_id_fkey"
+            columns: ["verification_method_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_verification_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       packages: {
         Row: {
           actual_delivery: string | null
@@ -418,6 +497,170 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pickup_codes: {
+        Row: {
+          code_type: string
+          code_value: string
+          created_at: string
+          expires_at: string
+          generated_by: string
+          id: string
+          is_active: boolean
+          package_id: string
+          used_at: string | null
+        }
+        Insert: {
+          code_type: string
+          code_value: string
+          created_at?: string
+          expires_at: string
+          generated_by: string
+          id?: string
+          is_active?: boolean
+          package_id: string
+          used_at?: string | null
+        }
+        Update: {
+          code_type?: string
+          code_value?: string
+          created_at?: string
+          expires_at?: string
+          generated_by?: string
+          id?: string
+          is_active?: boolean
+          package_id?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_codes_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_codes_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pickup_dispute_logs: {
+        Row: {
+          created_at: string
+          dispute_description: string
+          dispute_type: string
+          evidence_files: Json | null
+          id: string
+          package_id: string
+          pickup_record_id: string | null
+          reported_by: string
+          resolution_notes: string | null
+          resolution_status: string
+          resolved_at: string | null
+          resolved_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dispute_description: string
+          dispute_type: string
+          evidence_files?: Json | null
+          id?: string
+          package_id: string
+          pickup_record_id?: string | null
+          reported_by: string
+          resolution_notes?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dispute_description?: string
+          dispute_type?: string
+          evidence_files?: Json | null
+          id?: string
+          package_id?: string
+          pickup_record_id?: string | null
+          reported_by?: string
+          resolution_notes?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_dispute_logs_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_dispute_logs_pickup_record_id_fkey"
+            columns: ["pickup_record_id"]
+            isOneToOne: false
+            referencedRelation: "package_pickup_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_dispute_logs_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_dispute_logs_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pickup_verification_methods: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          requires_code: boolean
+          requires_photo: boolean
+          requires_signature: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          requires_code?: boolean
+          requires_photo?: boolean
+          requires_signature?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          requires_code?: boolean
+          requires_photo?: boolean
+          requires_signature?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

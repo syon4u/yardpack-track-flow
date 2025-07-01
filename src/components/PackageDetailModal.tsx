@@ -1,59 +1,48 @@
-
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MagayaIntegrationPanel } from './magaya/MagayaIntegrationPanel';
-import { TransformedPackage } from '@/types/package';
+import { Package, Calendar, MapPin, DollarSign, FileText, User, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
-import { Package, Calendar, User, MapPin, DollarSign, FileText } from 'lucide-react';
+import { Database } from '@/integrations/supabase/types';
+import { MagayaStatusIndicator } from './magaya/MagayaStatusIndicator';
+import PickupRecordsTable from './pickup/PickupRecordsTable';
+
+type PackageRow = Database['public']['Tables']['packages']['Row'];
+type PackageStatus = Database['public']['Enums']['package_status'];
 
 interface PackageDetailModalProps {
-  packageData: TransformedPackage | null;
+  packageData: PackageRow | null;
   isOpen: boolean;
   onClose: () => void;
   userRole: 'customer' | 'admin' | 'warehouse';
 }
 
 const PackageDetailModal: React.FC<PackageDetailModalProps> = ({
-  packageData,
+  packageData: pkg,
   isOpen,
   onClose,
   userRole,
 }) => {
-  if (!packageData) return null;
+  if (!pkg) return null;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'received':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'in_transit':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'arrived':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'ready_for_pickup':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'picked_up':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const statusColors = {
+    received: 'bg-blue-100 text-blue-800',
+    in_transit: 'bg-yellow-100 text-yellow-800',
+    arrived: 'bg-green-100 text-green-800',
+    ready_for_pickup: 'bg-purple-100 text-purple-800',
+    picked_up: 'bg-gray-100 text-gray-800',
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'N/A';
-    try {
-      return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
-    } catch (error) {
-      return 'Invalid Date';
+  const getStatusLabel = (status: PackageStatus) => {
+    switch (status) {
+      case 'received': return 'Received';
+      case 'in_transit': return 'In Transit';
+      case 'arrived': return 'Arrived';
+      case 'ready_for_pickup': return 'Ready for Pickup';
+      case 'picked_up': return 'Picked Up';
+      default: return 'Unknown';
     }
   };
 
@@ -62,227 +51,163 @@ const PackageDetailModal: React.FC<PackageDetailModalProps> = ({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            Package Details - {packageData.tracking_number}
+            <Package className="h-5 w-5" />
+            Package Details - {pkg.tracking_number}
           </DialogTitle>
-          <DialogDescription>
-            Comprehensive package information and management
-          </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
           {/* Basic Package Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                Package Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Status:</span>
-                <Badge className={getStatusColor(packageData.status)}>
-                  {packageData.status.replace('_', ' ').toUpperCase()}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium">Description:</span>
-                  <p className="text-muted-foreground">{packageData.description}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <h3 className="font-semibold text-lg">Package Information</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <Badge className={statusColors[pkg.status]}>
+                    {getStatusLabel(pkg.status)}
+                  </Badge>
                 </div>
-                <div>
-                  <span className="font-medium">External Tracking:</span>
-                  <p className="text-muted-foreground font-mono">
-                    {packageData.external_tracking_number || 'N/A'}
-                  </p>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Description:</span>
+                  <span className="font-medium">{pkg.description}</span>
                 </div>
-                <div>
-                  <span className="font-medium">Weight:</span>
-                  <p className="text-muted-foreground">
-                    {packageData.weight ? `${packageData.weight} lbs` : 'N/A'}
-                  </p>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tracking Number:</span>
+                  <span className="font-mono">{pkg.tracking_number}</span>
                 </div>
-                <div>
-                  <span className="font-medium">Dimensions:</span>
-                  <p className="text-muted-foreground">{packageData.dimensions || 'N/A'}</p>
-                </div>
-                <div>
-                  <span className="font-medium">Value:</span>
-                  <p className="text-muted-foreground">
-                    {packageData.package_value ? `$${packageData.package_value}` : 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <span className="font-medium">Carrier:</span>
-                  <p className="text-muted-foreground">{packageData.carrier || 'N/A'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Customer Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Customer Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="text-sm">
-                <span className="font-medium">Name:</span>
-                <p className="text-muted-foreground">{packageData.customer_name}</p>
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Email:</span>
-                <p className="text-muted-foreground">{packageData.customer_email || 'N/A'}</p>
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Delivery Address:</span>
-                <p className="text-muted-foreground">{packageData.delivery_address}</p>
-              </div>
-              {packageData.sender_name && (
-                <>
-                  <Separator />
-                  <div className="text-sm">
-                    <span className="font-medium">Sender:</span>
-                    <p className="text-muted-foreground">{packageData.sender_name}</p>
-                  </div>
-                  {packageData.sender_address && (
-                    <div className="text-sm">
-                      <span className="font-medium">Sender Address:</span>
-                      <p className="text-muted-foreground">{packageData.sender_address}</p>
-                    </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Timeline Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Timeline
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-1 gap-3 text-sm">
-                <div>
-                  <span className="font-medium">Date Received:</span>
-                  <p className="text-muted-foreground">{formatDate(packageData.date_received)}</p>
-                </div>
-                <div>
-                  <span className="font-medium">Estimated Delivery:</span>
-                  <p className="text-muted-foreground">{formatDate(packageData.estimated_delivery)}</p>
-                </div>
-                {packageData.actual_delivery && (
-                  <div>
-                    <span className="font-medium">Actual Delivery:</span>
-                    <p className="text-muted-foreground">{formatDate(packageData.actual_delivery)}</p>
+                {pkg.external_tracking_number && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">External Tracking:</span>
+                    <span className="font-mono">{pkg.external_tracking_number}</span>
                   </div>
                 )}
-                <div>
-                  <span className="font-medium">Last Updated:</span>
-                  <p className="text-muted-foreground">{formatDate(packageData.updated_at)}</p>
-                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-semibold text-lg">Dates & Delivery</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Date Received:</span>
+                  <span>{format(new Date(pkg.date_received), 'MMM dd, yyyy')}</span>
+                </div>
+                {pkg.estimated_delivery && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Estimated Delivery:</span>
+                    <span>{format(new Date(pkg.estimated_delivery), 'MMM dd, yyyy')}</span>
+                  </div>
+                )}
+                {pkg.actual_delivery && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Actual Delivery:</span>
+                    <span>{format(new Date(pkg.actual_delivery), 'MMM dd, yyyy HH:mm')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Magaya Integration Status */}
+          {userRole !== 'customer' && (
+            <>
+              <div>
+                <h3 className="font-semibold text-lg mb-3">Warehouse Integration</h3>
+                <MagayaStatusIndicator
+                  magayaShipmentId={pkg.magaya_shipment_id}
+                  warehouseLocation={pkg.warehouse_location}
+                  consolidationStatus={pkg.consolidation_status}
+                />
+              </div>
+              <Separator />
+            </>
+          )}
 
           {/* Financial Information */}
-          {(packageData.duty_amount || packageData.total_due) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
-                  Financial Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  {packageData.duty_rate && (
-                    <div>
-                      <span className="font-medium">Duty Rate:</span>
-                      <p className="text-muted-foreground">{(packageData.duty_rate * 100).toFixed(1)}%</p>
+          {(pkg.total_due || pkg.duty_amount || pkg.package_value) && (
+            <>
+              <div>
+                <h3 className="font-semibold text-lg mb-3">Financial Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {pkg.package_value && (
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-600">Package Value</p>
+                        <p className="font-medium">${pkg.package_value.toFixed(2)}</p>
+                      </div>
                     </div>
                   )}
-                  {packageData.duty_amount && (
-                    <div>
-                      <span className="font-medium">Duty Amount:</span>
-                      <p className="text-muted-foreground">${packageData.duty_amount.toFixed(2)}</p>
+                  {pkg.duty_amount && (
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-600">Duty Amount</p>
+                        <p className="font-medium">${pkg.duty_amount.toFixed(2)}</p>
+                      </div>
                     </div>
                   )}
-                  {packageData.total_due && (
-                    <div className="col-span-2">
-                      <span className="font-medium">Total Due:</span>
-                      <p className="text-lg font-semibold text-green-600">
-                        ${packageData.total_due.toFixed(2)}
-                      </p>
+                  {pkg.total_due && (
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Total Due</p>
+                        <p className="font-medium text-green-600">${pkg.total_due.toFixed(2)}</p>
+                      </div>
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <Separator />
+            </>
+          )}
+
+          {/* Pickup Verification Records */}
+          {userRole !== 'customer' && (
+            <>
+              <PickupRecordsTable
+                packageId={pkg.id}
+                onViewDetails={(recordId) => {
+                  console.log('View pickup record details:', recordId);
+                }}
+              />
+              <Separator />
+            </>
+          )}
+
+          {/* Additional Details */}
+          {(pkg.notes || pkg.sender_name || pkg.sender_address) && (
+            <div>
+              <h3 className="font-semibold text-lg mb-3">Additional Information</h3>
+              <div className="space-y-2">
+                {pkg.sender_name && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Sender:</span>
+                    <span>{pkg.sender_name}</span>
+                  </div>
+                )}
+                {pkg.sender_address && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Sender Address:</span>
+                    <span className="text-right max-w-xs">{pkg.sender_address}</span>
+                  </div>
+                )}
+                {pkg.notes && (
+                  <div>
+                    <span className="text-gray-600">Notes:</span>
+                    <p className="mt-1 p-2 bg-gray-50 rounded text-sm">{pkg.notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Magaya Integration Panel - Only for admin/warehouse */}
-        {userRole !== 'customer' && (
-          <>
-            <Separator className="my-6" />
-            <MagayaIntegrationPanel packageData={packageData} />
-          </>
-        )}
-
-        {/* Invoice Information */}
-        {packageData.invoices && packageData.invoices.length > 0 && (
-          <>
-            <Separator className="my-6" />
-            <Card>
-              <CardHeader>
-                <CardTitle>Invoices</CardTitle>
-                <CardDescription>
-                  Uploaded invoice documents for this package
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {packageData.invoices.map((invoice) => (
-                    <div key={invoice.id} className="flex items-center justify-between p-2 border rounded">
-                      <div>
-                        <p className="font-medium">{invoice.file_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Uploaded: {format(new Date(invoice.uploaded_at), 'MMM dd, yyyy')}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        View
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </>
-        )}
-
-        {/* Notes */}
-        {packageData.notes && (
-          <>
-            <Separator className="my-6" />
-            <Card>
-              <CardHeader>
-                <CardTitle>Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{packageData.notes}</p>
-              </CardContent>
-            </Card>
-          </>
-        )}
+        <div className="flex justify-end pt-4 border-t">
+          <Button onClick={onClose}>Close</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
