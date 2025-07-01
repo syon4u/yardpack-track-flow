@@ -41,6 +41,11 @@ interface TransformedPackage {
   last_notification_sent_at: string | null;
   created_at: string;
   updated_at: string;
+  // Add Magaya fields
+  magaya_shipment_id: string | null;
+  magaya_reference_number: string | null;
+  warehouse_location: string | null;
+  consolidation_status: string | null;
   customers: {
     id: string;
     full_name: string;
