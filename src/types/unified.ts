@@ -60,6 +60,12 @@ export interface UnifiedPackage {
   duty_rate: number | null;
   total_due: number | null;
   
+  // Magaya integration fields
+  magaya_shipment_id: string | null;
+  magaya_reference_number: string | null;
+  warehouse_location: string | null;
+  consolidation_status: string | null;
+  
   // Tracking and invoices
   invoices: Database['public']['Tables']['invoices']['Row'][];
   tracking_events?: Array<{

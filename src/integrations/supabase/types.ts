@@ -197,6 +197,47 @@ export type Database = {
           },
         ]
       }
+      magaya_sync_log: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          magaya_response: Json | null
+          package_id: string | null
+          sync_status: string
+          sync_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          magaya_response?: Json | null
+          package_id?: string | null
+          sync_status?: string
+          sync_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          magaya_response?: Json | null
+          package_id?: string | null
+          sync_status?: string
+          sync_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "magaya_sync_log_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -267,6 +308,7 @@ export type Database = {
           actual_delivery: string | null
           api_sync_status: string | null
           carrier: string | null
+          consolidation_status: string | null
           created_at: string
           customer_id: string
           date_received: string
@@ -284,6 +326,8 @@ export type Database = {
           last_notification_status:
             | Database["public"]["Enums"]["package_status"]
             | null
+          magaya_reference_number: string | null
+          magaya_shipment_id: string | null
           notes: string | null
           package_value: number | null
           sender_address: string | null
@@ -292,12 +336,14 @@ export type Database = {
           total_due: number | null
           tracking_number: string
           updated_at: string
+          warehouse_location: string | null
           weight: number | null
         }
         Insert: {
           actual_delivery?: string | null
           api_sync_status?: string | null
           carrier?: string | null
+          consolidation_status?: string | null
           created_at?: string
           customer_id: string
           date_received?: string
@@ -315,6 +361,8 @@ export type Database = {
           last_notification_status?:
             | Database["public"]["Enums"]["package_status"]
             | null
+          magaya_reference_number?: string | null
+          magaya_shipment_id?: string | null
           notes?: string | null
           package_value?: number | null
           sender_address?: string | null
@@ -323,12 +371,14 @@ export type Database = {
           total_due?: number | null
           tracking_number: string
           updated_at?: string
+          warehouse_location?: string | null
           weight?: number | null
         }
         Update: {
           actual_delivery?: string | null
           api_sync_status?: string | null
           carrier?: string | null
+          consolidation_status?: string | null
           created_at?: string
           customer_id?: string
           date_received?: string
@@ -346,6 +396,8 @@ export type Database = {
           last_notification_status?:
             | Database["public"]["Enums"]["package_status"]
             | null
+          magaya_reference_number?: string | null
+          magaya_shipment_id?: string | null
           notes?: string | null
           package_value?: number | null
           sender_address?: string | null
@@ -354,6 +406,7 @@ export type Database = {
           total_due?: number | null
           tracking_number?: string
           updated_at?: string
+          warehouse_location?: string | null
           weight?: number | null
         }
         Relationships: [
