@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
 import { useUploadInvoice, useDownloadInvoice } from '@/hooks/useInvoices';
 import { useAuth } from '@/contexts/AuthContext';
 import PackageCard from './PackageCard';
 import PackageTable from './PackageTable';
+import PackageDetailModal from './PackageDetailModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, LayoutList } from 'lucide-react';
@@ -34,6 +35,9 @@ const PackageList: React.FC<PackageListProps> = ({
   const updateStatusMutation = useUpdatePackageStatus();
   const uploadInvoiceMutation = useUploadInvoice();
   const downloadInvoiceMutation = useDownloadInvoice();
+  
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
+  const selectedPackage = packages?.find(pkg => pkg.id === selectedPackageId) || null;
 
   const handleStatusUpdate = async (packageId: string, status: PackageStatus) => {
     try {
@@ -69,6 +73,10 @@ const PackageList: React.FC<PackageListProps> = ({
         console.error('Error downloading invoice:', error);
       }
     }
+  };
+
+  const handleViewDetails = (packageId: string) => {
+    setSelectedPackageId(packageId);
   };
 
   if (isLoading) {
@@ -160,11 +168,17 @@ const PackageList: React.FC<PackageListProps> = ({
                   dutyAssessed: pkg.duty_amount !== null,
                   totalDue: pkg.total_due || undefined,
                   customerName: pkg.customer_name,
+                  // Magaya fields
+                  magayaShipmentId: pkg.magaya_shipment_id,
+                  magayaReferenceNumber: pkg.magaya_reference_number,
+                  warehouseLocation: pkg.warehouse_location,
+                  consolidationStatus: pkg.consolidation_status,
                 }}
                 userRole={profile?.role as 'customer' | 'admin' | 'warehouse' || 'customer'}
                 onStatusUpdate={handleStatusUpdate}
                 onUploadInvoice={handleUploadInvoice}
                 onViewInvoice={handleViewInvoice}
+                onViewDetails={handleViewDetails}
               />
             ))}
           </div>
@@ -174,8 +188,17 @@ const PackageList: React.FC<PackageListProps> = ({
             userRole={profile?.role as 'customer' | 'admin' | 'warehouse' || 'customer'}
             onUploadInvoice={handleUploadInvoice}
             onViewInvoice={handleViewInvoice}
+            onViewDetails={handleViewDetails}
           />
         )}
+
+        {/* Package Detail Modal */}
+        <PackageDetailModal
+          packageData={selectedPackage}
+          isOpen={!!selectedPackageId}
+          onClose={() => setSelectedPackageId(null)}
+          userRole={profile?.role as 'customer' | 'admin' | 'warehouse' || 'customer'}
+        />
       </div>
     </ErrorBoundary>
   );

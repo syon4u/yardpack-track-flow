@@ -3,9 +3,11 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Upload, Eye, Edit } from 'lucide-react';
+import { Upload, Eye, Edit, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { Database } from '@/integrations/supabase/types';
+import { MagayaStatusIndicator } from './magaya/MagayaStatusIndicator';
+import { MagayaSyncButton } from './magaya/MagayaSyncButton';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
 
@@ -19,6 +21,11 @@ interface Package {
   invoices?: any[];
   total_due?: number;
   customer_name?: string;
+  // Magaya fields
+  magaya_shipment_id?: string | null;
+  magaya_reference_number?: string | null;
+  warehouse_location?: string | null;
+  consolidation_status?: string | null;
 }
 
 interface PackageTableProps {
@@ -26,6 +33,7 @@ interface PackageTableProps {
   userRole: 'customer' | 'admin' | 'warehouse';
   onUploadInvoice?: (packageId: string) => void;
   onViewInvoice?: (packageId: string) => void;
+  onViewDetails?: (packageId: string) => void;
 }
 
 const getStatusColor = (status: PackageStatus) => {
@@ -67,6 +75,7 @@ const PackageTable: React.FC<PackageTableProps> = ({
   userRole,
   onUploadInvoice,
   onViewInvoice,
+  onViewDetails,
 }) => {
   return (
     <div className="border rounded-lg">
@@ -78,6 +87,7 @@ const PackageTable: React.FC<PackageTableProps> = ({
             <TableHead>Status</TableHead>
             <TableHead>Date Received</TableHead>
             <TableHead>Estimated Delivery</TableHead>
+            {userRole !== 'customer' && <TableHead>Magaya Status</TableHead>}
             <TableHead>Total Due</TableHead>
             <TableHead>Invoice</TableHead>
             <TableHead>Actions</TableHead>
@@ -104,6 +114,24 @@ const PackageTable: React.FC<PackageTableProps> = ({
               <TableCell>
                 {pkg.estimated_delivery ? format(new Date(pkg.estimated_delivery), 'yyyy-MM-dd') : 'N/A'}
               </TableCell>
+              {userRole !== 'customer' && (
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <MagayaStatusIndicator
+                      magayaShipmentId={pkg.magaya_shipment_id}
+                      warehouseLocation={pkg.warehouse_location}
+                      consolidationStatus={pkg.consolidation_status}
+                    />
+                    <MagayaSyncButton
+                      packageId={pkg.id}
+                      magayaShipmentId={pkg.magaya_shipment_id}
+                      size="sm"
+                      variant="ghost"
+                      showLabel={false}
+                    />
+                  </div>
+                </TableCell>
+              )}
               <TableCell>
                 {pkg.total_due ? `$${pkg.total_due.toFixed(2)}` : 'N/A'}
               </TableCell>
@@ -141,6 +169,15 @@ const PackageTable: React.FC<PackageTableProps> = ({
                         </Button>
                       )}
                     </>
+                  )}
+                  {onViewDetails && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onViewDetails(pkg.id)}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
                   )}
                 </div>
               </TableCell>
