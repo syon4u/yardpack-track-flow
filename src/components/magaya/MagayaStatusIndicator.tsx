@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Truck, Warehouse, Sync, AlertCircle } from 'lucide-react';
+import { Truck, Warehouse, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface MagayaStatusIndicatorProps {
   magayaShipmentId?: string | null;
@@ -20,7 +20,7 @@ export const MagayaStatusIndicator: React.FC<MagayaStatusIndicatorProps> = ({
     switch (status) {
       case 'pending':
         return {
-          icon: Sync,
+          icon: RefreshCw,
           label: 'Pending',
           color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
         };

@@ -132,7 +132,13 @@ export class OptimizedDataService {
         duty_amount: pkg.duty_amount,
         duty_rate: pkg.duty_rate,
         total_due: pkg.total_due,
+        // Add Magaya fields
+        magaya_shipment_id: pkg.magaya_shipment_id,
+        magaya_reference_number: pkg.magaya_reference_number,
+        warehouse_location: pkg.warehouse_location,
+        consolidation_status: pkg.consolidation_status,
         invoices: pkg.invoices || [],
+        tracking_events: [],
         invoice_uploaded: (pkg.invoices || []).length > 0,
         duty_assessed: pkg.duty_amount !== null,
         notes: pkg.notes,

@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Sync, Loader2 } from 'lucide-react';
+import { RefreshCw, Loader2 } from 'lucide-react';
 import { useMagayaIntegration } from '@/hooks/useMagayaIntegration';
 
 interface MagayaSyncButtonProps {
   packageId: string;
   magayaShipmentId?: string | null;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'default' | 'lg';
   variant?: 'default' | 'outline' | 'ghost';
   showLabel?: boolean;
 }
@@ -26,7 +26,7 @@ export const MagayaSyncButton: React.FC<MagayaSyncButtonProps> = ({
   };
 
   const buttonText = magayaShipmentId ? 'Refresh' : 'Sync with Magaya';
-  const buttonIcon = isLoading ? Loader2 : Sync;
+  const buttonIcon = isLoading ? Loader2 : RefreshCw;
 
   return (
     <Button

@@ -54,7 +54,14 @@ export const transformPackageToUnified = (pkg: DatabasePackage): UnifiedPackage 
     duty_rate: pkg.duty_rate,
     total_due: pkg.total_due,
     
+    // Magaya integration fields
+    magaya_shipment_id: pkg.magaya_shipment_id,
+    magaya_reference_number: pkg.magaya_reference_number,
+    warehouse_location: pkg.warehouse_location,
+    consolidation_status: pkg.consolidation_status,
+    
     invoices: pkg.invoices || [],
+    tracking_events: [],
     
     invoice_uploaded: pkg.invoices ? pkg.invoices.length > 0 : false,
     duty_assessed: pkg.duty_amount !== null,
