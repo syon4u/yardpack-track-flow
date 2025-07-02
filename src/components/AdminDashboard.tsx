@@ -35,7 +35,12 @@ const AdminDashboard: React.FC = () => {
           setStatusFilter={setStatusFilter}
         />
 
-        <PackageList searchTerm={searchTerm} statusFilter={statusFilter} />
+        <PackageList 
+          searchTerm={searchTerm} 
+          statusFilter={statusFilter} 
+          viewMode="table"
+          onViewModeChange={() => {}} // Admin always uses table view
+        />
       </div>
 
       {showCreatePackage && (

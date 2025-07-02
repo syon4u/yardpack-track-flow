@@ -22,6 +22,15 @@ interface Package {
   invoices?: any[];
   total_due?: number;
   customer_name?: string;
+  customer_email?: string;
+  package_value?: number;
+  duty_amount?: number;
+  weight?: number;
+  dimensions?: string;
+  sender_name?: string;
+  external_tracking_number?: string;
+  carrier?: string;
+  notes?: string;
   // Magaya fields
   magaya_shipment_id?: string | null;
   magaya_reference_number?: string | null;
@@ -91,10 +100,15 @@ const PackageTable: React.FC<PackageTableProps> = ({
           <TableHeader>
             <TableRow>
               <TableHead>Tracking Number</TableHead>
+              <TableHead>Customer</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date Received</TableHead>
-              <TableHead>Estimated Delivery</TableHead>
+              <TableHead>Est. Delivery</TableHead>
+              {userRole !== 'customer' && <TableHead>Package Value</TableHead>}
+              {userRole !== 'customer' && <TableHead>Duty Amount</TableHead>}
+              {userRole !== 'customer' && <TableHead>Weight</TableHead>}
+              {userRole !== 'customer' && <TableHead>Carrier</TableHead>}
               {userRole !== 'customer' && <TableHead>Magaya Status</TableHead>}
               <TableHead>Total Due</TableHead>
               <TableHead>Invoice</TableHead>
@@ -105,12 +119,31 @@ const PackageTable: React.FC<PackageTableProps> = ({
             {packages.map((pkg) => (
               <TableRow key={pkg.id}>
                 <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <Edit className="h-4 w-4 text-gray-500" />
-                    {pkg.tracking_number}
+                  <div className="flex flex-col">
+                    <span className="font-mono text-sm">{pkg.tracking_number}</span>
+                    {pkg.external_tracking_number && (
+                      <span className="text-xs text-muted-foreground">
+                        Ext: {pkg.external_tracking_number}
+                      </span>
+                    )}
                   </div>
                 </TableCell>
-                <TableCell className="max-w-xs truncate">{pkg.description}</TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{pkg.customer_name}</span>
+                    {pkg.customer_email && (
+                      <span className="text-xs text-muted-foreground">{pkg.customer_email}</span>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="max-w-xs">
+                  <div className="flex flex-col">
+                    <span className="truncate">{pkg.description}</span>
+                    {pkg.dimensions && (
+                      <span className="text-xs text-muted-foreground">{pkg.dimensions}</span>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <Badge className={getStatusColor(pkg.status)}>
                     {getStatusLabel(pkg.status)}
@@ -122,6 +155,31 @@ const PackageTable: React.FC<PackageTableProps> = ({
                 <TableCell>
                   {pkg.estimated_delivery ? format(new Date(pkg.estimated_delivery), 'yyyy-MM-dd') : 'N/A'}
                 </TableCell>
+                {userRole !== 'customer' && (
+                  <TableCell>
+                    {pkg.package_value ? `$${pkg.package_value.toFixed(2)}` : 'N/A'}
+                  </TableCell>
+                )}
+                {userRole !== 'customer' && (
+                  <TableCell>
+                    {pkg.duty_amount ? `$${pkg.duty_amount.toFixed(2)}` : 'N/A'}
+                  </TableCell>
+                )}
+                {userRole !== 'customer' && (
+                  <TableCell>
+                    {pkg.weight ? `${pkg.weight} lbs` : 'N/A'}
+                  </TableCell>
+                )}
+                {userRole !== 'customer' && (
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span>{pkg.carrier || 'N/A'}</span>
+                      {pkg.sender_name && (
+                        <span className="text-xs text-muted-foreground">From: {pkg.sender_name}</span>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
                 {userRole !== 'customer' && (
                   <TableCell>
                     <div className="flex items-center gap-2">
