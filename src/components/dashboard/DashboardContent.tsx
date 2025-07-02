@@ -11,6 +11,7 @@ import AnalyticsDashboard from './AnalyticsDashboard';
 import ProfileSettings from './ProfileSettings';
 import SystemSettings from './SystemSettings';
 import InvoiceManagement from './InvoiceManagement';
+import NotificationManagement from './NotificationManagement';
 
 const DashboardContent: React.FC = () => {
   const { profile } = useAuth();
@@ -25,6 +26,8 @@ const DashboardContent: React.FC = () => {
         return profile?.role === 'admin' ? <CustomerManagement /> : <CustomerOverview />;
       case 'users':
         return profile?.role === 'admin' ? <SystemUserManagement /> : <CustomerOverview />;
+      case 'notifications':
+        return profile?.role === 'admin' ? <NotificationManagement /> : <CustomerOverview />;
       case 'analytics':
         return profile?.role === 'admin' ? <AnalyticsDashboard /> : <CustomerOverview />;
       case 'invoices':

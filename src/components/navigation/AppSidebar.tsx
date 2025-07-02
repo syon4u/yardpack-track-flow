@@ -12,7 +12,8 @@ import {
   User,
   HelpCircle,
   LogOut,
-  UserCog
+  UserCog,
+  Bell
 } from 'lucide-react';
 import {
   Sidebar,
@@ -62,6 +63,7 @@ const AppSidebar: React.FC = () => {
     { title: 'Packages', url: '/dashboard?tab=packages', icon: Package },
     { title: 'Customers', url: '/dashboard?tab=customers', icon: Users },
     { title: 'System Users', url: '/dashboard?tab=users', icon: UserCog },
+    { title: 'Notifications', url: '/dashboard?tab=notifications', icon: Bell },
     { title: 'Analytics', url: '/dashboard?tab=analytics', icon: BarChart3 },
     { title: 'Scanner', url: '/warehouse', icon: Scan },
     { title: 'Settings', url: '/dashboard?tab=settings', icon: Settings },
