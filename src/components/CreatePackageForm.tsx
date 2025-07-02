@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCreatePackage } from '@/hooks/usePackages';
 import { useCarrierDetection } from '@/hooks/useTrackingAPI';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  EnhancedForm, 
+  FormField, 
+  EnhancedInput, 
+  EnhancedTextarea, 
+  FormActions 
+} from '@/components/ui/enhanced-form';
+import { PackageSchema, ValidationHelper, PackageFormData } from '@/utils/validation';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { LoadingList } from '@/components/ui/loading-states';
 
 interface CreatePackageFormProps {
   onClose: () => void;
@@ -19,6 +25,7 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
   const createPackageMutation = useCreatePackage();
   const { detectCarrier } = useCarrierDetection();
   
+  const isMobile = useIsMobile();
   const [formData, setFormData] = useState({
     tracking_number: '',
     customer_id: '',
@@ -33,6 +40,8 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
     carrier: '',
     external_tracking_number: ''
   });
+  
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Use the customers from the new customers table
   const { data: customers, isPending: customersLoading } = useCustomers();
@@ -109,53 +118,58 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
           <DialogTitle>Create New Package</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="tracking_number">Internal Tracking Number</Label>
-              <Input
-                id="tracking_number"
+        <EnhancedForm>
+          <div className={isMobile ? 'space-y-4' : 'grid grid-cols-2 gap-4'}>
+            <FormField 
+              label="Internal Tracking Number" 
+              required
+              error={fieldErrors.tracking_number}
+            >
+              <EnhancedInput
                 value={formData.tracking_number}
                 onChange={(e) => handleInputChange('tracking_number', e.target.value)}
                 placeholder="YP2024XXX"
-                required
+                error={!!fieldErrors.tracking_number}
               />
-            </div>
+            </FormField>
             
-            <div>
-              <Label htmlFor="customer_id">Customer</Label>
-              <Select 
-                value={formData.customer_id} 
-                onValueChange={(value) => handleInputChange('customer_id', value)}
-                disabled={customersLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={customersLoading ? "Loading customers..." : "Select customer"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {registeredCustomers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.full_name} {customer.email ? `(${customer.email})` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField 
+              label="Customer" 
+              required
+              error={fieldErrors.customer_id}
+            >
+              {customersLoading ? (
+                <LoadingList count={1} variant="compact" />
+              ) : (
+                <Select 
+                  value={formData.customer_id} 
+                  onValueChange={(value) => handleInputChange('customer_id', value)}
+                >
+                  <SelectTrigger className={fieldErrors.customer_id ? 'border-destructive' : ''}>
+                    <SelectValue placeholder="Select customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {registeredCustomers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.full_name} {customer.email ? `(${customer.email})` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </FormField>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="external_tracking_number">Carrier Tracking Number</Label>
-              <Input
-                id="external_tracking_number"
+          <div className={isMobile ? 'space-y-4' : 'grid grid-cols-2 gap-4'}>
+            <FormField label="Carrier Tracking Number">
+              <EnhancedInput
                 value={formData.external_tracking_number}
                 onChange={(e) => handleInputChange('external_tracking_number', e.target.value)}
                 placeholder="External carrier tracking number"
               />
-            </div>
+            </FormField>
             
-            <div>
-              <Label htmlFor="carrier">Carrier</Label>
+            <FormField label="Carrier">
               <Select value={formData.carrier} onValueChange={(value) => handleInputChange('carrier', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select carrier" />
@@ -168,111 +182,95 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
                   <SelectItem value="OTHER">Other</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
           </div>
 
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Input
-              id="description"
+          <FormField label="Description" required>
+            <EnhancedInput
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Package contents description"
-              required
             />
-          </div>
+          </FormField>
 
-          <div>
-            <Label htmlFor="delivery_address">Delivery Address</Label>
-            <Textarea
-              id="delivery_address"
+          <FormField label="Delivery Address" required>
+            <EnhancedTextarea
               value={formData.delivery_address}
               onChange={(e) => handleInputChange('delivery_address', e.target.value)}
               placeholder="Full delivery address in Jamaica"
-              required
             />
-          </div>
+          </FormField>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="sender_name">Sender Name</Label>
-              <Input
-                id="sender_name"
+          <div className={isMobile ? 'space-y-4' : 'grid grid-cols-2 gap-4'}>
+            <FormField label="Sender Name">
+              <EnhancedInput
                 value={formData.sender_name}
                 onChange={(e) => handleInputChange('sender_name', e.target.value)}
                 placeholder="Store or sender name"
               />
-            </div>
+            </FormField>
             
-            <div>
-              <Label htmlFor="sender_address">Sender Address</Label>
-              <Input
-                id="sender_address"
+            <FormField label="Sender Address">
+              <EnhancedInput
                 value={formData.sender_address}
                 onChange={(e) => handleInputChange('sender_address', e.target.value)}
                 placeholder="Miami address"
               />
-            </div>
+            </FormField>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="weight">Weight (lbs)</Label>
-              <Input
-                id="weight"
+          <div className={isMobile ? 'space-y-4' : 'grid grid-cols-3 gap-4'}>
+            <FormField label="Weight (lbs)">
+              <EnhancedInput
                 type="number"
                 step="0.1"
                 value={formData.weight}
                 onChange={(e) => handleInputChange('weight', e.target.value)}
                 placeholder="0.0"
               />
-            </div>
+            </FormField>
             
-            <div>
-              <Label htmlFor="dimensions">Dimensions</Label>
-              <Input
-                id="dimensions"
+            <FormField label="Dimensions">
+              <EnhancedInput
                 value={formData.dimensions}
                 onChange={(e) => handleInputChange('dimensions', e.target.value)}
                 placeholder="L x W x H inches"
               />
-            </div>
+            </FormField>
             
-            <div>
-              <Label htmlFor="package_value">Package Value ($)</Label>
-              <Input
-                id="package_value"
+            <FormField label="Package Value ($)">
+              <EnhancedInput
                 type="number"
                 step="0.01"
                 value={formData.package_value}
                 onChange={(e) => handleInputChange('package_value', e.target.value)}
                 placeholder="0.00"
               />
-            </div>
+            </FormField>
           </div>
 
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
+          <FormField label="Notes">
+            <EnhancedTextarea
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
               placeholder="Additional notes or instructions"
             />
-          </div>
+          </FormField>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={createPackageMutation.isPending || customersLoading}
-            >
-              {createPackageMutation.isPending ? 'Creating...' : 'Create Package'}
-            </Button>
-          </div>
-        </form>
+          <FormActions
+            primaryAction={{
+              label: 'Create Package',
+              onClick: handleSubmit,
+              loading: createPackageMutation.isPending,
+              disabled: customersLoading
+            }}
+            secondaryAction={{
+              label: 'Cancel',
+              onClick: onClose,
+              variant: 'outline'
+            }}
+          />
+        </EnhancedForm>
       </DialogContent>
     </Dialog>
   );
