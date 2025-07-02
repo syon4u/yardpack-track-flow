@@ -22,17 +22,19 @@ interface PackageListProps {
   statusFilter?: string;
   viewMode?: 'tiles' | 'table';
   onViewModeChange?: (mode: 'tiles' | 'table') => void;
+  customerFilter?: string;
 }
 
 const PackageList: React.FC<PackageListProps> = ({ 
   searchTerm, 
   statusFilter, 
   viewMode = 'tiles',
-  onViewModeChange 
+  onViewModeChange,
+  customerFilter 
 }) => {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const { data: packages, isPending, error } = usePackages({ searchTerm, statusFilter });
+  const { data: packages, isPending, error } = usePackages({ searchTerm, statusFilter, customerFilter });
   const updateStatusMutation = useUpdatePackageStatus();
   const uploadInvoiceMutation = useUploadInvoice();
   const downloadInvoiceMutation = useDownloadInvoice();

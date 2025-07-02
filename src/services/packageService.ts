@@ -10,7 +10,7 @@ export const fetchPackages = async (
   userRole: string | undefined,
   options: UsePackagesOptions = {}
 ): Promise<TransformedPackage[]> => {
-  const { searchTerm, statusFilter } = options;
+  const { searchTerm, statusFilter, customerFilter } = options;
   
   console.log('Fetching packages for user:', userId, 'with role:', userRole);
   
@@ -55,6 +55,11 @@ export const fetchPackages = async (
     if (validStatuses.includes(statusFilter as PackageStatus)) {
       query = query.eq('status', statusFilter as PackageStatus);
     }
+  }
+
+  // Apply customer filter (for admin/warehouse to filter by specific customer)
+  if (customerFilter && userRole !== 'customer') {
+    query = query.eq('customer_id', customerFilter);
   }
 
   const { data, error } = await query;

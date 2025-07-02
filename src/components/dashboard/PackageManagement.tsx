@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 import PackageList from '../PackageList';
 import CreatePackageForm from '../CreatePackageForm';
 import AdminDashboardHeader from '../admin/AdminDashboardHeader';
@@ -10,9 +11,13 @@ import CustomerPackagesTab from '../customer/CustomerPackagesTab';
 
 const PackageManagement: React.FC = () => {
   const { profile } = useAuth();
+  const [searchParams] = useSearchParams();
   const [showCreatePackage, setShowCreatePackage] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  // Get customer filter from URL params
+  const customerFilter = searchParams.get('customer') || undefined;
 
   // Admin view with full package management features
   if (profile?.role === 'admin') {
@@ -21,6 +26,11 @@ const PackageManagement: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Package Management</h1>
           <p className="text-gray-600 mt-1">Manage all packages in the system</p>
+          {customerFilter && (
+            <p className="text-sm text-blue-600 mt-1">
+              Filtered by customer ID: {customerFilter}
+            </p>
+          )}
         </div>
 
         <AdminDashboardHeader onCreatePackage={() => setShowCreatePackage(true)} />
@@ -35,7 +45,11 @@ const PackageManagement: React.FC = () => {
             setStatusFilter={setStatusFilter}
           />
 
-          <PackageList searchTerm={searchTerm} statusFilter={statusFilter} />
+          <PackageList 
+            searchTerm={searchTerm} 
+            statusFilter={statusFilter}
+            customerFilter={customerFilter}
+          />
         </div>
 
         {showCreatePackage && (

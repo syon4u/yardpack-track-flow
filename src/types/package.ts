@@ -67,6 +67,7 @@ export interface TransformedPackage {
 export interface UsePackagesOptions {
   searchTerm?: string;
   statusFilter?: string;
+  customerFilter?: string;
 }
 
 export interface CreatePackageData {
