@@ -260,7 +260,7 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
           <FormActions
             primaryAction={{
               label: 'Create Package',
-              onClick: handleSubmit,
+              onClick: () => handleSubmit({ preventDefault: () => {} } as React.FormEvent),
               loading: createPackageMutation.isPending,
               disabled: customersLoading
             }}
