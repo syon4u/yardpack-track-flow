@@ -51,7 +51,7 @@ export const fetchPackages = async (
   }
 
   // Apply status filter with the correct enum values
-  if (statusFilter && statusFilter !== 'all') {
+  if (statusFilter && statusFilter.trim()) {
     const validStatuses: PackageStatus[] = [
       'received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'
     ];

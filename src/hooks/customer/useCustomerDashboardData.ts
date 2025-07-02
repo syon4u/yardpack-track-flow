@@ -2,9 +2,11 @@ import { usePackages } from '@/hooks/usePackages';
 
 export const useCustomerDashboardData = () => {
   // Get packages for this customer - let service handle filtering automatically for customer role
+  // Use undefined for consistent cache keys with other components
   const { data: packages, isPending, error } = usePackages({
-    searchTerm: '',
-    statusFilter: 'all'
+    searchTerm: undefined,
+    statusFilter: undefined,
+    customerFilter: undefined
   });
 
   // For customer role, packages are already filtered by the service

@@ -111,11 +111,11 @@ const PackageList: React.FC<PackageListProps> = ({
     return (
       <div className="text-center py-8">
         <p className="text-gray-600">
-          {searchTerm || statusFilter !== 'all' 
+          {searchTerm || statusFilter 
             ? 'No packages found matching your filters.' 
             : 'No packages found.'}
         </p>
-        {profile?.role === 'customer' && !searchTerm && statusFilter === 'all' && (
+        {profile?.role === 'customer' && !searchTerm && !statusFilter && (
           <p className="text-sm text-gray-500 mt-2">
             Contact YardPack to add your first package.
           </p>

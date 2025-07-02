@@ -8,8 +8,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import PackageList from '../PackageList';
 
 const CustomerPackagesTab: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const isMobile = useIsMobile();
 
   return (
@@ -34,7 +34,7 @@ const CustomerPackagesTab: React.FC = () => {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Packages</SelectItem>
+              <SelectItem value="">All Packages</SelectItem>
               <SelectItem value="received">Received at Miami</SelectItem>
               <SelectItem value="in_transit">In Transit</SelectItem>
               <SelectItem value="arrived">Arrived in Jamaica</SelectItem>
@@ -43,13 +43,13 @@ const CustomerPackagesTab: React.FC = () => {
             </SelectContent>
           </Select>
           
-          {(searchTerm || statusFilter !== 'all') && (
+          {(searchTerm || statusFilter) && (
             <Button 
               variant="outline" 
               size={isMobile ? "sm" : "default"}
               onClick={() => {
-                setSearchTerm('');
-                setStatusFilter('all');
+                setSearchTerm(undefined);
+                setStatusFilter(undefined);
               }}
               className={`${isMobile ? 'h-10 px-3' : ''} flex items-center gap-2`}
             >
