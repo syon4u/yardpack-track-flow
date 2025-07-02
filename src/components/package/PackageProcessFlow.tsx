@@ -11,7 +11,13 @@ import {
   Mail, 
   MailCheck, 
   AlertCircle,
-  ChevronRight
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  User,
+  Settings,
+  QrCode,
+  Camera
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { useUpdatePackageStatus } from '@/hooks/packages/useUpdatePackageStatus';
@@ -20,6 +26,16 @@ import { format } from 'date-fns';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
 type PackageRow = Database['public']['Tables']['packages']['Row'];
+
+interface Activity {
+  id: string;
+  name: string;
+  description: string;
+  required: boolean;
+  completed: boolean;
+  icon: React.ComponentType<{ className?: string }>;
+  completedAt?: string;
+}
 
 interface PackageProcessFlowProps {
   packageData: PackageRow;
@@ -32,45 +48,179 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
   userRole,
   onStatusChange
 }) => {
+  const [expandedStage, setExpandedStage] = useState<PackageStatus | null>(null);
   const [confirmingStatus, setConfirmingStatus] = useState<PackageStatus | null>(null);
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdatePackageStatus();
   const { mutate: sendNotification, isPending: isSendingNotification } = useSendNotification();
 
+  // Define activities for each stage (like Dynamics 365 CRM)
+  const getActivitiesForStage = (status: PackageStatus): Activity[] => {
+    const baseActivities = {
+      received: [
+        {
+          id: 'log-package',
+          name: 'Log Package Details',
+          description: 'Record package information in system',
+          required: true,
+          completed: true,
+          icon: FileText,
+          completedAt: packageData.created_at
+        },
+        {
+          id: 'verify-customer',
+          name: 'Verify Customer Information',
+          description: 'Confirm customer details and contact info',
+          required: true,
+          completed: !!packageData.customer_id,
+          icon: User
+        },
+        {
+          id: 'send-confirmation',
+          name: 'Send Confirmation Email',
+          description: 'Notify customer that package was received',
+          required: false,
+          completed: packageData.last_notification_status === 'received' && !!packageData.last_notification_sent_at,
+          icon: Mail,
+          completedAt: packageData.last_notification_sent_at || undefined
+        }
+      ],
+      in_transit: [
+        {
+          id: 'update-tracking',
+          name: 'Update Tracking Information',
+          description: 'Record transit details and estimated arrival',
+          required: true,
+          completed: !!packageData.external_tracking_number,
+          icon: Truck
+        },
+        {
+          id: 'send-transit-notification',
+          name: 'Send Transit Notification',
+          description: 'Inform customer package is in transit',
+          required: false,
+          completed: packageData.last_notification_status === 'in_transit' && !!packageData.last_notification_sent_at,
+          icon: Mail,
+          completedAt: packageData.last_notification_sent_at || undefined
+        }
+      ],
+      arrived: [
+        {
+          id: 'customs-processing',
+          name: 'Process Through Customs',
+          description: 'Complete customs clearance procedures',
+          required: true,
+          completed: !!packageData.duty_amount,
+          icon: FileText
+        },
+        {
+          id: 'warehouse-assignment',
+          name: 'Assign Warehouse Location',
+          description: 'Allocate storage location in facility',
+          required: true,
+          completed: !!packageData.warehouse_location,
+          icon: MapPin
+        },
+        {
+          id: 'send-arrival-notification',
+          name: 'Send Arrival Notification',
+          description: 'Notify customer of package arrival',
+          required: false,
+          completed: packageData.last_notification_status === 'arrived' && !!packageData.last_notification_sent_at,
+          icon: Mail,
+          completedAt: packageData.last_notification_sent_at || undefined
+        }
+      ],
+      ready_for_pickup: [
+        {
+          id: 'generate-pickup-code',
+          name: 'Generate Pickup Code',
+          description: 'Create unique pickup verification code',
+          required: true,
+          completed: false, // Would need to check pickup_codes table
+          icon: QrCode
+        },
+        {
+          id: 'prepare-package',
+          name: 'Prepare Package for Pickup',
+          description: 'Move package to pickup area',
+          required: true,
+          completed: packageData.warehouse_location === 'pickup_area',
+          icon: Package
+        },
+        {
+          id: 'send-pickup-notification',
+          name: 'Send Pickup Ready Notification',
+          description: 'Inform customer package is ready',
+          required: true,
+          completed: packageData.last_notification_status === 'ready_for_pickup' && !!packageData.last_notification_sent_at,
+          icon: Mail,
+          completedAt: packageData.last_notification_sent_at || undefined
+        }
+      ],
+      picked_up: [
+        {
+          id: 'verify-identity',
+          name: 'Verify Customer Identity',
+          description: 'Confirm pickup person authorization',
+          required: true,
+          completed: !!packageData.actual_delivery,
+          icon: User,
+          completedAt: packageData.actual_delivery || undefined
+        },
+        {
+          id: 'capture-signature',
+          name: 'Capture Digital Signature',
+          description: 'Record pickup confirmation signature',
+          required: true,
+          completed: !!packageData.actual_delivery,
+          icon: Camera,
+          completedAt: packageData.actual_delivery || undefined
+        },
+        {
+          id: 'complete-process',
+          name: 'Complete Package Process',
+          description: 'Close package in system',
+          required: true,
+          completed: packageData.status === 'picked_up',
+          icon: CheckCircle,
+          completedAt: packageData.actual_delivery || undefined
+        }
+      ]
+    };
+
+    return baseActivities[status] || [];
+  };
+
   const stages = [
     {
       status: 'received' as PackageStatus,
-      label: 'Received',
+      label: 'Package Received',
       icon: Package,
-      description: 'Package received at facility',
-      actions: ['Generate tracking info', 'Send confirmation'],
+      description: 'Package logged and processed',
     },
     {
       status: 'in_transit' as PackageStatus,
       label: 'In Transit',
       icon: Truck,
-      description: 'Package in transit to Jamaica',
-      actions: ['Update tracking data', 'Send transit notification'],
+      description: 'En route to Jamaica',
     },
     {
       status: 'arrived' as PackageStatus,
-      label: 'Arrived',
+      label: 'Arrived in Jamaica',
       icon: MapPin,
-      description: 'Package arrived in Jamaica',
-      actions: ['Assign warehouse location', 'Process customs'],
+      description: 'Customs and warehouse processing',
     },
     {
       status: 'ready_for_pickup' as PackageStatus,
       label: 'Ready for Pickup',
       icon: Clock,
-      description: 'Package ready for customer pickup',
-      actions: ['Generate pickup code', 'Send pickup notification'],
+      description: 'Available for customer collection',
     },
     {
       status: 'picked_up' as PackageStatus,
-      label: 'Picked Up',
+      label: 'Package Delivered',
       icon: CheckCircle,
-      description: 'Package picked up by customer',
-      actions: ['Complete verification', 'Close package'],
+      description: 'Successfully delivered to customer',
     },
   ];
 
@@ -81,8 +231,8 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
   const getStageStatus = (stageIndex: number) => {
     const currentIndex = getCurrentStageIndex();
     if (stageIndex < currentIndex) return 'completed';
-    if (stageIndex === currentIndex) return 'current';
-    return 'pending';
+    if (stageIndex === currentIndex) return 'active';
+    return 'inactive';
   };
 
   const canAdvanceToStatus = (targetStatus: PackageStatus) => {
@@ -91,7 +241,6 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
     const currentIndex = getCurrentStageIndex();
     const targetIndex = stages.findIndex(stage => stage.status === targetStatus);
     
-    // Can only advance to the next stage
     return targetIndex === currentIndex + 1;
   };
 
@@ -114,156 +263,210 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
     sendNotification({ packageId: packageData.id, status });
   };
 
-  const getNotificationStatus = (status: PackageStatus) => {
-    if (packageData.last_notification_status === status && packageData.last_notification_sent_at) {
-      return 'sent';
-    }
-    return 'none';
+  const getRequiredActivitiesCount = (status: PackageStatus) => {
+    const activities = getActivitiesForStage(status);
+    const required = activities.filter(a => a.required);
+    const completed = activities.filter(a => a.required && a.completed);
+    return { completed: completed.length, total: required.length };
+  };
+
+  const isStageCompleted = (status: PackageStatus) => {
+    const counts = getRequiredActivitiesCount(status);
+    return counts.completed === counts.total;
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-lg">Package Process Flow</h3>
+        <h3 className="font-semibold text-lg">Business Process Flow</h3>
         <Badge variant="outline" className="text-sm">
-          Current: {stages[getCurrentStageIndex()]?.label}
+          {stages[getCurrentStageIndex()]?.label}
         </Badge>
       </div>
 
-      {/* Horizontal Flow */}
-      <div className="relative">
-        <div className="flex items-center justify-between">
+      {/* Dynamics 365 Style Process Flow */}
+      <div className="bg-white border rounded-lg p-6 shadow-sm">
+        <div className="flex items-start justify-between relative">
           {stages.map((stage, index) => {
             const stageStatus = getStageStatus(index);
             const Icon = stage.icon;
-            const notificationStatus = getNotificationStatus(stage.status);
+            const activities = getActivitiesForStage(stage.status);
+            const requiredCounts = getRequiredActivitiesCount(stage.status);
+            const isExpanded = expandedStage === stage.status;
             const canAdvance = canAdvanceToStatus(stage.status);
             
             return (
-              <React.Fragment key={stage.status}>
-                <div className="flex flex-col items-center space-y-2 flex-1">
-                  {/* Stage Icon */}
+              <div key={stage.status} className="flex-1 relative">
+                {/* Stage Header */}
+                <div className="flex flex-col items-center">
+                  {/* Stage Circle */}
                   <div className={`
-                    relative w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all
+                    relative w-16 h-16 rounded-full flex items-center justify-center border-3 transition-all duration-300 cursor-pointer
                     ${stageStatus === 'completed' 
-                      ? 'bg-green-100 border-green-500 text-green-700' 
-                      : stageStatus === 'current'
-                      ? 'bg-blue-100 border-blue-500 text-blue-700'
-                      : 'bg-gray-100 border-gray-300 text-gray-500'
+                      ? 'bg-green-50 border-green-500 text-green-700 shadow-sm' 
+                      : stageStatus === 'active'
+                      ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-md animate-pulse'
+                      : 'bg-gray-50 border-gray-300 text-gray-400'
                     }
-                    ${canAdvance ? 'cursor-pointer hover:bg-blue-50' : ''}
+                    ${canAdvance ? 'hover:bg-blue-100 hover:border-blue-600' : ''}
                   `}
-                  onClick={() => canAdvance && handleStatusChange(stage.status)}
+                  onClick={() => setExpandedStage(isExpanded ? null : stage.status)}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-6 h-6" />
                     {stageStatus === 'completed' && (
-                      <CheckCircle className="absolute -top-1 -right-1 w-4 h-4 text-green-600 bg-white rounded-full" />
+                      <CheckCircle className="absolute -top-2 -right-2 w-6 h-6 text-green-600 bg-white rounded-full shadow-sm" />
+                    )}
+                    {stageStatus === 'active' && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full animate-ping"></div>
                     )}
                   </div>
 
-                  {/* Stage Label */}
-                  <div className="text-center">
-                    <p className={`text-sm font-medium ${
-                      stageStatus === 'current' ? 'text-blue-700' : 
+                  {/* Stage Info */}
+                  <div className="text-center mt-3 max-w-32">
+                    <p className={`text-sm font-semibold ${
+                      stageStatus === 'active' ? 'text-blue-700' : 
                       stageStatus === 'completed' ? 'text-green-700' : 'text-gray-500'
                     }`}>
                       {stage.label}
                     </p>
-                    <p className="text-xs text-gray-500 max-w-24 break-words">
+                    <p className="text-xs text-gray-500 mt-1">
                       {stage.description}
                     </p>
-                  </div>
-
-                  {/* Notification Status */}
-                  <div className="flex items-center gap-1">
-                    {notificationStatus === 'sent' ? (
-                      <div className="flex items-center gap-1 text-green-600">
-                        <MailCheck className="w-3 h-3" />
-                        <span className="text-xs">Sent</span>
+                    
+                    {/* Progress Indicator */}
+                    <div className="mt-2">
+                      <div className={`text-xs ${
+                        stageStatus === 'active' ? 'text-blue-600' : 
+                        stageStatus === 'completed' ? 'text-green-600' : 'text-gray-400'
+                      }`}>
+                        {requiredCounts.completed}/{requiredCounts.total} Required
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-1 text-gray-400">
-                        <Mail className="w-3 h-3" />
-                        <span className="text-xs">-</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions for Admins */}
-                  {userRole !== 'customer' && stageStatus === 'current' && (
-                    <div className="flex flex-col gap-1 mt-2">
-                      {canAdvance && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs h-6 px-2"
-                          onClick={() => handleStatusChange(stage.status)}
-                          disabled={isUpdatingStatus && confirmingStatus === stage.status}
-                        >
-                          {isUpdatingStatus && confirmingStatus === stage.status 
-                            ? 'Updating...' 
-                            : 'Advance'
-                          }
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-xs h-6 px-2"
-                        onClick={() => handleSendNotification(stage.status)}
-                        disabled={isSendingNotification}
+                      
+                      {/* Expand/Collapse Indicator */}
+                      <button
+                        onClick={() => setExpandedStage(isExpanded ? null : stage.status)}
+                        className="mt-1 text-gray-400 hover:text-gray-600 transition-colors"
                       >
-                        {isSendingNotification ? 'Sending...' : 'Notify'}
-                      </Button>
+                        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </button>
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* Connector Arrow */}
+                {/* Connection Line */}
                 {index < stages.length - 1 && (
                   <div className={`
-                    flex items-center justify-center w-8 h-12
-                    ${index < getCurrentStageIndex() ? 'text-green-500' : 'text-gray-300'}
-                  `}>
-                    <ChevronRight className="w-4 h-4" />
+                    absolute top-8 left-[calc(100%-2rem)] w-[calc(100%-4rem)] h-0.5 
+                    ${index < getCurrentStageIndex() ? 'bg-green-500' : 'bg-gray-300'}
+                    transition-colors duration-300
+                  `} />
+                )}
+
+                {/* Expanded Activities (Dynamics 365 style) */}
+                {isExpanded && (
+                  <div className="absolute top-24 left-0 right-0 z-10 bg-white border rounded-lg shadow-lg p-4 animate-fade-in">
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-sm text-gray-700 border-b pb-2">
+                        Stage Activities
+                      </h4>
+                      {activities.map((activity) => (
+                        <div key={activity.id} className="flex items-start gap-3 p-2 rounded hover:bg-gray-50">
+                          <div className={`
+                            w-6 h-6 rounded-full flex items-center justify-center text-xs
+                            ${activity.completed 
+                              ? 'bg-green-100 text-green-700' 
+                              : activity.required 
+                              ? 'bg-blue-100 text-blue-700' 
+                              : 'bg-gray-100 text-gray-500'
+                            }
+                          `}>
+                            {activity.completed ? <CheckCircle className="w-3 h-3" /> : <activity.icon className="w-3 h-3" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className={`text-sm font-medium ${activity.completed ? 'text-green-700' : 'text-gray-700'}`}>
+                                {activity.name}
+                              </p>
+                              {activity.required && (
+                                <Badge variant="outline" className="text-xs">Required</Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">{activity.description}</p>
+                            {activity.completedAt && (
+                              <p className="text-xs text-green-600 mt-1">
+                                Completed: {format(new Date(activity.completedAt), 'MMM dd, yyyy HH:mm')}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Action Buttons for Admins */}
+                      {userRole !== 'customer' && stageStatus === 'active' && (
+                        <div className="border-t pt-3 flex gap-2">
+                          {canAdvance && isStageCompleted(stage.status) && (
+                            <Button
+                              size="sm"
+                              className="text-xs"
+                              onClick={() => handleStatusChange(stage.status)}
+                              disabled={isUpdatingStatus && confirmingStatus === stage.status}
+                            >
+                              {isUpdatingStatus && confirmingStatus === stage.status 
+                                ? 'Advancing...' 
+                                : 'Complete Stage'
+                              }
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            onClick={() => handleSendNotification(stage.status)}
+                            disabled={isSendingNotification}
+                          >
+                            {isSendingNotification ? 'Sending...' : 'Send Notification'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
-              </React.Fragment>
+              </div>
             );
           })}
         </div>
       </div>
 
-      {/* Timeline Information */}
-      <div className="space-y-2">
-        <h4 className="font-medium text-sm">Timeline</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-          <div>
-            <span className="text-gray-600">Date Received:</span>
-            <span className="ml-2 font-medium">
+      {/* Timeline Summary */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <h4 className="font-medium text-sm mb-3 text-gray-700">Process Timeline</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Package Received:</span>
+            <span className="font-medium">
               {format(new Date(packageData.date_received), 'MMM dd, yyyy HH:mm')}
             </span>
           </div>
           {packageData.estimated_delivery && (
-            <div>
-              <span className="text-gray-600">Est. Delivery:</span>
-              <span className="ml-2 font-medium">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Estimated Delivery:</span>
+              <span className="font-medium">
                 {format(new Date(packageData.estimated_delivery), 'MMM dd, yyyy')}
               </span>
             </div>
           )}
           {packageData.actual_delivery && (
-            <div>
+            <div className="flex justify-between">
               <span className="text-gray-600">Actual Delivery:</span>
-              <span className="ml-2 font-medium">
+              <span className="font-medium text-green-600">
                 {format(new Date(packageData.actual_delivery), 'MMM dd, yyyy HH:mm')}
               </span>
             </div>
           )}
           {packageData.last_notification_sent_at && (
-            <div>
+            <div className="flex justify-between">
               <span className="text-gray-600">Last Notification:</span>
-              <span className="ml-2 font-medium">
+              <span className="font-medium">
                 {format(new Date(packageData.last_notification_sent_at), 'MMM dd, yyyy HH:mm')}
               </span>
             </div>
