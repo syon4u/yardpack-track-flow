@@ -3,26 +3,17 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Truck, CheckCircle, DollarSign } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useAuth } from '@/contexts/AuthContext';
-import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
+import { useCustomerDashboardData } from '@/hooks/customer/useCustomerDashboardData';
 
 const CustomerStats: React.FC = () => {
   const isMobile = useIsMobile();
-  const { profile } = useAuth();
-  
-  // Fetch packages for the current customer
-  const { data: packageData, isPending } = useOptimizedPackages(
-    { customerId: profile?.id },
-    { page: 1, limit: 1000 } // Get all packages for stats
-  );
+  const { packages, isPending, stats } = useCustomerDashboardData();
 
-  const packages = packageData?.data || [];
-
-  // Calculate statistics from actual data
-  const totalPackages = packages.length;
-  const inTransitPackages = packages.filter(p => p.status === 'in_transit').length;
-  const readyForPickup = packages.filter(p => p.status === 'ready_for_pickup').length;
-  const totalDue = packages.reduce((sum, p) => sum + (p.total_due || 0), 0);
+  // Use pre-calculated stats from the hook
+  const totalPackages = stats.totalPackages;
+  const inTransitPackages = stats.inTransitPackages;
+  const readyForPickup = stats.readyForPickup;
+  const totalDue = stats.totalDue;
 
   if (isPending) {
     return (
