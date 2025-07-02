@@ -11,6 +11,7 @@ import Dashboard from "@/components/Dashboard";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import WarehousePage from "@/pages/WarehousePage";
+import PackageDetailPage from "@/pages/PackageDetailPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "@/components/error/ErrorBoundary";
 import RouteErrorBoundary from "@/components/error/RouteErrorBoundary";
@@ -81,6 +82,16 @@ const AppContent: React.FC = () => {
                 ) : (
                   <Navigate to="/dashboard" replace />
                 )
+              } 
+            />
+            <Route 
+              path="/package/:id" 
+              element={
+                <RouteErrorBoundary>
+                  <Layout>
+                    <PackageDetailPage />
+                  </Layout>
+                </RouteErrorBoundary>
               } 
             />
             {/* Catch-all for authenticated users - redirect based on role */}
