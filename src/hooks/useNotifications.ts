@@ -16,20 +16,37 @@ interface Notification {
 }
 
 export const useNotifications = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   
   return useQuery({
-    queryKey: ['notifications', user?.id],
+    queryKey: ['notifications', user?.id, profile?.role],
     queryFn: async (): Promise<Notification[]> => {
       if (!user) return [];
       
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      console.log('Fetching notifications for user:', user.id, 'role:', profile?.role);
       
-      if (error) throw error;
+      let query = supabase
+        .from('notifications')
+        .select('*');
+      
+      // If admin, get ALL notifications; if customer, only their own
+      if (profile?.role === 'admin') {
+        console.log('Admin user - fetching all notifications');
+      } else {
+        console.log('Customer user - fetching only their notifications');
+        query = query.eq('user_id', user.id);
+      }
+      
+      query = query.order('created_at', { ascending: false });
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        throw error;
+      }
+      
+      console.log('Fetched notifications:', data?.length || 0);
       return data || [];
     },
     enabled: !!user,
@@ -47,12 +64,21 @@ export const useSendNotification = () => {
         body: { packageId, status }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(`Failed to send notification: ${error.message}`);
+      }
+      
+      console.log('Notification sent successfully:', data);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      console.log('Notification mutation successful, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['packages'] });
+    },
+    onError: (error) => {
+      console.error('Notification mutation failed:', error);
     },
   });
 };

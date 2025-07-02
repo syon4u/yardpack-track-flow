@@ -64,14 +64,24 @@ export const fetchPackages = async (
   console.log('Fetched packages:', data);
   
   // Transform data to include computed properties that PackageList expects
-  const transformedData: TransformedPackage[] = (data || []).map(pkg => ({
-    ...pkg,
-    customer_name: pkg.customers?.full_name || 'Unknown Customer',
-    customer_email: pkg.customers?.email || null,
-    invoices: pkg.invoices || [],
-    invoice_uploaded: pkg.invoices && pkg.invoices.length > 0,
-    duty_assessed: pkg.duty_amount !== null,
-  }));
+  const transformedData: TransformedPackage[] = (data || []).map(pkg => {
+    const customer = pkg.customers;
+    
+    // Ensure customer data is always available with fallbacks
+    const customer_name = customer?.full_name || 'Unknown Customer';
+    const customer_email = customer?.email || null;
+    
+    console.log(`Package ${pkg.tracking_number}: customer_name=${customer_name}, customer_email=${customer_email}`);
+    
+    return {
+      ...pkg,
+      customer_name,
+      customer_email,
+      invoices: pkg.invoices || [],
+      invoice_uploaded: pkg.invoices && pkg.invoices.length > 0,
+      duty_assessed: pkg.duty_amount !== null,
+    };
+  });
   
   return transformedData;
 };

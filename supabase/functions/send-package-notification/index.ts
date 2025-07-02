@@ -148,13 +148,32 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Email sent successfully:', emailResponse.data);
 
-    // Update notification record as sent
-    await supabase
+    // Update notification record as sent and update package notification tracking
+    const notificationUpdate = await supabase
       .from('notifications')
       .update({ sent_at: new Date().toISOString() })
       .eq('package_id', packageId)
       .eq('type', 'email')
       .is('sent_at', null);
+    
+    if (notificationUpdate.error) {
+      console.error('Failed to update notification record:', notificationUpdate.error);
+    }
+
+    // Update package notification tracking
+    const packageUpdate = await supabase
+      .from('packages')
+      .update({ 
+        last_notification_status: status,
+        last_notification_sent_at: new Date().toISOString()
+      })
+      .eq('id', packageId);
+    
+    if (packageUpdate.error) {
+      console.error('Failed to update package notification tracking:', packageUpdate.error);
+    }
+    
+    console.log('Notification tracking updated for package:', packageId);
 
     return new Response(
       JSON.stringify({ 
