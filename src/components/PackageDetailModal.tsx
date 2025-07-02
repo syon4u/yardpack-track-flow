@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { Database } from '@/integrations/supabase/types';
 import { MagayaStatusIndicator } from './magaya/MagayaStatusIndicator';
 import PickupRecordsTable from './pickup/PickupRecordsTable';
+import PackageProcessFlow from './package/PackageProcessFlow';
 
 type PackageRow = Database['public']['Tables']['packages']['Row'];
 type PackageStatus = Database['public']['Enums']['package_status'];
@@ -57,6 +58,18 @@ const PackageDetailModal: React.FC<PackageDetailModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Package Process Flow */}
+          <PackageProcessFlow 
+            packageData={pkg} 
+            userRole={userRole}
+            onStatusChange={() => {
+              // The modal will automatically refresh with new data from the query
+              console.log('Package status updated');
+            }}
+          />
+
+          <Separator />
+
           {/* Basic Package Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
