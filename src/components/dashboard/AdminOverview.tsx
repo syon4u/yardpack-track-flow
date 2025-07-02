@@ -7,10 +7,10 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
 const AdminOverview: React.FC = () => {
-  const { data: stats, isLoading } = useOptimizedStats();
+  const { data: stats, isPending } = useOptimizedStats();
   const navigate = useNavigate();
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="space-y-6">
         <div className="animate-pulse">

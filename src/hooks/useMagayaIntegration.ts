@@ -45,7 +45,6 @@ export const useMagayaIntegration = () => {
       toast.success('Package synced with Magaya successfully');
     },
     onError: (error: Error) => {
-      console.error('Failed to create shipment:', error);
       toast.error(`Failed to sync with Magaya: ${error.message}`);
     },
   });
@@ -64,7 +63,6 @@ export const useMagayaIntegration = () => {
       toast.success('Shipment status updated in Magaya');
     },
     onError: (error: Error) => {
-      console.error('Failed to update status:', error);
       toast.error(`Failed to update Magaya status: ${error.message}`);
     },
   });
@@ -81,7 +79,6 @@ export const useMagayaIntegration = () => {
       toast.success('Package synced with Magaya');
     },
     onError: (error: Error) => {
-      console.error('Failed to sync package:', error);
       toast.error(`Failed to sync package: ${error.message}`);
     },
   });
@@ -98,7 +95,6 @@ export const useMagayaIntegration = () => {
       queryClient.invalidateQueries({ queryKey: ['packages'] });
     },
     onError: (error: Error) => {
-      console.error('Failed to get shipment info:', error);
       toast.error(`Failed to get Magaya shipment info: ${error.message}`);
     },
   });

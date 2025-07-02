@@ -28,7 +28,7 @@ const CustomerDashboard: React.FC = () => {
   const customerRecord = customers?.find(c => c.user_id === profile?.id);
   
   // Get packages for this customer
-  const { data: packages, isLoading } = usePackages({
+  const { data: packages, isPending } = usePackages({
     searchTerm: '',
     statusFilter: 'all'
   });
@@ -51,7 +51,7 @@ const CustomerDashboard: React.FC = () => {
   // Calculate pending invoices (packages without invoices)
   const pendingInvoices = customerPackages.filter(p => !p.invoice_uploaded).length;
 
-  if (isLoading) {
+  if (isPending) {
     return <DashboardSkeleton />;
   }
 

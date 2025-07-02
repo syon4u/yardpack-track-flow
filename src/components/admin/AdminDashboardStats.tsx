@@ -5,9 +5,9 @@ import { Package, Users, TrendingUp, Clock } from 'lucide-react';
 import { useOptimizedStats } from '@/hooks/useOptimizedCustomers';
 
 const AdminDashboardStats: React.FC = () => {
-  const { data: stats, isLoading } = useOptimizedStats();
+  const { data: stats, isPending } = useOptimizedStats();
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (

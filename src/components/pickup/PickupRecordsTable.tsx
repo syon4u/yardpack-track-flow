@@ -16,9 +16,9 @@ const PickupRecordsTable: React.FC<PickupRecordsTableProps> = ({
   packageId,
   onViewDetails,
 }) => {
-  const { data: pickupRecords, isLoading } = usePackagePickupRecords(packageId);
+  const { data: pickupRecords, isPending } = usePackagePickupRecords(packageId);
 
-  if (isLoading) {
+  if (isPending) {
     return <div className="text-center py-4">Loading pickup records...</div>;
   }
 

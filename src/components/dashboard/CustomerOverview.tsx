@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 
 const CustomerOverview: React.FC = () => {
   const { profile } = useAuth();
-  const { data: packageData, isLoading } = useOptimizedPackages(
+  const { data: packageData, isPending } = useOptimizedPackages(
     { customerId: profile?.id },
     { page: 1, limit: 10 }
   );
@@ -27,7 +27,7 @@ const CustomerOverview: React.FC = () => {
 
   const recentPackages = packages.slice(0, 5);
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="space-y-6">
         <div className="animate-pulse">

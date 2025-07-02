@@ -65,7 +65,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
   // Fetch optimized packages - destructure the query result properly
   const {
     data: queryResult,
-    isLoading,
+    isPending,
     error,
   } = useOptimizedPackages(
     {
@@ -210,14 +210,14 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       </div>
 
       {/* Loading state */}
-      {isLoading && (
+      {isPending && (
         <div className="text-center py-8 text-muted-foreground">
           Loading packages...
         </div>
       )}
 
       {/* Table */}
-      {!isLoading && (
+      {!isPending && (
         <>
           <VirtualizedTable
             data={packages}

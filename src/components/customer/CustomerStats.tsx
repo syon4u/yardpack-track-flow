@@ -11,7 +11,7 @@ const CustomerStats: React.FC = () => {
   const { profile } = useAuth();
   
   // Fetch packages for the current customer
-  const { data: packageData, isLoading } = useOptimizedPackages(
+  const { data: packageData, isPending } = useOptimizedPackages(
     { customerId: profile?.id },
     { page: 1, limit: 1000 } // Get all packages for stats
   );
@@ -24,7 +24,7 @@ const CustomerStats: React.FC = () => {
   const readyForPickup = packages.filter(p => p.status === 'ready_for_pickup').length;
   const totalDue = packages.reduce((sum, p) => sum + (p.total_due || 0), 0);
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className={`grid gap-3 sm:gap-4 md:gap-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-4'}`}>
         {Array.from({ length: 4 }).map((_, i) => (

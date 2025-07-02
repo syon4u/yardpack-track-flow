@@ -10,16 +10,13 @@ export const useCustomers = () => {
   return useQuery({
     queryKey: ['customers'],
     queryFn: async (): Promise<CustomerWithStats[]> => {
-      console.log('Fetching customers with stats from customers table');
-      
       const { data: customers, error } = await supabase
         .from('customers')
         .select('*')
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Error fetching customers:', error);
-        throw error;
+        throw new Error(`Failed to fetch customers: ${error.message}`);
       }
       
       if (!customers) return [];
@@ -55,7 +52,6 @@ export const useCustomers = () => {
         })
       );
 
-      console.log('Fetched customers with stats:', customersWithStats);
       return customersWithStats;
     },
   });
@@ -74,8 +70,7 @@ export const useCustomerById = (customerId: string) => {
         .single();
       
       if (error) {
-        console.error('Error fetching customer:', error);
-        throw error;
+        throw new Error(`Failed to fetch customer: ${error.message}`);
       }
       
       return data;
@@ -98,8 +93,6 @@ export const useCreateCustomer = () => {
       preferred_contact_method?: string | null;
       notes?: string | null;
     }) => {
-      console.log('Creating new customer:', customerData);
-      
       const { data, error } = await supabase
         .from('customers')
         .insert([customerData])

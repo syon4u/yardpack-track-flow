@@ -51,8 +51,6 @@ export const useOptimizedPackages = (
   return useQuery({
     queryKey: ['optimized-packages', customerId, searchTerm, statusFilter, page, limit],
     queryFn: async (): Promise<OptimizedPackagesResult> => {
-      console.log('Fetching optimized packages with filters:', filters);
-
       // Build the base query with proper joins
       let query = supabase
         .from('packages')
@@ -92,8 +90,7 @@ export const useOptimizedPackages = (
       const { data, error, count } = await query;
 
       if (error) {
-        console.error('Error fetching optimized packages:', error);
-        throw error;
+        throw new Error(`Failed to fetch packages: ${error.message}`);
       }
 
       const total = count || 0;
@@ -107,8 +104,6 @@ export const useOptimizedPackages = (
         invoice_uploaded: (pkg.invoices || []).length > 0,
         duty_assessed: pkg.duty_amount !== null,
       }));
-
-      console.log(`Fetched ${transformedData.length} packages out of ${total} total`);
 
       return {
         data: transformedData,

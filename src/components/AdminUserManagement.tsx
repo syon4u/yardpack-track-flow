@@ -13,7 +13,7 @@ const AdminUserManagement: React.FC = () => {
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isPending } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -37,7 +37,7 @@ const AdminUserManagement: React.FC = () => {
   const warehouseUsers = users?.filter(u => u.role === 'warehouse').length || 0;
   const customerServiceUsers = users?.filter(u => u.role === 'customer').length || 0;
 
-  if (isLoading) {
+  if (isPending) {
     return <div>Loading system users...</div>;
   }
 

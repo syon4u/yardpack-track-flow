@@ -35,7 +35,7 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
   });
 
   // Use the customers from the new customers table
-  const { data: customers, isLoading: customersLoading } = useCustomers();
+  const { data: customers, isPending: customersLoading } = useCustomers();
 
   // Filter to only show registered customers for the dropdown
   const registeredCustomers = customers?.filter(customer => 
@@ -82,10 +82,9 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
       
       onClose();
     } catch (error) {
-      console.error('Error creating package:', error);
       toast({
-        title: "Error",
-        description: "Failed to create package",
+        title: "Error creating package",
+        description: error instanceof Error ? error.message : "Failed to create package",
         variant: "destructive",
       });
     }

@@ -31,7 +31,7 @@ const PackageList: React.FC<PackageListProps> = ({
   onViewModeChange 
 }) => {
   const { profile } = useAuth();
-  const { data: packages, isLoading, error } = usePackages({ searchTerm, statusFilter });
+  const { data: packages, isPending, error } = usePackages({ searchTerm, statusFilter });
   const updateStatusMutation = useUpdatePackageStatus();
   const uploadInvoiceMutation = useUploadInvoice();
   const downloadInvoiceMutation = useDownloadInvoice();
@@ -43,7 +43,7 @@ const PackageList: React.FC<PackageListProps> = ({
     try {
       await updateStatusMutation.mutateAsync({ packageId, status });
     } catch (error) {
-      console.error('Error updating status:', error);
+      // Error handling is done by the mutation
     }
   };
 
@@ -57,7 +57,7 @@ const PackageList: React.FC<PackageListProps> = ({
         try {
           await uploadInvoiceMutation.mutateAsync({ packageId, file });
         } catch (error) {
-          console.error('Error uploading invoice:', error);
+          // Error handling is done by the mutation
         }
       }
     };
@@ -70,7 +70,7 @@ const PackageList: React.FC<PackageListProps> = ({
       try {
         await downloadInvoiceMutation.mutateAsync(pkg.invoices[0].file_path);
       } catch (error) {
-        console.error('Error downloading invoice:', error);
+        // Error handling is done by the mutation
       }
     }
   };
@@ -79,7 +79,7 @@ const PackageList: React.FC<PackageListProps> = ({
     setSelectedPackageId(packageId);
   };
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="space-y-4">
         {onViewModeChange && (

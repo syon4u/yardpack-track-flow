@@ -17,7 +17,7 @@ const AdminCustomerManagement: React.FC = () => {
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const isMobile = useIsMobile();
 
-  const { data: customers, isLoading, error } = useCustomers();
+  const { data: customers, isPending, error } = useCustomers();
 
   const filteredCustomers = customers?.filter(customer => {
     const matchesSearch = 
@@ -36,7 +36,7 @@ const AdminCustomerManagement: React.FC = () => {
   const packageOnlyCustomers = customers?.filter(c => c.customer_type === 'package_only').length || 0;
   const activeCustomers = customers?.filter(c => c.active_packages > 0).length || 0;
 
-  if (isLoading) {
+  if (isPending) {
     return <div className="flex justify-center py-8">Loading customers...</div>;
   }
 
