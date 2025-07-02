@@ -44,18 +44,14 @@ const CustomerDashboard: React.FC = () => {
     }, 1000);
   }, []);
   
-  // Get customer record for this user
-  const { data: customers } = useCustomers();
-  const customerRecord = customers?.find(c => c.user_id === profile?.id);
-  
-  // Get packages for this customer
-  const { data: packages, isPending } = usePackages({
+  // Get packages for this customer - let service handle filtering automatically for customer role
+  const { data: packages, isPending, error } = usePackages({
     searchTerm: '',
     statusFilter: 'all'
   });
 
-  // Filter packages for current customer
-  const customerPackages = packages?.filter(p => p.customer_id === customerRecord?.id) || [];
+  // For customer role, packages are already filtered by the service
+  const customerPackages = packages || [];
 
   // Calculate statistics from packages
   const totalPackages = customerPackages.length;
@@ -74,6 +70,17 @@ const CustomerDashboard: React.FC = () => {
 
   if (isPending) {
     return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">Error loading dashboard data</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
   }
 
   return (

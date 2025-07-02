@@ -12,7 +12,7 @@ export const fetchPackages = async (
 ): Promise<TransformedPackage[]> => {
   const { searchTerm, statusFilter, customerFilter } = options;
   
-  console.log('Fetching packages for user:', userId, 'with role:', userRole);
+  console.log('Fetching packages for user:', userId, 'with role:', userRole, 'with options:', options);
   
   // Use customers table instead of profiles for package relationships
   let query = supabase
@@ -27,16 +27,20 @@ export const fetchPackages = async (
   // If customer, only show packages for customers linked to their user account
   if (userRole === 'customer') {
     // First get the customer record for this user
-    const { data: customerRecord } = await supabase
+    const { data: customerRecord, error: customerError } = await supabase
       .from('customers')
       .select('id')
       .eq('user_id', userId)
       .single();
     
+    console.log('Customer record lookup for user:', userId, 'result:', customerRecord, 'error:', customerError);
+    
     if (customerRecord) {
+      console.log('Filtering packages for customer_id:', customerRecord.id);
       query = query.eq('customer_id', customerRecord.id);
     } else {
       // No customer record found, return empty array
+      console.log('No customer record found for user:', userId);
       return [];
     }
   }
