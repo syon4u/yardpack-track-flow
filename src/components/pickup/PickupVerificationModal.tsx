@@ -6,16 +6,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePickupVerificationMethods, useCreatePickupRecord } from '@/hooks/usePickupVerification';
-import { Database } from '@/integrations/supabase/types';
-import { Camera, Signature, QrCode, Key, User, CheckCircle } from 'lucide-react';
-import { toast } from 'sonner';
 import DigitalSignaturePad from './DigitalSignaturePad';
 import PhotoCaptureComponent from './PhotoCaptureComponent';
 
-type Package = Database['public']['Tables']['packages']['Row'];
+// Use the same Package interface as PackageTable
+interface Package {
+  id: string;
+  tracking_number: string;
+  description: string;
+  status: string;
+  date_received: string;
+  estimated_delivery?: string;
+  invoices?: any[];
+  total_due?: number;
+  customer_name?: string;
+  magaya_shipment_id?: string | null;
+  magaya_reference_number?: string | null;
+  warehouse_location?: string | null;
+  consolidation_status?: string | null;
+}
 
 interface PickupVerificationModalProps {
   package: Package | null;
@@ -30,244 +43,265 @@ const PickupVerificationModal: React.FC<PickupVerificationModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const { profile } = useAuth();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { data: verificationMethods } = usePickupVerificationMethods();
   const createPickupRecord = useCreatePickupRecord();
 
-  const [selectedMethodId, setSelectedMethodId] = useState('');
-  const [pickupPersonName, setPickupPersonName] = useState('');
-  const [pickupPersonPhone, setPickupPersonPhone] = useState('');
-  const [pickupPersonRelationship, setPickupPersonRelationship] = useState('customer');
-  const [pickupNotes, setPickupNotes] = useState('');
-  const [packageCondition, setPackageCondition] = useState('good');
-  const [customerSatisfied, setCustomerSatisfied] = useState(true);
-  const [verificationData, setVerificationData] = useState<any>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    verification_method_id: '',
+    pickup_person_name: '',
+    pickup_person_phone: '',
+    pickup_person_relationship: 'customer',
+    pickup_notes: '',
+    package_condition: 'good',
+    customer_satisfied: true,
+  });
 
-  const selectedMethod = verificationMethods?.find(m => m.id === selectedMethodId);
+  const [verificationData, setVerificationData] = useState<any>({});
+  const [currentStep, setCurrentStep] = useState(1);
+
+  const selectedMethod = verificationMethods?.find(m => m.id === formData.verification_method_id);
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleVerificationData = (data: any) => {
+    setVerificationData(prev => ({ ...prev, ...data }));
+  };
 
   const handleSubmit = async () => {
-    if (!pkg || !profile || !selectedMethodId || !pickupPersonName.trim()) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
+    if (!pkg || !user) return;
 
-    setIsSubmitting(true);
     try {
       await createPickupRecord.mutateAsync({
         package_id: pkg.id,
-        verification_method_id: selectedMethodId,
-        pickup_person_name: pickupPersonName.trim(),
-        pickup_person_phone: pickupPersonPhone.trim() || undefined,
-        pickup_person_relationship: pickupPersonRelationship,
-        authorized_by_staff: profile.id,
+        verification_method_id: formData.verification_method_id,
+        pickup_person_name: formData.pickup_person_name,
+        pickup_person_phone: formData.pickup_person_phone,
+        pickup_person_relationship: formData.pickup_person_relationship,
+        authorized_by_staff: user.id,
         verification_data: verificationData,
-        pickup_notes: pickupNotes.trim() || undefined,
-        package_condition: packageCondition,
-        customer_satisfied: customerSatisfied,
+        pickup_notes: formData.pickup_notes,
+        package_condition: formData.package_condition,
+        customer_satisfied: formData.customer_satisfied,
       });
 
-      toast.success('Package pickup recorded successfully');
+      toast({
+        title: "Pickup Recorded Successfully",
+        description: `Package ${pkg.tracking_number} has been marked as picked up.`,
+      });
+
       onSuccess?.();
       onClose();
       resetForm();
     } catch (error) {
-      console.error('Error recording pickup:', error);
-      toast.error('Failed to record package pickup');
-    } finally {
-      setIsSubmitting(false);
+      toast({
+        title: "Error Recording Pickup",
+        description: "Failed to record the package pickup. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const resetForm = () => {
-    setSelectedMethodId('');
-    setPickupPersonName('');
-    setPickupPersonPhone('');
-    setPickupPersonRelationship('customer');
-    setPickupNotes('');
-    setPackageCondition('good');
-    setCustomerSatisfied(true);
+    setFormData({
+      verification_method_id: '',
+      pickup_person_name: '',
+      pickup_person_phone: '',
+      pickup_person_relationship: 'customer',
+      pickup_notes: '',
+      package_condition: 'good',
+      customer_satisfied: true,
+    });
     setVerificationData({});
-  };
-
-  const handleClose = () => {
-    resetForm();
-    onClose();
+    setCurrentStep(1);
   };
 
   if (!pkg) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            Record Package Pickup
-          </DialogTitle>
-          <div className="text-sm text-gray-600">
-            <p><strong>Package:</strong> {pkg.tracking_number}</p>
-            <p><strong>Description:</strong> {pkg.description}</p>
-          </div>
+          <DialogTitle>Record Package Pickup</DialogTitle>
+          <p className="text-sm text-gray-600">
+            Package: {pkg.tracking_number} - {pkg.description}
+          </p>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Verification Method Selection */}
-          <div>
-            <Label htmlFor="verification-method">Verification Method *</Label>
-            <Select value={selectedMethodId} onValueChange={setSelectedMethodId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select verification method" />
-              </SelectTrigger>
-              <SelectContent>
-                {verificationMethods?.map((method) => (
-                  <SelectItem key={method.id} value={method.id}>
-                    <div className="flex items-center gap-2">
-                      {method.name === 'digital_signature' && <Signature className="h-4 w-4" />}
-                      {method.name === 'photo_id' && <Camera className="h-4 w-4" />}
-                      {method.name === 'qr_code' && <QrCode className="h-4 w-4" />}
-                      {method.name === 'pin_code' && <Key className="h-4 w-4" />}
-                      {method.name === 'staff_verification' && <User className="h-4 w-4" />}
-                      <span className="capitalize">{method.name.replace('_', ' ')}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedMethod?.description && (
-              <p className="text-sm text-gray-500 mt-1">{selectedMethod.description}</p>
-            )}
-          </div>
+          {currentStep === 1 && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="verification_method">Verification Method</Label>
+                <Select
+                  value={formData.verification_method_id}
+                  onValueChange={(value) => handleInputChange('verification_method_id', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select verification method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {verificationMethods?.map((method) => (
+                      <SelectItem key={method.id} value={method.id}>
+                        {method.name.replace('_', ' ').toUpperCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Pickup Person Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="pickup-person-name">Pickup Person Name *</Label>
-              <Input
-                id="pickup-person-name"
-                value={pickupPersonName}
-                onChange={(e) => setPickupPersonName(e.target.value)}
-                placeholder="Full name of person collecting package"
-              />
-            </div>
-            <div>
-              <Label htmlFor="pickup-person-phone">Phone Number</Label>
-              <Input
-                id="pickup-person-phone"
-                value={pickupPersonPhone}
-                onChange={(e) => setPickupPersonPhone(e.target.value)}
-                placeholder="Contact number"
-              />
-            </div>
-          </div>
+              <div>
+                <Label htmlFor="pickup_person_name">Pickup Person Name</Label>
+                <Input
+                  id="pickup_person_name"
+                  value={formData.pickup_person_name}
+                  onChange={(e) => handleInputChange('pickup_person_name', e.target.value)}
+                  placeholder="Full name of person collecting package"
+                  required
+                />
+              </div>
 
-          <div>
-            <Label htmlFor="relationship">Relationship to Customer</Label>
-            <Select value={pickupPersonRelationship} onValueChange={setPickupPersonRelationship}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="customer">Customer (Self)</SelectItem>
-                <SelectItem value="authorized_representative">Authorized Representative</SelectItem>
-                <SelectItem value="family_member">Family Member</SelectItem>
-                <SelectItem value="friend">Friend</SelectItem>
-                <SelectItem value="employee">Employee/Staff</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div>
+                <Label htmlFor="pickup_person_phone">Phone Number (Optional)</Label>
+                <Input
+                  id="pickup_person_phone"
+                  value={formData.pickup_person_phone}
+                  onChange={(e) => handleInputChange('pickup_person_phone', e.target.value)}
+                  placeholder="Contact number"
+                />
+              </div>
 
-          {/* Verification Components */}
-          {selectedMethod?.requires_signature && (
-            <div>
-              <Label>Digital Signature *</Label>
-              <DigitalSignaturePad
-                onSave={(signatureData) => setVerificationData({ ...verificationData, signature: signatureData })}
-              />
-            </div>
-          )}
+              <div>
+                <Label>Relationship to Customer</Label>
+                <RadioGroup
+                  value={formData.pickup_person_relationship}
+                  onValueChange={(value) => handleInputChange('pickup_person_relationship', value)}
+                  className="mt-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="customer" id="customer" />
+                    <Label htmlFor="customer">Customer</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="authorized_representative" id="authorized_representative" />
+                    <Label htmlFor="authorized_representative">Authorized Representative</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="family_member" id="family_member" />
+                    <Label htmlFor="family_member">Family Member</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="other" id="other" />
+                    <Label htmlFor="other">Other</Label>
+                  </div>
+                </RadioGroup>
+              </div>
 
-          {selectedMethod?.requires_photo && (
-            <div>
-              <Label>Photo ID Verification *</Label>
-              <PhotoCaptureComponent
-                onCapture={(photoData) => setVerificationData({ ...verificationData, photo: photoData })}
-              />
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setCurrentStep(2)}
+                  disabled={!formData.verification_method_id || !formData.pickup_person_name}
+                  className="flex-1"
+                >
+                  Next: Verification
+                </Button>
+                <Button variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
 
-          {selectedMethod?.requires_code && (
-            <div>
-              <Label htmlFor="verification-code">Verification Code *</Label>
-              <Input
-                id="verification-code"
-                value={verificationData.code || ''}
-                onChange={(e) => setVerificationData({ ...verificationData, code: e.target.value })}
-                placeholder="Enter QR code or PIN"
-                className="font-mono"
-              />
+          {currentStep === 2 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">
+                {selectedMethod?.name.replace('_', ' ').toUpperCase()} Verification
+              </h3>
+
+              {selectedMethod?.requires_signature && (
+                <div>
+                  <Label>Digital Signature</Label>
+                  <DigitalSignaturePad
+                    onSave={(signature) => handleVerificationData({ signature })}
+                  />
+                </div>
+              )}
+
+              {selectedMethod?.requires_photo && (
+                <div>
+                  <Label>Photo Verification</Label>
+                  <PhotoCaptureComponent
+                    onCapture={(photo) => handleVerificationData({ photo })}
+                  />
+                </div>
+              )}
+
+              {selectedMethod?.requires_code && (
+                <div>
+                  <Label htmlFor="verification_code">Verification Code</Label>
+                  <Input
+                    id="verification_code"
+                    placeholder="Enter pickup code"
+                    onChange={(e) => handleVerificationData({ code: e.target.value })}
+                  />
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="package_condition">Package Condition</Label>
+                <Select
+                  value={formData.package_condition}
+                  onValueChange={(value) => handleInputChange('package_condition', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="good">Good</SelectItem>
+                    <SelectItem value="damaged">Damaged</SelectItem>
+                    <SelectItem value="opened">Opened</SelectItem>
+                    <SelectItem value="wet">Water Damaged</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="pickup_notes">Notes (Optional)</Label>
+                <Textarea
+                  id="pickup_notes"
+                  value={formData.pickup_notes}
+                  onChange={(e) => handleInputChange('pickup_notes', e.target.value)}
+                  placeholder="Any additional notes about the pickup"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="customer_satisfied"
+                  checked={formData.customer_satisfied}
+                  onChange={(e) => handleInputChange('customer_satisfied', e.target.checked)}
+                />
+                <Label htmlFor="customer_satisfied">Customer satisfied with pickup process</Label>
+              </div>
+
+              <div className="flex gap-2">
+                <Button onClick={() => setCurrentStep(1)} variant="outline">
+                  Back
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={createPickupRecord.isPending}
+                  className="flex-1"
+                >
+                  {createPickupRecord.isPending ? 'Recording...' : 'Complete Pickup'}
+                </Button>
+              </div>
             </div>
           )}
-
-          {/* Package Condition */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="package-condition">Package Condition</Label>
-              <Select value={packageCondition} onValueChange={setPackageCondition}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="damaged">Damaged</SelectItem>
-                  <SelectItem value="opened">Opened/Tampered</SelectItem>
-                  <SelectItem value="wet">Water Damage</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="customer-satisfied">Customer Satisfaction</Label>
-              <Select 
-                value={customerSatisfied ? 'satisfied' : 'unsatisfied'} 
-                onValueChange={(value) => setCustomerSatisfied(value === 'satisfied')}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="satisfied">Satisfied</SelectItem>
-                  <SelectItem value="unsatisfied">Unsatisfied</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Notes */}
-          <div>
-            <Label htmlFor="pickup-notes">Pickup Notes</Label>
-            <Textarea
-              id="pickup-notes"
-              value={pickupNotes}
-              onChange={(e) => setPickupNotes(e.target.value)}
-              placeholder="Any additional notes about the pickup..."
-              rows={3}
-            />
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-2 justify-end pt-4 border-t">
-            <Button variant="outline" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSubmit} 
-              disabled={isSubmitting || !selectedMethodId || !pickupPersonName.trim()}
-            >
-              {isSubmitting ? 'Recording...' : 'Record Pickup'}
-            </Button>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
