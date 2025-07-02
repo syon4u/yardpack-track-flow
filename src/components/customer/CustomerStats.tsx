@@ -28,14 +28,14 @@ const CustomerStats: React.FC = () => {
     return (
       <div className={`grid gap-3 sm:gap-4 md:gap-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-4'}`}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className={isMobile ? 'p-3' : ''}>
+          <Card key={i} className={`${isMobile ? 'p-3' : ''} animate-fade-in`} style={{ animationDelay: `${i * 100}ms` }}>
             <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
-              <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 w-16 bg-loading-skeleton rounded loading-shimmer"></div>
+              <div className="h-4 w-4 bg-loading-skeleton rounded loading-shimmer"></div>
             </CardHeader>
             <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
-              <div className={`bg-gray-200 rounded animate-pulse mb-1 ${isMobile ? 'h-5 w-12' : 'h-8 w-16'}`}></div>
-              <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+              <div className={`bg-loading-skeleton rounded loading-shimmer mb-1 ${isMobile ? 'h-5 w-12' : 'h-8 w-16'}`}></div>
+              <div className="h-3 w-20 bg-loading-skeleton rounded loading-shimmer"></div>
             </CardContent>
           </Card>
         ))}
@@ -45,7 +45,7 @@ const CustomerStats: React.FC = () => {
 
   return (
     <div className={`grid gap-3 sm:gap-4 md:gap-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-4'}`}>
-      <Card className={isMobile ? 'p-3' : ''}>
+      <Card className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target`} style={{ animationDelay: '0ms' }}>
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
           <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
             {isMobile ? 'Total' : 'Total Packages'}
@@ -53,14 +53,14 @@ const CustomerStats: React.FC = () => {
           <Package className={`text-muted-foreground ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
         </CardHeader>
         <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
-          <div className={`font-bold ${isMobile ? 'text-lg' : 'text-2xl'}`}>{totalPackages}</div>
+          <div className={`font-bold ${isMobile ? 'text-lg' : 'text-2xl'} animate-scale-in`} style={{ animationDelay: '200ms' }}>{totalPackages}</div>
           <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
             {isMobile ? 'All shipments' : 'All time shipments'}
           </p>
         </CardContent>
       </Card>
       
-      <Card className={isMobile ? 'p-3' : ''}>
+      <Card className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target`} style={{ animationDelay: '100ms' }}>
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
           <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
             {isMobile ? 'Transit' : 'In Transit'}
@@ -68,37 +68,37 @@ const CustomerStats: React.FC = () => {
           <Truck className={`text-blue-500 ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
         </CardHeader>
         <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
-          <div className={`font-bold text-blue-600 ${isMobile ? 'text-lg' : 'text-2xl'}`}>{inTransitPackages}</div>
+          <div className={`font-bold text-blue-600 ${isMobile ? 'text-lg' : 'text-2xl'} animate-scale-in`} style={{ animationDelay: '300ms' }}>{inTransitPackages}</div>
           <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
             {isMobile ? 'To Jamaica' : 'On the way to Jamaica'}
           </p>
         </CardContent>
       </Card>
       
-      <Card className={isMobile ? 'p-3' : ''}>
+      <Card className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target`} style={{ animationDelay: '200ms' }}>
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
           <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
             {isMobile ? 'Ready' : 'Ready for Pickup'}
           </CardTitle>
-          <CheckCircle className={`text-green-500 ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+          <CheckCircle className={`text-green-500 ${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${readyForPickup > 0 ? 'animate-pulse-glow' : ''}`} />
         </CardHeader>
         <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
-          <div className={`font-bold text-green-600 ${isMobile ? 'text-lg' : 'text-2xl'}`}>{readyForPickup}</div>
+          <div className={`font-bold text-green-600 ${isMobile ? 'text-lg' : 'text-2xl'} animate-scale-in`} style={{ animationDelay: '400ms' }}>{readyForPickup}</div>
           <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
             {isMobile ? 'For collection' : 'Available for collection'}
           </p>
         </CardContent>
       </Card>
       
-      <Card className={isMobile ? 'p-3' : ''}>
+      <Card className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target`} style={{ animationDelay: '300ms' }}>
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
           <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
             {isMobile ? 'Due' : 'Total Due'}
           </CardTitle>
-          <DollarSign className={`text-orange-500 ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+          <DollarSign className={`text-orange-500 ${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${totalDue > 0 ? 'animate-pulse-glow' : ''}`} />
         </CardHeader>
         <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
-          <div className={`font-bold text-orange-600 ${isMobile ? 'text-lg' : 'text-2xl'}`}>${totalDue.toFixed(2)}</div>
+          <div className={`font-bold text-orange-600 ${isMobile ? 'text-lg' : 'text-2xl'} animate-scale-in`} style={{ animationDelay: '500ms' }}>${totalDue.toFixed(2)}</div>
           <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
             {isMobile ? 'Outstanding' : 'Outstanding balance'}
           </p>
