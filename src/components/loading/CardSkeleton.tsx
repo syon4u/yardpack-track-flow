@@ -74,9 +74,9 @@ const CardSkeleton: React.FC<CardSkeletonProps> = ({
           : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
     }`}>
       {Array.from({ length: count }).map((_, i) => (
-        <React.Fragment key={i}>
+        <div key={i}>
           {renderCard()}
-        </React.Fragment>
+        </div>
       ))}
     </div>
   );

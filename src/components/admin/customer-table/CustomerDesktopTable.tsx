@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Calendar } from 'lucide-react';
@@ -8,29 +8,23 @@ import CustomerContactInfo from './CustomerContactInfo';
 import CustomerPackageStats from './CustomerPackageStats';
 import CustomerFinancialInfo from './CustomerFinancialInfo';
 import CustomerActions from './CustomerActions';
-
-interface CustomerWithStats {
-  id: string;
-  customer_number: string;
-  customer_type: 'registered' | 'guest' | 'package_only';
-  full_name: string;
-  email: string | null;
-  phone_number: string | null;
-  address: string | null;
-  created_at: string;
-  total_packages: number;
-  active_packages: number;
-  completed_packages: number;
-  total_spent: number;
-  outstanding_balance: number;
-  last_activity: string | null;
-}
+import EditCustomerDialog from '../EditCustomerDialog';
+import { CustomerWithStats } from '@/types/customer';
 
 interface CustomerDesktopTableProps {
   customers: CustomerWithStats[];
 }
 
 const CustomerDesktopTable: React.FC<CustomerDesktopTableProps> = ({ customers }) => {
+  const [editingCustomer, setEditingCustomer] = useState<CustomerWithStats | null>(null);
+
+  const handleEditCustomer = (customerId: string) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      setEditingCustomer(customer);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -96,17 +90,30 @@ const CustomerDesktopTable: React.FC<CustomerDesktopTableProps> = ({ customers }
                       }
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <CustomerActions hasEmail={!!customer.email} isMobile={false} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
-  );
+                   <TableCell>
+                     <CustomerActions 
+                       customerId={customer.id}
+                       customerEmail={customer.email}
+                       customerName={customer.full_name}
+                       hasEmail={!!customer.email} 
+                       isMobile={false}
+                       onEdit={handleEditCustomer}
+                     />
+                   </TableCell>
+                 </TableRow>
+               ))}
+             </TableBody>
+           </Table>
+         </div>
+
+         <EditCustomerDialog
+           customer={editingCustomer}
+           isOpen={!!editingCustomer}
+           onClose={() => setEditingCustomer(null)}
+         />
+       </CardContent>
+     </Card>
+   );
 };
 
 export default CustomerDesktopTable;

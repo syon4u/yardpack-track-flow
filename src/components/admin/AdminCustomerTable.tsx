@@ -3,23 +3,7 @@ import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import CustomerMobileCard from './customer-table/CustomerMobileCard';
 import CustomerDesktopTable from './customer-table/CustomerDesktopTable';
-
-interface CustomerWithStats {
-  id: string;
-  customer_number: string;
-  customer_type: 'registered' | 'guest' | 'package_only';
-  full_name: string;
-  email: string | null;
-  phone_number: string | null;
-  address: string | null;
-  created_at: string;
-  total_packages: number;
-  active_packages: number;
-  completed_packages: number;
-  total_spent: number;
-  outstanding_balance: number;
-  last_activity: string | null;
-}
+import { CustomerWithStats } from '@/types/customer';
 
 interface AdminCustomerTableProps {
   customers: CustomerWithStats[];
