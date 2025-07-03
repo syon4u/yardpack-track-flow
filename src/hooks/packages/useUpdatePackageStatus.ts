@@ -16,7 +16,17 @@ export const useUpdatePackageStatus = () => {
       
       // Automatically trigger notification when status is updated
       try {
-        await sendNotification({ packageId, status });
+        // Use the mutateAsync function to properly handle async notification
+        const notificationMutation = useSendNotification();
+        await new Promise((resolve, reject) => {
+          notificationMutation.mutate(
+            { packageId, status },
+            {
+              onSuccess: resolve,
+              onError: reject
+            }
+          );
+        });
         console.log('Notification triggered for package:', packageId);
       } catch (notificationError) {
         console.error('Failed to send notification:', notificationError);

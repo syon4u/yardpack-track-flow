@@ -22,7 +22,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onClose }) => {
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
-    role: 'customer' as 'admin' | 'warehouse' | 'customer',
+    role: 'warehouse' as 'admin' | 'warehouse',
     username: '',
     password: ''
   });
@@ -127,7 +127,6 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onClose }) => {
                 <SelectValue placeholder="Select system role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="customer">Customer Service</SelectItem>
                 <SelectItem value="warehouse">Warehouse Staff</SelectItem>
                 <SelectItem value="admin">Administrator</SelectItem>
               </SelectContent>

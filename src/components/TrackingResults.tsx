@@ -58,9 +58,9 @@ const TrackingResults: React.FC<TrackingResultsProps> = ({ trackingNumber, onBac
     switch (status) {
       case 'received': return 'bg-blue-500';
       case 'in_transit': return 'bg-yellow-500';
-      case 'arrived_jamaica': return 'bg-orange-500';
-      case 'ready_pickup': return 'bg-green-500';
-      case 'completed': return 'bg-gray-500';
+      case 'arrived': return 'bg-orange-500';
+      case 'ready_for_pickup': return 'bg-green-500';
+      case 'picked_up': return 'bg-gray-500';
       default: return 'bg-gray-400';
     }
   };
@@ -69,9 +69,9 @@ const TrackingResults: React.FC<TrackingResultsProps> = ({ trackingNumber, onBac
     switch (status) {
       case 'received': return 'Received at Miami';
       case 'in_transit': return 'In Transit to Jamaica';
-      case 'arrived_jamaica': return 'Arrived in Jamaica';
-      case 'ready_pickup': return 'Ready for Pickup';
-      case 'completed': return 'Delivered/Completed';
+      case 'arrived': return 'Arrived in Jamaica';
+      case 'ready_for_pickup': return 'Ready for Pickup';
+      case 'picked_up': return 'Delivered/Completed';
       default: return 'Unknown Status';
     }
   };
@@ -84,14 +84,14 @@ const TrackingResults: React.FC<TrackingResultsProps> = ({ trackingNumber, onBac
     switch (status) {
       case 'received': return <Package className="h-6 w-6 text-white" />;
       case 'in_transit': return <Truck className="h-6 w-6 text-white" />;
-      case 'arrived_jamaica': return <MapPin className="h-6 w-6 text-white" />;
-      case 'ready_pickup': return <CheckCircle className="h-6 w-6 text-white" />;
-      case 'completed': return <CheckCircle className="h-6 w-6 text-white" />;
+      case 'arrived': return <MapPin className="h-6 w-6 text-white" />;
+      case 'ready_for_pickup': return <CheckCircle className="h-6 w-6 text-white" />;
+      case 'picked_up': return <CheckCircle className="h-6 w-6 text-white" />;
       default: return <Clock className="h-6 w-6 text-white" />;
     }
   };
 
-  const statusFlow = ['received', 'in_transit', 'arrived_jamaica', 'ready_pickup', 'completed'];
+  const statusFlow = ['received', 'in_transit', 'arrived', 'ready_for_pickup', 'picked_up'];
   const currentStatusIndex = packageData ? statusFlow.indexOf(packageData.status) : -1;
 
   if (loading) {

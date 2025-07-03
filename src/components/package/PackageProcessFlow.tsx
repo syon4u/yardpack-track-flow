@@ -22,6 +22,7 @@ import {
 import { Database } from '@/integrations/supabase/types';
 import { useUpdatePackageStatus } from '@/hooks/packages/useUpdatePackageStatus';
 import { useSendNotification } from '@/hooks/useNotifications';
+import { useGeneratePickupCode } from '@/hooks/usePickupVerification';
 import { format } from 'date-fns';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
@@ -52,6 +53,7 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
   const [confirmingStatus, setConfirmingStatus] = useState<PackageStatus | null>(null);
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdatePackageStatus();
   const { mutate: sendNotification, isPending: isSendingNotification } = useSendNotification();
+  const generatePickupCode = useGeneratePickupCode();
 
   // Define activities for each stage (like Dynamics 365 CRM)
   const getActivitiesForStage = (status: PackageStatus): Activity[] => {
@@ -263,6 +265,18 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
     sendNotification({ packageId: packageData.id, status });
   };
 
+  const handleGeneratePickupCode = async (codeType: 'qr' | 'pin') => {
+    try {
+      await generatePickupCode.mutateAsync({
+        package_id: packageData.id,
+        code_type: codeType,
+        expires_in_hours: 48 // 2 days expiry
+      });
+    } catch (error) {
+      console.error('Failed to generate pickup code:', error);
+    }
+  };
+
   const getRequiredActivitiesCount = (status: PackageStatus) => {
     const activities = getActivitiesForStage(status);
     const required = activities.filter(a => a.required);
@@ -417,7 +431,7 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
                               }
                             </Button>
                           )}
-                          <Button
+                           <Button
                             size="sm"
                             variant="outline"
                             className="text-xs"
@@ -426,6 +440,28 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
                           >
                             {isSendingNotification ? 'Sending...' : 'Send Notification'}
                           </Button>
+                          {stage.status === 'ready_for_pickup' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs"
+                                onClick={() => handleGeneratePickupCode('pin')}
+                                disabled={generatePickupCode.isPending}
+                              >
+                                {generatePickupCode.isPending ? 'Generating...' : 'Generate PIN'}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs"
+                                onClick={() => handleGeneratePickupCode('qr')}
+                                disabled={generatePickupCode.isPending}
+                              >
+                                {generatePickupCode.isPending ? 'Generating...' : 'Generate QR'}
+                              </Button>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
