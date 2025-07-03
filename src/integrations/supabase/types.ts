@@ -259,6 +259,50 @@ export type Database = {
           },
         ]
       }
+      manual_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message_body: string
+          recipient_emails: Json
+          recipient_ids: Json
+          recipient_type: string
+          sender_id: string
+          sent_at: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_body: string
+          recipient_emails?: Json
+          recipient_ids?: Json
+          recipient_type: string
+          sender_id: string
+          sent_at?: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_body?: string
+          recipient_emails?: Json
+          recipient_ids?: Json
+          recipient_type?: string
+          sender_id?: string
+          sent_at?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_manual_notifications_sender"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
