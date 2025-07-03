@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCustomerByUserId } from '@/hooks/customer/useCustomerByUserId';
 import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,11 +9,22 @@ import { Package, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-rea
 import { Badge } from '@/components/ui/badge';
 
 const CustomerOverview: React.FC = () => {
-  const { profile } = useAuth();
-  const { data: packageData, isPending } = useOptimizedPackages(
-    { customerId: profile?.id },
+  const { profile, user } = useAuth();
+  
+  // Debug logging
+  console.log('CustomerOverview - Auth state:', { profile, user });
+  
+  // Get customer record for this user
+  const { data: customer, isPending: customerPending, error: customerError } = useCustomerByUserId(user?.id);
+  
+  console.log('CustomerOverview - Customer data:', { customer, customerPending, customerError });
+  
+  const { data: packageData, isPending: packagesPending, error: packagesError } = useOptimizedPackages(
+    { customerId: customer?.id },
     { page: 1, limit: 10 }
   );
+  
+  console.log('CustomerOverview - Packages data:', { packageData, packagesPending, packagesError });
 
   const packages = packageData?.data || [];
 
@@ -27,7 +39,7 @@ const CustomerOverview: React.FC = () => {
 
   const recentPackages = packages.slice(0, 5);
 
-  if (isPending) {
+  if (customerPending || packagesPending) {
     return (
       <div className="space-y-6">
         <div className="animate-pulse">
@@ -38,6 +50,28 @@ const CustomerOverview: React.FC = () => {
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (customerError || packagesError) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">Error loading data: {customerError?.message || packagesError?.message}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!customer) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <p className="text-gray-600 mb-2">No customer record found for your account</p>
+          <p className="text-sm text-gray-500">Please contact support to set up your customer profile</p>
         </div>
       </div>
     );

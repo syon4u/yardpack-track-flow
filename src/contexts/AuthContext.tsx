@@ -38,6 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('AuthContext - Fetching profile for userId:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -45,20 +46,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .maybeSingle(); // Use maybeSingle to handle cases where profile doesn't exist
       
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error('AuthContext - Error fetching profile:', error);
         // Don't throw, just log and continue
         return;
       }
       
       if (data) {
+        console.log('AuthContext - Profile found:', data);
         setProfile(data);
       } else {
-        console.warn('No profile found for user:', userId);
+        console.warn('AuthContext - No profile found for user:', userId);
         // Profile doesn't exist yet, this could be a new user
         setProfile(null);
       }
     } catch (error) {
-      console.error('Unexpected error fetching profile:', error);
+      console.error('AuthContext - Unexpected error fetching profile:', error);
       // On error, set profile to null to allow the app to continue
       setProfile(null);
     }
@@ -68,16 +70,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Set up auth state listener FIRST to avoid race conditions
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, session);
+        console.log('AuthContext - Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          console.log('AuthContext - Fetching profile for user:', session.user.id);
           // Use setTimeout to defer profile fetching and avoid blocking auth state changes
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 100); // Small delay to ensure auth state is fully processed
         } else {
+          console.log('AuthContext - No session, clearing profile');
           setProfile(null);
         }
         
