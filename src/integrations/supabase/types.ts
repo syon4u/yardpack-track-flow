@@ -218,6 +218,36 @@ export type Database = {
           },
         ]
       }
+      magaya_auto_sync_config: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_enabled: boolean | null
+          retry_attempts: number | null
+          retry_delay_seconds: number | null
+          sync_on_status_changes: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          retry_attempts?: number | null
+          retry_delay_seconds?: number | null
+          sync_on_status_changes?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          retry_attempts?: number | null
+          retry_delay_seconds?: number | null
+          sync_on_status_changes?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       magaya_sync_log: {
         Row: {
           created_at: string | null
