@@ -23,6 +23,7 @@ interface PackageListProps {
   viewMode?: 'tiles' | 'table';
   onViewModeChange?: (mode: 'tiles' | 'table') => void;
   customerFilter?: string;
+  itemsPerPage?: number;
 }
 
 const PackageList: React.FC<PackageListProps> = ({ 
@@ -30,7 +31,8 @@ const PackageList: React.FC<PackageListProps> = ({
   statusFilter, 
   viewMode = 'tiles',
   onViewModeChange,
-  customerFilter 
+  customerFilter,
+  itemsPerPage
 }) => {
   const { profile } = useAuth();
   const navigate = useNavigate();
@@ -78,6 +80,18 @@ const PackageList: React.FC<PackageListProps> = ({
   const handleViewDetails = (packageId: string) => {
     navigate(`/package/${packageId}`);
   };
+
+  // Pagination logic
+  const [currentPage, setCurrentPage] = useState(1);
+  const packagesPerPage = itemsPerPage || (viewMode === 'table' ? 10 : 12);
+  const totalPages = Math.ceil((packages?.length || 0) / packagesPerPage);
+  const startIndex = (currentPage - 1) * packagesPerPage;
+  const paginatedPackages = packages?.slice(startIndex, startIndex + packagesPerPage) || [];
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, customerFilter]);
 
   if (isPending) {
     return (
@@ -154,7 +168,7 @@ const PackageList: React.FC<PackageListProps> = ({
         {/* Package Content */}
         {viewMode === 'tiles' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {packages.map((pkg) => (
+            {paginatedPackages.map((pkg) => (
               <PackageCard
                 key={pkg.id}
                 package={{
@@ -184,12 +198,42 @@ const PackageList: React.FC<PackageListProps> = ({
           </div>
         ) : (
           <PackageTable
-            packages={packages}
+            packages={paginatedPackages}
             userRole={profile?.role as 'customer' | 'admin' | 'warehouse' || 'customer'}
             onUploadReceipt={handleUploadReceipt}
             onViewReceipt={handleViewReceipt}
             onViewDetails={handleViewDetails}
           />
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-4">
+            <div className="text-sm text-gray-600">
+              Showing {startIndex + 1} to {Math.min(startIndex + packagesPerPage, packages?.length || 0)} of {packages?.length || 0} packages
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         )}
       </div>
     </ErrorBoundary>

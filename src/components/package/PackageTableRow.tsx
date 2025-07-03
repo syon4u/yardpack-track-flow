@@ -1,13 +1,11 @@
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Upload, Eye, ExternalLink, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Database } from '@/integrations/supabase/types';
 import { MagayaStatusIndicator } from '../magaya/MagayaStatusIndicator';
-import { MagayaSyncButton } from '../magaya/MagayaSyncButton';
 import PackageStatusBadge from './PackageStatusBadge';
+import PackageActionsMenu from './PackageActionsMenu';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
 
@@ -43,6 +41,11 @@ interface PackageTableRowProps {
   onViewReceipt?: (packageId: string) => void;
   onViewDetails?: (packageId: string) => void;
   onRecordPickup?: (pkg: Package) => void;
+  onEditPackage?: (packageId: string) => void;
+  onSyncMagaya?: (packageId: string) => void;
+  onDeletePackage?: (packageId: string) => void;
+  onGenerateInvoice?: (packageId: string) => void;
+  onViewHistory?: (packageId: string) => void;
 }
 
 const PackageTableRow: React.FC<PackageTableRowProps> = ({
@@ -52,10 +55,12 @@ const PackageTableRow: React.FC<PackageTableRowProps> = ({
   onViewReceipt,
   onViewDetails,
   onRecordPickup,
+  onEditPackage,
+  onSyncMagaya,
+  onDeletePackage,
+  onGenerateInvoice,
+  onViewHistory,
 }) => {
-  const canRecordPickup = (pkg: Package) => {
-    return userRole !== 'customer' && pkg.status === 'ready_for_pickup';
-  };
 
   return (
     <TableRow>
@@ -127,13 +132,6 @@ const PackageTableRow: React.FC<PackageTableRowProps> = ({
               warehouseLocation={pkg.warehouse_location}
               consolidationStatus={pkg.consolidation_status}
             />
-            <MagayaSyncButton
-              packageId={pkg.id}
-              magayaShipmentId={pkg.magaya_shipment_id}
-              size="sm"
-              variant="ghost"
-              showLabel={false}
-            />
           </div>
         </TableCell>
       )}
@@ -152,49 +150,19 @@ const PackageTableRow: React.FC<PackageTableRowProps> = ({
         )}
       </TableCell>
       <TableCell>
-        <div className="flex gap-2">
-          {userRole === 'customer' && (
-            <>
-              {(!pkg.invoices || pkg.invoices.length === 0) && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onUploadReceipt?.(pkg.id)}
-                >
-                  <Upload className="h-4 w-4" />
-                </Button>
-              )}
-              {pkg.invoices && pkg.invoices.length > 0 && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onViewReceipt?.(pkg.id)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              )}
-            </>
-          )}
-          {canRecordPickup(pkg) && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onRecordPickup?.(pkg)}
-              className="text-green-600 hover:text-green-700"
-            >
-              <CheckCircle className="h-4 w-4" />
-            </Button>
-          )}
-          {onViewDetails && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onViewDetails(pkg.id)}
-            >
-              <ExternalLink className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+        <PackageActionsMenu
+          package={pkg}
+          userRole={userRole}
+          onViewDetails={onViewDetails}
+          onEditPackage={onEditPackage}
+          onUploadReceipt={onUploadReceipt}
+          onViewReceipt={onViewReceipt}
+          onRecordPickup={onRecordPickup}
+          onSyncMagaya={onSyncMagaya}
+          onDeletePackage={onDeletePackage}
+          onGenerateInvoice={onGenerateInvoice}
+          onViewHistory={onViewHistory}
+        />
       </TableCell>
     </TableRow>
   );
