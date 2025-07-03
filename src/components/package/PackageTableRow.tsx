@@ -39,8 +39,8 @@ interface Package {
 interface PackageTableRowProps {
   package: Package;
   userRole: 'customer' | 'admin' | 'warehouse';
-  onUploadInvoice?: (packageId: string) => void;
-  onViewInvoice?: (packageId: string) => void;
+  onUploadReceipt?: (packageId: string) => void;
+  onViewReceipt?: (packageId: string) => void;
   onViewDetails?: (packageId: string) => void;
   onRecordPickup?: (pkg: Package) => void;
 }
@@ -48,8 +48,8 @@ interface PackageTableRowProps {
 const PackageTableRow: React.FC<PackageTableRowProps> = ({
   package: pkg,
   userRole,
-  onUploadInvoice,
-  onViewInvoice,
+  onUploadReceipt,
+  onViewReceipt,
   onViewDetails,
   onRecordPickup,
 }) => {
@@ -159,7 +159,7 @@ const PackageTableRow: React.FC<PackageTableRowProps> = ({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => onUploadInvoice?.(pkg.id)}
+                  onClick={() => onUploadReceipt?.(pkg.id)}
                 >
                   <Upload className="h-4 w-4" />
                 </Button>
@@ -168,7 +168,7 @@ const PackageTableRow: React.FC<PackageTableRowProps> = ({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => onViewInvoice?.(pkg.id)}
+                  onClick={() => onViewReceipt?.(pkg.id)}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>

@@ -8,7 +8,7 @@ import CustomerStatusBreakdown from './CustomerStatusBreakdown';
 import CustomerFinancialSummary from './CustomerFinancialSummary';
 import CustomerRecentActivity from './CustomerRecentActivity';
 import CustomerPackagesTab from './CustomerPackagesTab';
-import CustomerInvoicesTab from './CustomerInvoicesTab';
+import CustomerReceiptsTab from './CustomerReceiptsTab';
 import CustomerProfileTab from './CustomerProfileTab';
 import CustomerHelpSection from './CustomerHelpSection';
 
@@ -23,7 +23,7 @@ interface CustomerDashboardDesktopProps {
     inTransitPackages: number;
     arrivedPackages: number;
     readyForPickup: number;
-    pendingInvoices: number;
+    pendingReceipts: number;
   };
 }
 
@@ -43,7 +43,7 @@ const CustomerDashboardDesktop: React.FC<CustomerDashboardDesktopProps> = ({ pac
         <TabsList className="grid w-full grid-cols-5 mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="packages">My Packages</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+          <TabsTrigger value="receipts">Receipts</TabsTrigger>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="help">Help</TabsTrigger>
         </TabsList>
@@ -51,7 +51,7 @@ const CustomerDashboardDesktop: React.FC<CustomerDashboardDesktopProps> = ({ pac
         <TabsContent value="overview" className="space-y-6 animate-fade-in">
           <div className="grid gap-6 md:grid-cols-2">
             <CustomerActionItems 
-              pendingInvoices={stats.pendingInvoices}
+              pendingReceipts={stats.pendingReceipts}
               readyForPickup={stats.readyForPickup}
             />
             <CustomerStatusBreakdown 
@@ -67,7 +67,7 @@ const CustomerDashboardDesktop: React.FC<CustomerDashboardDesktopProps> = ({ pac
             <CustomerFinancialSummary
               totalValue={stats.totalValue}
               totalDue={stats.totalDue}
-              pendingInvoices={stats.pendingInvoices}
+              pendingReceipts={stats.pendingReceipts}
             />
             <CustomerRecentActivity packages={packages} />
           </div>
@@ -77,8 +77,8 @@ const CustomerDashboardDesktop: React.FC<CustomerDashboardDesktopProps> = ({ pac
           <CustomerPackagesTab />
         </TabsContent>
 
-        <TabsContent value="invoices" className="animate-fade-in">
-          <CustomerInvoicesTab />
+        <TabsContent value="receipts" className="animate-fade-in">
+          <CustomerReceiptsTab />
         </TabsContent>
 
         <TabsContent value="profile" className="animate-fade-in">

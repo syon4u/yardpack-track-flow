@@ -137,32 +137,53 @@ export type Database = {
       }
       invoices: {
         Row: {
+          document_type: string
+          due_date: string | null
           file_name: string
           file_path: string
           file_size: number | null
           file_type: string
           id: string
+          invoice_number: string | null
+          line_items: Json | null
+          notes: string | null
           package_id: string
+          status: string | null
+          total_amount: number | null
           uploaded_at: string
           uploaded_by: string
         }
         Insert: {
+          document_type?: string
+          due_date?: string | null
           file_name: string
           file_path: string
           file_size?: number | null
           file_type: string
           id?: string
+          invoice_number?: string | null
+          line_items?: Json | null
+          notes?: string | null
           package_id: string
+          status?: string | null
+          total_amount?: number | null
           uploaded_at?: string
           uploaded_by: string
         }
         Update: {
+          document_type?: string
+          due_date?: string | null
           file_name?: string
           file_path?: string
           file_size?: number | null
           file_type?: string
           id?: string
+          invoice_number?: string | null
+          line_items?: Json | null
+          notes?: string | null
           package_id?: string
+          status?: string | null
+          total_amount?: number | null
           uploaded_at?: string
           uploaded_by?: string
         }
@@ -754,6 +775,10 @@ export type Database = {
       check_duplicate_customers: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      generate_invoice_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       is_admin: {
         Args: { user_id: string }

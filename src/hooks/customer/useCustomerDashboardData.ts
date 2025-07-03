@@ -23,7 +23,7 @@ export const useCustomerDashboardData = () => {
   const readyForPickup = customerPackages.filter(p => p.status === 'ready_for_pickup').length;
 
   // Calculate pending invoices (packages without invoices)
-  const pendingInvoices = customerPackages.filter(p => !p.invoice_uploaded).length;
+  const pendingReceipts = customerPackages.filter(p => !p.receipt_uploaded).length;
 
   return {
     packages: customerPackages,
@@ -38,7 +38,7 @@ export const useCustomerDashboardData = () => {
       inTransitPackages,
       arrivedPackages,
       readyForPickup,
-      pendingInvoices
+      pendingReceipts
     }
   };
 };

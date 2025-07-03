@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
-import { useUploadInvoice, useDownloadInvoice } from '@/hooks/useInvoices';
+import { useUploadReceipt, useDownloadReceipt } from '@/hooks/useInvoices';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import PackageCard from './PackageCard';
@@ -36,8 +36,8 @@ const PackageList: React.FC<PackageListProps> = ({
   const navigate = useNavigate();
   const { data: packages, isPending, error } = usePackages({ searchTerm, statusFilter, customerFilter });
   const updateStatusMutation = useUpdatePackageStatus();
-  const uploadInvoiceMutation = useUploadInvoice();
-  const downloadInvoiceMutation = useDownloadInvoice();
+  const uploadReceiptMutation = useUploadReceipt();
+  const downloadReceiptMutation = useDownloadReceipt();
 
   const handleStatusUpdate = async (packageId: string, status: PackageStatus) => {
     try {
@@ -47,7 +47,7 @@ const PackageList: React.FC<PackageListProps> = ({
     }
   };
 
-  const handleUploadInvoice = async (packageId: string) => {
+  const handleUploadReceipt = async (packageId: string) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf,.jpg,.jpeg,.png';
@@ -55,7 +55,7 @@ const PackageList: React.FC<PackageListProps> = ({
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         try {
-          await uploadInvoiceMutation.mutateAsync({ packageId, file });
+          await uploadReceiptMutation.mutateAsync({ packageId, file });
         } catch (error) {
           // Error handling is done by the mutation
         }
@@ -64,11 +64,11 @@ const PackageList: React.FC<PackageListProps> = ({
     input.click();
   };
 
-  const handleViewInvoice = async (packageId: string) => {
+  const handleViewReceipt = async (packageId: string) => {
     const pkg = packages?.find(p => p.id === packageId);
     if (pkg && pkg.invoices && pkg.invoices.length > 0) {
       try {
-        await downloadInvoiceMutation.mutateAsync(pkg.invoices[0].file_path);
+        await downloadReceiptMutation.mutateAsync(pkg.invoices[0].file_path);
       } catch (error) {
         // Error handling is done by the mutation
       }
@@ -164,7 +164,7 @@ const PackageList: React.FC<PackageListProps> = ({
                   status: pkg.status,
                   dateReceived: pkg.date_received,
                   estimatedDelivery: pkg.estimated_delivery || undefined,
-                  invoiceUploaded: pkg.invoices && pkg.invoices.length > 0,
+                  receiptUploaded: pkg.receipt_uploaded,
                   dutyAssessed: pkg.duty_amount !== null,
                   totalDue: pkg.total_due || undefined,
                   customerName: pkg.customer_name,
@@ -176,8 +176,8 @@ const PackageList: React.FC<PackageListProps> = ({
                 }}
                 userRole={profile?.role as 'customer' | 'admin' | 'warehouse' || 'customer'}
                 onStatusUpdate={handleStatusUpdate}
-                onUploadInvoice={handleUploadInvoice}
-                onViewInvoice={handleViewInvoice}
+                onUploadReceipt={handleUploadReceipt}
+                onViewReceipt={handleViewReceipt}
                 onViewDetails={handleViewDetails}
               />
             ))}
@@ -186,8 +186,8 @@ const PackageList: React.FC<PackageListProps> = ({
           <PackageTable
             packages={packages}
             userRole={profile?.role as 'customer' | 'admin' | 'warehouse' || 'customer'}
-            onUploadInvoice={handleUploadInvoice}
-            onViewInvoice={handleViewInvoice}
+            onUploadReceipt={handleUploadReceipt}
+            onViewReceipt={handleViewReceipt}
             onViewDetails={handleViewDetails}
           />
         )}

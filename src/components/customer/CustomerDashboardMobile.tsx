@@ -8,7 +8,7 @@ import CustomerStatusBreakdown from './CustomerStatusBreakdown';
 import CustomerFinancialSummary from './CustomerFinancialSummary';
 import CustomerRecentActivity from './CustomerRecentActivity';
 import CustomerPackagesTab from './CustomerPackagesTab';
-import CustomerInvoicesTab from './CustomerInvoicesTab';
+import CustomerReceiptsTab from './CustomerReceiptsTab';
 import CustomerProfileTab from './CustomerProfileTab';
 import CustomerHelpSection from './CustomerHelpSection';
 
@@ -23,7 +23,7 @@ interface CustomerDashboardMobileProps {
     inTransitPackages: number;
     arrivedPackages: number;
     readyForPickup: number;
-    pendingInvoices: number;
+    pendingReceipts: number;
   };
 }
 
@@ -84,7 +84,7 @@ const CustomerDashboardMobile: React.FC<CustomerDashboardMobileProps> = ({ packa
             <div className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
                 <CustomerActionItems 
-                  pendingInvoices={stats.pendingInvoices}
+                  pendingReceipts={stats.pendingReceipts}
                   readyForPickup={stats.readyForPickup}
                 />
                 <CustomerStatusBreakdown 
@@ -100,7 +100,7 @@ const CustomerDashboardMobile: React.FC<CustomerDashboardMobileProps> = ({ packa
                 <CustomerFinancialSummary
                   totalValue={stats.totalValue}
                   totalDue={stats.totalDue}
-                  pendingInvoices={stats.pendingInvoices}
+                  pendingReceipts={stats.pendingReceipts}
                 />
                 <CustomerRecentActivity packages={packages} />
               </div>
@@ -111,8 +111,8 @@ const CustomerDashboardMobile: React.FC<CustomerDashboardMobileProps> = ({ packa
             <CustomerPackagesTab />
           </TabsContent>
 
-          <TabsContent value="invoices" className="animate-slide-up">
-            <CustomerInvoicesTab />
+          <TabsContent value="receipts" className="animate-slide-up">
+            <CustomerReceiptsTab />
           </TabsContent>
 
           <TabsContent value="profile" className="animate-slide-up">
@@ -138,8 +138,8 @@ const CustomerDashboardMobile: React.FC<CustomerDashboardMobileProps> = ({ packa
               <TabsTrigger value="packages" className="flex-col gap-1 h-full touch-target">
                 <div className="text-xs">Packages</div>
               </TabsTrigger>
-              <TabsTrigger value="invoices" className="flex-col gap-1 h-full touch-target">
-                <div className="text-xs">Invoices</div>
+              <TabsTrigger value="receipts" className="flex-col gap-1 h-full touch-target">
+                <div className="text-xs">Receipts</div>
               </TabsTrigger>
               <TabsTrigger value="profile" className="flex-col gap-1 h-full touch-target">
                 <div className="text-xs">Profile</div>

@@ -6,17 +6,17 @@ import { AlertCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CustomerActionItemsProps {
-  pendingInvoices: number;
+  pendingReceipts: number;
   readyForPickup: number;
 }
 
 const CustomerActionItems: React.FC<CustomerActionItemsProps> = ({
-  pendingInvoices,
+  pendingReceipts,
   readyForPickup
 }) => {
   const isMobile = useIsMobile();
 
-  if (pendingInvoices === 0 && readyForPickup === 0) {
+  if (pendingReceipts === 0 && readyForPickup === 0) {
     return null;
   }
 
@@ -29,12 +29,12 @@ const CustomerActionItems: React.FC<CustomerActionItemsProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className={`space-y-2 ${isMobile ? 'space-y-3' : 'space-y-2'}`}>
-        {pendingInvoices > 0 && (
+        {pendingReceipts > 0 && (
           <div className={`flex items-center justify-between ${isMobile ? 'flex-col items-start space-y-1' : ''}`}>
             <span className={`${isMobile ? 'text-xs' : 'text-sm'}`}>
               {isMobile 
-                ? `${pendingInvoices} package${pendingInvoices > 1 ? 's' : ''} need invoices`
-                : `You have ${pendingInvoices} package${pendingInvoices > 1 ? 's' : ''} waiting for invoice upload`
+                ? `${pendingReceipts} package${pendingReceipts > 1 ? 's' : ''} need receipts`
+                : `You have ${pendingReceipts} package${pendingReceipts > 1 ? 's' : ''} waiting for receipt upload`
               }
             </span>
             <Badge 
