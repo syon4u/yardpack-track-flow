@@ -24,9 +24,14 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Enhanced authentication validation
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("Missing or invalid authorization header");
+      return new Response(
+        JSON.stringify({ error: "Authorization required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -36,26 +41,68 @@ const handler = async (req: Request): Promise<Response> => {
       }
     });
 
-    // Get user from auth header
+    // Validate JWT token and get user
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      throw new Error("Unauthorized");
+      console.error("Invalid or expired token:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication token" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
+    // Verify admin role with proper error handling
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    if (profile?.role !== 'admin') {
-      throw new Error("Admin access required");
+    if (profileError) {
+      console.error("Error fetching user profile:", profileError);
+      return new Response(
+        JSON.stringify({ error: "User profile not found" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    const { recipientType, recipientIds, subject, messageBody }: ManualNotificationRequest = await req.json();
+    if (profile?.role !== 'admin') {
+      console.error("Non-admin user attempted to send manual notification:", user.id);
+      return new Response(
+        JSON.stringify({ error: "Admin access required" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Enhanced input validation
+    const requestBody = await req.json();
+    const { recipientType, recipientIds, subject, messageBody }: ManualNotificationRequest = requestBody;
+    
+    // Validate required fields
+    if (!recipientType || !subject?.trim() || !messageBody?.trim()) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields: recipientType, subject, and messageBody are required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate recipient type
+    if (!['individual', 'broadcast'].includes(recipientType)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid recipientType. Must be 'individual' or 'broadcast'" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate recipients for individual messages
+    if (recipientType === 'individual' && (!recipientIds || !Array.isArray(recipientIds) || recipientIds.length === 0)) {
+      return new Response(
+        JSON.stringify({ error: "Individual messages require at least one recipient ID" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     let recipients: Array<{id: string, email: string, name: string}> = [];
 
