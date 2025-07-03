@@ -1,5 +1,6 @@
 import React from 'react';
 import { MoreHorizontal, Eye, Edit, Upload, Download, CheckCircle, RefreshCw, Trash2, FileText, History } from 'lucide-react';
+import { PackageRowData } from '@/types/packageTableRow';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,26 +9,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Database } from '@/integrations/supabase/types';
-
-type PackageStatus = Database['public']['Enums']['package_status'];
-
-interface Package {
-  id: string;
-  tracking_number: string;
-  status: PackageStatus;
-  invoices?: any[];
-  magaya_shipment_id?: string | null;
-}
 
 interface PackageActionsMenuProps {
-  package: Package;
+  package: PackageRowData;
   userRole: 'customer' | 'admin' | 'warehouse';
   onViewDetails?: (packageId: string) => void;
   onEditPackage?: (packageId: string) => void;
   onUploadReceipt?: (packageId: string) => void;
   onViewReceipt?: (packageId: string) => void;
-  onRecordPickup?: (pkg: Package) => void;
+  onRecordPickup?: (pkg: PackageRowData) => void;
   onSyncMagaya?: (packageId: string) => void;
   onDeletePackage?: (packageId: string) => void;
   onGenerateInvoice?: (packageId: string) => void;
@@ -58,7 +48,7 @@ const PackageActionsMenu: React.FC<PackageActionsMenuProps> = ({
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-48 bg-background border z-50">
         {onViewDetails && (
           <DropdownMenuItem onClick={() => onViewDetails(pkg.id)}>
             <Eye className="mr-2 h-4 w-4" />
