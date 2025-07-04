@@ -5,16 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Detect base path for Lovable preview environment
-  const getBasePath = () => {
-    if (process.env.NODE_ENV === 'development' && process.env.LOVABLE_PREVIEW) {
-      return '/projects/05edb5eb-bd65-4211-b7e5-faa8ef3c05a1/yardpack-track-flow/';
-    }
-    return '/';
-  };
-
   return {
-    base: getBasePath(),
+    base: '/', // Simplified base path - router handles environment detection
     server: {
       host: "::",
       port: 8080,

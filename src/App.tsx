@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
 import Dashboard from "@/components/Dashboard";
@@ -15,6 +15,7 @@ import PackageDetailPage from "@/pages/PackageDetailPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "@/components/error/ErrorBoundary";
 import RouteErrorBoundary from "@/components/error/RouteErrorBoundary";
+import AppRouter from "@/components/routing/AppRouter";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,19 +37,8 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Detect if we're running in Lovable preview environment
-  const getBasename = () => {
-    const pathname = window.location.pathname;
-    // If we're in a Lovable preview (contains /projects/ path), extract the base path
-    if (pathname.includes('/projects/')) {
-      const match = pathname.match(/^(\/projects\/[^\/]+\/[^\/]+)/);
-      return match ? match[1] : '';
-    }
-    return '';
-  };
-
   return (
-    <BrowserRouter basename={getBasename()}>
+    <AppRouter>
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
@@ -113,7 +103,7 @@ const AppContent: React.FC = () => {
           <Route path="*" element={<Navigate to="/auth" replace />} />
         )}
       </Routes>
-    </BrowserRouter>
+    </AppRouter>
   );
 };
 
