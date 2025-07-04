@@ -67,10 +67,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+    
     // Set up auth state listener FIRST to avoid race conditions
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('AuthContext - Auth state changed:', event, session?.user?.id);
+        
+        if (!mounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -78,13 +83,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.log('AuthContext - Fetching profile for user:', session.user.id);
           // Use setTimeout to defer profile fetching and avoid blocking auth state changes
           setTimeout(() => {
-            fetchProfile(session.user.id);
+            if (mounted) {
+              fetchProfile(session.user.id);
+            }
           }, 100); // Small delay to ensure auth state is fully processed
         } else {
           console.log('AuthContext - No session, clearing profile');
           setProfile(null);
         }
         
+        // Always set loading to false after processing auth state
         setIsLoading(false);
       }
     );
@@ -92,7 +100,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // THEN check for existing session
     const initializeAuth = async () => {
       try {
+        console.log('AuthContext - Initializing auth...');
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
         
         if (error) {
           console.error('Error getting session:', error);
@@ -100,6 +111,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return;
         }
         
+        console.log('AuthContext - Initial session:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -110,13 +122,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsLoading(false);
       } catch (error) {
         console.error('Error initializing auth:', error);
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string, phoneNumber?: string) => {

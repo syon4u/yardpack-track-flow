@@ -29,13 +29,20 @@ const queryClient = new QueryClient({
 const AppContent: React.FC = () => {
   const { user, profile, isLoading } = useAuth();
 
+  // Debug logging
+  console.log('[AppContent] Auth state:', { user: !!user, profile, isLoading });
+  console.log('[AppContent] Current URL:', window.location.href);
+
   if (isLoading) {
+    console.log('[AppContent] Still loading auth...');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-green-900">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-400"></div>
       </div>
     );
   }
+
+  console.log('[AppContent] Auth loaded, rendering routes...');
 
   return (
     <AppRouter>
