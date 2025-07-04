@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { defaultQueryRetryOptions } from '@/utils/retryUtils';
 
 type PackageRow = Database['public']['Tables']['packages']['Row'];
 type CustomerRow = Database['public']['Tables']['customers']['Row'];
@@ -133,5 +134,6 @@ export const useOptimizedPackages = (
     enabled: !!user,
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
+    ...defaultQueryRetryOptions,
   });
 };

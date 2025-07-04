@@ -1,8 +1,8 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Database } from '@/integrations/supabase/types';
 import { updatePackageStatus } from '@/services/packageService';
 import { useSendNotification } from '@/hooks/useNotifications';
+import { defaultMutationRetryOptions } from '@/utils/retryUtils';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
 
@@ -25,6 +25,8 @@ export const useUpdatePackageStatus = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['packages'] });
+      queryClient.invalidateQueries({ queryKey: ['optimized-packages'] });
     },
+    ...defaultMutationRetryOptions,
   });
 };

@@ -1,6 +1,7 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import ErrorFallback from './ErrorFallback';
+import { errorReporter } from '@/services/errorReporting';
 
 interface Props {
   children: ReactNode;
@@ -30,6 +31,17 @@ class ErrorBoundary extends Component<Props, State> {
       error,
       errorInfo
     });
+
+    // Report error to error reporting service
+    errorReporter.reportError(
+      error,
+      'high',
+      { 
+        componentStack: errorInfo.componentStack,
+        errorBoundary: true 
+      },
+      errorInfo
+    );
 
     // Call optional error handler
     this.props.onError?.(error, errorInfo);
