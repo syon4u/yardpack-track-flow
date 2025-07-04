@@ -23,7 +23,7 @@ const AppRouter: React.FC<AppRouterProps> = ({ children }) => {
     // Check if we're in Lovable preview environment
     if (hostname === 'lovable.dev' && pathname.includes('/projects/')) {
       // Match pattern: /projects/[project-id] (no additional segment required)
-      const match = pathname.match(/^(\/projects\/[^\/]+)/);
+      const match = pathname.match(/^(\/projects\/[^\/]+(?:\/[^\/]+)?)/);
       if (match) {
         const basename = match[1];
         console.log('[AppRouter] Lovable preview detected, basename:', basename);
