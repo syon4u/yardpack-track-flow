@@ -1,11 +1,99 @@
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
+
+type Invoice = Database['public']['Tables']['invoices']['Row'];
+type InvoiceInsert = Database['public']['Tables']['invoices']['Insert'];
+type InvoiceUpdate = Database['public']['Tables']['invoices']['Update'];
+
+// Hook to get invoices for a user
+export const useInvoices = (packageId?: string) => {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['invoices', user?.id, packageId],
+    queryFn: async () => {
+      if (!user) throw new Error('Not authenticated');
+      
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('uploaded_by', user.id)
+        .order('uploaded_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+};
+
+// Hook to get all invoices for admin
+export const useAllInvoices = (status?: string) => {
+  const { profile } = useAuth();
+  
+  return useQuery({
+    queryKey: ['all-invoices', status],
+    queryFn: async () => {
+      let query = supabase.from('invoices').select('*');
+      
+      if (status && status !== 'all') {
+        query = query.eq('status', status);
+      }
+      
+      const { data, error } = await query.order('uploaded_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: profile?.role === 'admin',
+  });
+};
+
+// Hook to update invoice status (admin only)
+export const useUpdateInvoiceStatus = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async ({ invoiceId, status, notes }: { 
+      invoiceId: string; 
+      status: string; 
+      notes?: string 
+    }) => {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ status, notes })
+        .eq('id', invoiceId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['all-invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['packages'] });
+      toast({
+        title: "Invoice Updated",
+        description: "Invoice status has been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update invoice status. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+};
 
 export const useUploadInvoice = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async ({ packageId, file }: { packageId: string; file: File }) => {
@@ -33,17 +121,33 @@ export const useUploadInvoice = () => {
           file_size: file.size,
           file_type: file.type,
           uploaded_by: user.id,
+          status: 'pending',
+          document_type: 'receipt',
         });
       
       if (dbError) throw dbError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['packages'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast({
+        title: "Invoice Uploaded",
+        description: "Your invoice has been uploaded successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload invoice. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 };
 
 export const useDownloadInvoice = () => {
+  const { toast } = useToast();
+  
   return useMutation({
     mutationFn: async (filePath: string) => {
       const { data, error } = await supabase.storage
@@ -61,6 +165,46 @@ export const useDownloadInvoice = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    },
+    onError: (error) => {
+      toast({
+        title: "Download Failed",
+        description: "Failed to download invoice. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+// Hook to delete invoice
+export const useDeleteInvoice = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async (invoiceId: string) => {
+      const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', invoiceId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['all-invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['packages'] });
+      toast({
+        title: "Invoice Deleted",
+        description: "Invoice has been deleted successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete invoice. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 };
