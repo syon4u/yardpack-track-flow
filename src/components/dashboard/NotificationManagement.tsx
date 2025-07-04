@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { usePackages } from '@/hooks/usePackages';
+import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 import { useNotifications } from '@/hooks/useNotifications';
 import PackageNotificationCard from '@/components/notifications/PackageNotificationCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Mail, Bell, Package } from 'lucide-react';
 
 const NotificationManagement: React.FC = () => {
-  const { data: packages = [], isLoading: packagesLoading } = usePackages();
+  const { data: packagesResult, isLoading: packagesLoading } = useOptimizedPackages();
+  const packages = packagesResult?.data || [];
   const { data: notifications = [], isLoading: notificationsLoading } = useNotifications();
 
   const packagesNeedingNotification = packages.filter(pkg => 

@@ -6,9 +6,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Calendar } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
-type Package = Database['public']['Tables']['packages']['Row'] & {
-  profiles?: Database['public']['Tables']['profiles']['Row'] | null;
-  invoices: Database['public']['Tables']['invoices']['Row'][];
+type Package = {
+  id: string;
+  tracking_number: string;
+  customer_id: string;
+  description: string;
+  status: Database['public']['Enums']['package_status'];
+  package_value: number | null;
+  created_at: string;
+  invoices: any[];
 };
 
 interface CustomerRecentActivityProps {

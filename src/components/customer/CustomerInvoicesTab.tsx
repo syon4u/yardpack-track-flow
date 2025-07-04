@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useInvoices, useUploadInvoice, useDownloadInvoice, useDeleteInvoice } from '@/hooks/useInvoices';
-import { usePackages } from '@/hooks/usePackages';
+import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 import { useAuth } from '@/contexts/AuthContext';
 import { FileText, Upload, Download, Trash2, Search, Plus, Eye } from 'lucide-react';
 import { format } from 'date-fns';
@@ -23,7 +23,8 @@ const CustomerInvoicesTab: React.FC = () => {
   const [selectedPackageId, setSelectedPackageId] = useState<string>('');
 
   const { data: invoices, isPending: invoicesLoading } = useInvoices();
-  const { data: packages } = usePackages({});
+  const { data: packagesResult } = useOptimizedPackages({});
+  const packages = packagesResult?.data || [];
   const uploadMutation = useUploadInvoice();
   const downloadMutation = useDownloadInvoice();
   const deleteMutation = useDeleteInvoice();

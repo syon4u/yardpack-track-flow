@@ -19,7 +19,7 @@ import CustomerHelpSection from './customer/CustomerHelpSection';
 import DashboardSkeleton from './loading/DashboardSkeleton';
 import ErrorBoundary from './error/ErrorBoundary';
 import { useCustomers } from '@/hooks/useCustomers';
-import { usePackages } from '@/hooks/usePackages';
+import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 
 const CustomerDashboard: React.FC = () => {
   const { profile } = useAuth();
@@ -46,13 +46,13 @@ const CustomerDashboard: React.FC = () => {
   }, []);
   
   // Get packages for this customer - let service handle filtering automatically for customer role
-  const { data: packages, isPending, error } = usePackages({
+  const { data: packagesResult, isPending, error } = useOptimizedPackages({
     searchTerm: '',
     statusFilter: 'all'
   });
 
   // For customer role, packages are already filtered by the service
-  const customerPackages = packages || [];
+  const customerPackages = packagesResult?.data || [];
 
   // Calculate statistics from packages
   const totalPackages = customerPackages.length;

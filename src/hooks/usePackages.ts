@@ -1,6 +1,7 @@
 
-// Re-export the refactored hooks for backward compatibility
-export { usePackagesQuery as usePackages } from './packages/usePackagesQuery';
+// DEPRECATED: Use useOptimizedPackages instead
+// This hook is kept for backward compatibility but will be removed in future versions
+export { useOptimizedPackages as usePackages } from './useOptimizedPackages';
 export { useUpdatePackageStatus } from './packages/useUpdatePackageStatus';
 export { useCreatePackage } from './packages/useCreatePackage';
 

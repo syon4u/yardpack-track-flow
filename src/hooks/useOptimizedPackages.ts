@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 type PackageRow = Database['public']['Tables']['packages']['Row'];
 type CustomerRow = Database['public']['Tables']['customers']['Row'];
@@ -47,10 +48,13 @@ export const useOptimizedPackages = (
 ) => {
   const { customerId, searchTerm, statusFilter } = filters;
   const { page, limit } = pagination;
+  const { user, profile } = useAuth();
 
   return useQuery({
-    queryKey: ['optimized-packages', customerId, searchTerm, statusFilter, page, limit],
+    queryKey: ['optimized-packages', user?.id, profile?.role, customerId, searchTerm, statusFilter, page, limit],
     queryFn: async (): Promise<OptimizedPackagesResult> => {
+      if (!user) return { data: [], total: 0, hasMore: false };
+      
       // Build the base query with proper joins
       let query = supabase
         .from('packages')
@@ -60,9 +64,24 @@ export const useOptimizedPackages = (
           invoices(*)
         `, { count: 'exact' });
 
-      // Apply customer filter using the customers table relationship
-      if (customerId) {
-        query = query.eq('customers.user_id', customerId);
+      // For customers, automatically filter by their packages
+      if (profile?.role === 'customer') {
+        // First get the customer record for this user
+        const { data: customerRecord, error: customerError } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (customerRecord) {
+          query = query.eq('customer_id', customerRecord.id);
+        } else {
+          // No customer record found, return empty result
+          return { data: [], total: 0, hasMore: false };
+        }
+      } else if (customerId) {
+        // For admin filtering by specific customer
+        query = query.eq('customer_id', customerId);
       }
 
       // Apply search filter
@@ -111,6 +130,7 @@ export const useOptimizedPackages = (
         hasMore,
       };
     },
+    enabled: !!user,
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
   });

@@ -19,7 +19,7 @@ import {
   Clock,
   X
 } from 'lucide-react';
-import { usePackages } from '@/hooks/usePackages';
+import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 import { useToast } from '@/hooks/use-toast';
 
 interface ConsolidationRequest {
@@ -32,7 +32,8 @@ interface ConsolidationRequest {
 
 const PackageConsolidationRequest: React.FC = () => {
   const { toast } = useToast();
-  const { data: packages } = usePackages({ statusFilter: 'arrived' });
+  const { data: packagesResult } = useOptimizedPackages({ statusFilter: 'arrived' });
+  const packages = packagesResult?.data || [];
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [request, setRequest] = useState<ConsolidationRequest>({
     selectedPackages: [],

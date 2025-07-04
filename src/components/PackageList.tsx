@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
+import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
+import { useUpdatePackageStatus } from '@/hooks/usePackages';
 import { useUploadInvoice, useDownloadInvoice } from '@/hooks/useInvoices';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -34,7 +35,8 @@ const PackageList: React.FC<PackageListProps> = ({
 }) => {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const { data: packages, isPending, error } = usePackages({ searchTerm, statusFilter, customerFilter });
+  const { data: packagesResult, isPending, error } = useOptimizedPackages({ searchTerm, statusFilter, customerId: customerFilter });
+  const packages = packagesResult?.data || [];
   const updateStatusMutation = useUpdatePackageStatus();
   const uploadInvoiceMutation = useUploadInvoice();
   const downloadInvoiceMutation = useDownloadInvoice();

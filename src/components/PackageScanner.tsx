@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
+import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
+import { useUpdatePackageStatus } from '@/hooks/usePackages';
 import { useUSPSTracking, useCarrierDetection } from '@/hooks/useTrackingAPI';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,7 +24,8 @@ const PackageScanner: React.FC = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [apiStatus, setApiStatus] = useState<Record<string, 'connected' | 'error' | 'unconfigured'>>({});
   
-  const { data: packages, isLoading: packagesLoading, error: packagesError } = usePackages();
+  const { data: packagesResult, isLoading: packagesLoading, error: packagesError } = useOptimizedPackages();
+  const packages = packagesResult?.data || [];
   const updateStatusMutation = useUpdatePackageStatus();
   const uspsTrackingMutation = useUSPSTracking();
   const { detectCarrier } = useCarrierDetection();
