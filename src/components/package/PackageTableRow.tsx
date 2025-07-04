@@ -1,41 +1,19 @@
 import React from 'react';
-import { TableCell, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Eye, ExternalLink, CheckCircle } from 'lucide-react';
-import { format } from 'date-fns';
-import { Database } from '@/integrations/supabase/types';
-import { MagayaStatusIndicator } from '../magaya/MagayaStatusIndicator';
-import { MagayaSyncButton } from '../magaya/MagayaSyncButton';
-import PackageStatusBadge from './PackageStatusBadge';
-
-type PackageStatus = Database['public']['Enums']['package_status'];
-
-interface Package {
-  id: string;
-  tracking_number: string;
-  description: string;
-  status: PackageStatus;
-  date_received: string;
-  estimated_delivery?: string;
-  invoices?: any[];
-  total_due?: number;
-  customer_name?: string;
-  customer_email?: string;
-  package_value?: number;
-  duty_amount?: number;
-  weight?: number;
-  dimensions?: string;
-  sender_name?: string;
-  external_tracking_number?: string;
-  carrier?: string;
-  notes?: string;
-  magaya_shipment_id?: string | null;
-  magaya_reference_number?: string | null;
-  warehouse_location?: string | null;
-  consolidation_status?: string | null;
-}
+import { TableRow } from '@/components/ui/table';
+import { Package, PackageStatus } from './types';
+import PackageTrackingCell from './table-cells/PackageTrackingCell';
+import PackageCustomerCell from './table-cells/PackageCustomerCell';
+import PackageDescriptionCell from './table-cells/PackageDescriptionCell';
+import PackageStatusCell from './table-cells/PackageStatusCell';
+import { PackageDateReceivedCell, PackageEstimatedDeliveryCell } from './table-cells/PackageDatesCell';
+import PackageValueCell from './table-cells/PackageValueCell';
+import PackageDutyCell from './table-cells/PackageDutyCell';
+import PackageWeightCell from './table-cells/PackageWeightCell';
+import PackageCarrierCell from './table-cells/PackageCarrierCell';
+import PackageMagayaCell from './table-cells/PackageMagayaCell';
+import PackageTotalDueCell from './table-cells/PackageTotalDueCell';
+import PackageInvoiceStatusCell from './table-cells/PackageInvoiceStatusCell';
+import PackageActionsCell from './table-cells/PackageActionsCell';
 
 interface PackageTableRowProps {
   package: Package;
@@ -56,167 +34,53 @@ const PackageTableRow: React.FC<PackageTableRowProps> = ({
   onRecordPickup,
   onStatusUpdate,
 }) => {
-  const canRecordPickup = (pkg: Package) => {
-    return userRole !== 'customer' && pkg.status === 'ready_for_pickup';
-  };
-
   return (
     <TableRow>
-      <TableCell className="font-medium">
-        <div className="flex flex-col">
-          <span className="font-mono text-sm">{pkg.tracking_number}</span>
-          {pkg.external_tracking_number && (
-            <span className="text-xs text-muted-foreground">
-              Ext: {pkg.external_tracking_number}
-            </span>
-          )}
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="font-medium">{pkg.customer_name}</span>
-          {pkg.customer_email && (
-            <span className="text-xs text-muted-foreground">{pkg.customer_email}</span>
-          )}
-        </div>
-      </TableCell>
-      <TableCell className="max-w-xs">
-        <div className="flex flex-col">
-          <span className="truncate">{pkg.description}</span>
-          {pkg.dimensions && (
-            <span className="text-xs text-muted-foreground">{pkg.dimensions}</span>
-          )}
-        </div>
-      </TableCell>
-      <TableCell>
-        {userRole === 'admin' && onStatusUpdate ? (
-          <Select
-            value={pkg.status}
-            onValueChange={(value) => onStatusUpdate(pkg.id, value as PackageStatus)}
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="received">Received at Miami</SelectItem>
-              <SelectItem value="in_transit">In Transit</SelectItem>
-              <SelectItem value="arrived">Arrived in Jamaica</SelectItem>
-              <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
-              <SelectItem value="picked_up">Picked Up</SelectItem>
-            </SelectContent>
-          </Select>
-        ) : (
-          <PackageStatusBadge status={pkg.status} />
-        )}
-      </TableCell>
-      <TableCell>
-        {pkg.date_received ? new Date(pkg.date_received).toLocaleDateString() : 'N/A'}
-      </TableCell>
-      <TableCell>
-        {pkg.estimated_delivery ? format(new Date(pkg.estimated_delivery), 'yyyy-MM-dd') : 'N/A'}
-      </TableCell>
-      {userRole !== 'customer' && (
-        <TableCell>
-          {pkg.package_value ? `$${pkg.package_value.toFixed(2)}` : 'N/A'}
-        </TableCell>
-      )}
-      {userRole !== 'customer' && (
-        <TableCell>
-          {pkg.duty_amount ? `$${pkg.duty_amount.toFixed(2)}` : 'N/A'}
-        </TableCell>
-      )}
-      {userRole !== 'customer' && (
-        <TableCell>
-          {pkg.weight ? `${pkg.weight} lbs` : 'N/A'}
-        </TableCell>
-      )}
-      {userRole !== 'customer' && (
-        <TableCell>
-          <div className="flex flex-col">
-            <span>{pkg.carrier || 'N/A'}</span>
-            {pkg.sender_name && (
-              <span className="text-xs text-muted-foreground">From: {pkg.sender_name}</span>
-            )}
-          </div>
-        </TableCell>
-      )}
-      {userRole !== 'customer' && (
-        <TableCell>
-          <div className="flex items-center gap-2">
-            <MagayaStatusIndicator
-              magayaShipmentId={pkg.magaya_shipment_id}
-              warehouseLocation={pkg.warehouse_location}
-              consolidationStatus={pkg.consolidation_status}
-            />
-            <MagayaSyncButton
-              packageId={pkg.id}
-              magayaShipmentId={pkg.magaya_shipment_id}
-              size="sm"
-              variant="ghost"
-              showLabel={false}
-            />
-          </div>
-        </TableCell>
-      )}
-      <TableCell>
-        {pkg.total_due ? `$${pkg.total_due.toFixed(2)}` : 'N/A'}
-      </TableCell>
-      <TableCell>
-        {pkg.invoices && pkg.invoices.length > 0 ? (
-          <Badge variant="outline" className="text-green-600 border-green-300">
-            Uploaded
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="text-orange-600 border-orange-300">
-            Pending
-          </Badge>
-        )}
-      </TableCell>
-      <TableCell>
-        <div className="flex gap-2">
-          {userRole === 'customer' && (
-            <>
-              {(!pkg.invoices || pkg.invoices.length === 0) && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onUploadInvoice?.(pkg.id)}
-                >
-                  <Upload className="h-4 w-4" />
-                </Button>
-              )}
-              {pkg.invoices && pkg.invoices.length > 0 && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onViewInvoice?.(pkg.id)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              )}
-            </>
-          )}
-          {canRecordPickup(pkg) && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onRecordPickup?.(pkg)}
-              className="text-green-600 hover:text-green-700"
-            >
-              <CheckCircle className="h-4 w-4" />
-            </Button>
-          )}
-          {onViewDetails && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onViewDetails(pkg.id)}
-            >
-              <ExternalLink className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </TableCell>
+      <PackageTrackingCell 
+        trackingNumber={pkg.tracking_number}
+        externalTrackingNumber={pkg.external_tracking_number}
+      />
+      <PackageCustomerCell 
+        customerName={pkg.customer_name}
+        customerEmail={pkg.customer_email}
+      />
+      <PackageDescriptionCell 
+        description={pkg.description}
+        dimensions={pkg.dimensions}
+      />
+      <PackageStatusCell 
+        status={pkg.status}
+        userRole={userRole}
+        packageId={pkg.id}
+        onStatusUpdate={onStatusUpdate}
+      />
+      <PackageDateReceivedCell dateReceived={pkg.date_received} />
+      <PackageEstimatedDeliveryCell estimatedDelivery={pkg.estimated_delivery} />
+      <PackageValueCell packageValue={pkg.package_value} userRole={userRole} />
+      <PackageDutyCell dutyAmount={pkg.duty_amount} userRole={userRole} />
+      <PackageWeightCell weight={pkg.weight} userRole={userRole} />
+      <PackageCarrierCell 
+        carrier={pkg.carrier}
+        senderName={pkg.sender_name}
+        userRole={userRole}
+      />
+      <PackageMagayaCell 
+        packageId={pkg.id}
+        magayaShipmentId={pkg.magaya_shipment_id}
+        warehouseLocation={pkg.warehouse_location}
+        consolidationStatus={pkg.consolidation_status}
+        userRole={userRole}
+      />
+      <PackageTotalDueCell totalDue={pkg.total_due} />
+      <PackageInvoiceStatusCell invoices={pkg.invoices} />
+      <PackageActionsCell 
+        package={pkg}
+        userRole={userRole}
+        onUploadInvoice={onUploadInvoice}
+        onViewInvoice={onViewInvoice}
+        onViewDetails={onViewDetails}
+        onRecordPickup={onRecordPickup}
+      />
     </TableRow>
   );
 };
