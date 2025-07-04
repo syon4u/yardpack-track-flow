@@ -42,10 +42,10 @@ export const useCustomerAnalytics = () => {
     queryFn: async (): Promise<CustomerLifetimeValue[]> => {
       if (!user || profile?.role !== 'admin') return [];
       
-      const { data, error } = await supabase.rpc('calculate_customer_clv');
+      const { data, error } = await supabase.rpc('calculate_customer_clv' as any);
       
       if (error) throw error;
-      return data || [];
+      return (data as CustomerLifetimeValue[] | null) || [];
     },
     enabled: !!user && profile?.role === 'admin',
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -57,10 +57,10 @@ export const useCustomerAnalytics = () => {
     queryFn: async (): Promise<SeasonalDemand[]> => {
       if (!user || profile?.role !== 'admin') return [];
       
-      const { data, error } = await supabase.rpc('get_seasonal_demand_analysis');
+      const { data, error } = await supabase.rpc('get_seasonal_demand_analysis' as any);
       
       if (error) throw error;
-      return data || [];
+      return (data as SeasonalDemand[] | null) || [];
     },
     enabled: !!user && profile?.role === 'admin',
     staleTime: 30 * 60 * 1000, // 30 minutes
@@ -72,10 +72,10 @@ export const useCustomerAnalytics = () => {
     queryFn: async (): Promise<CustomerSegmentation[]> => {
       if (!user || profile?.role !== 'admin') return [];
       
-      const { data, error } = await supabase.rpc('get_customer_segmentation');
+      const { data, error } = await supabase.rpc('get_customer_segmentation' as any);
       
       if (error) throw error;
-      return data || [];
+      return (data as CustomerSegmentation[] | null) || [];
     },
     enabled: !!user && profile?.role === 'admin',
     staleTime: 15 * 60 * 1000, // 15 minutes
