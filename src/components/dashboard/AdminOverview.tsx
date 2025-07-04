@@ -1,14 +1,79 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useOptimizedStats } from '@/hooks/useOptimizedCustomers';
+import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
+import { useUpdatePackageStatus } from '@/hooks/usePackages';
+import { useUploadInvoice, useDownloadInvoice } from '@/hooks/useInvoices';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, Users, TrendingUp, Clock, Plus, Scan } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Package, Users, TrendingUp, Clock, Plus, Scan, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import PackageTable from '../PackageTable';
+import CreatePackageForm from '../CreatePackageForm';
+import { Database } from '@/integrations/supabase/types';
+
+type PackageStatus = Database['public']['Enums']['package_status'];
 
 const AdminOverview: React.FC = () => {
   const { data: stats, isPending } = useOptimizedStats();
   const navigate = useNavigate();
+  
+  // Package management state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [showCreatePackage, setShowCreatePackage] = useState(false);
+  
+  // Package data and handlers
+  const { data: packagesResult, isPending: packagesLoading } = useOptimizedPackages({
+    searchTerm,
+    statusFilter: statusFilter === 'all' ? undefined : statusFilter
+  });
+  
+  const updateStatusMutation = useUpdatePackageStatus();
+  const uploadInvoiceMutation = useUploadInvoice();
+  const downloadInvoiceMutation = useDownloadInvoice();
+
+  const handleStatusUpdate = async (packageId: string, status: PackageStatus) => {
+    try {
+      await updateStatusMutation.mutateAsync({ packageId, status });
+    } catch (error) {
+      // Error handling is done by the mutation
+    }
+  };
+
+  const handleUploadInvoice = async (packageId: string) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          await uploadInvoiceMutation.mutateAsync({ packageId, file });
+        } catch (error) {
+          // Error handling is done by the mutation
+        }
+      }
+    };
+    input.click();
+  };
+
+  const handleViewInvoice = async (packageId: string) => {
+    const pkg = packagesResult?.data?.find(p => p.id === packageId);
+    if (pkg && pkg.invoices && pkg.invoices.length > 0) {
+      try {
+        await downloadInvoiceMutation.mutateAsync(pkg.invoices[0].file_path);
+      } catch (error) {
+        // Error handling is done by the mutation
+      }
+    }
+  };
+
+  const handleViewDetails = (packageId: string) => {
+    navigate(`/package/${packageId}`);
+  };
 
   if (isPending) {
     return (
@@ -42,18 +107,6 @@ const AdminOverview: React.FC = () => {
     active: 0,
   };
 
-  const handlePackageManagement = () => {
-    navigate('/dashboard?tab=packages');
-  };
-
-  const handleCustomerManagement = () => {
-    navigate('/dashboard?tab=customers');
-  };
-
-  const handleAnalytics = () => {
-    navigate('/dashboard?tab=analytics');
-  };
-
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -69,7 +122,7 @@ const AdminOverview: React.FC = () => {
               Scanner
             </Button>
           </Link>
-          <Button className="flex items-center gap-2">
+          <Button className="flex items-center gap-2" onClick={() => setShowCreatePackage(true)}>
             <Plus className="h-4 w-4" />
             Create Package
           </Button>
@@ -127,53 +180,62 @@ const AdminOverview: React.FC = () => {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <Package className="h-5 w-5 mr-2 text-blue-600" />
-              Package Management
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 mb-4">View, create, and manage all packages in the system</p>
-            <Button variant="outline" className="w-full" onClick={handlePackageManagement}>
-              Manage Packages
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Package Management Section */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <h2 className="text-lg font-semibold text-gray-900">Package Management</h2>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search packages..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-full sm:w-64"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="received">Received at Miami</SelectItem>
+                <SelectItem value="in_transit">In Transit</SelectItem>
+                <SelectItem value="arrived">Arrived in Jamaica</SelectItem>
+                <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
+                <SelectItem value="picked_up">Picked Up</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <Users className="h-5 w-5 mr-2 text-green-600" />
-              Customer Management
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 mb-4">View customer profiles and manage accounts</p>
-            <Button variant="outline" className="w-full" onClick={handleCustomerManagement}>
-              Manage Customers
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <TrendingUp className="h-5 w-5 mr-2 text-purple-600" />
-              Analytics
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 mb-4">View detailed reports and analytics</p>
-            <Button variant="outline" className="w-full" onClick={handleAnalytics}>
-              View Analytics
-            </Button>
-          </CardContent>
-        </Card>
+        {packagesLoading ? (
+          <div className="border rounded-lg p-8 text-center">
+            <div className="animate-pulse">Loading packages...</div>
+          </div>
+        ) : packagesResult?.data && packagesResult.data.length > 0 ? (
+          <PackageTable
+            packages={packagesResult.data}
+            userRole="admin"
+            onUploadInvoice={handleUploadInvoice}
+            onViewInvoice={handleViewInvoice}
+            onViewDetails={handleViewDetails}
+            onStatusUpdate={handleStatusUpdate}
+          />
+        ) : (
+          <div className="border rounded-lg p-8 text-center text-gray-600">
+            {searchTerm || statusFilter !== 'all' 
+              ? 'No packages found matching your filters.' 
+              : 'No packages found.'}
+          </div>
+        )}
       </div>
+
+      {/* Create Package Modal */}
+      {showCreatePackage && (
+        <CreatePackageForm onClose={() => setShowCreatePackage(false)} />
+      )}
     </div>
   );
 };
