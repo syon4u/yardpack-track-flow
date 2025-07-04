@@ -36,16 +36,16 @@ interface Package {
 interface PackageTableProps {
   packages: Package[];
   userRole: 'customer' | 'admin' | 'warehouse';
-  onUploadReceipt?: (packageId: string) => void;
-  onViewReceipt?: (packageId: string) => void;
+  onUploadInvoice?: (packageId: string) => void;
+  onViewInvoice?: (packageId: string) => void;
   onViewDetails?: (packageId: string) => void;
 }
 
 const PackageTable: React.FC<PackageTableProps> = ({
   packages,
   userRole,
-  onUploadReceipt,
-  onViewReceipt,
+  onUploadInvoice,
+  onViewInvoice,
   onViewDetails,
 }) => {
   const [selectedPackageForPickup, setSelectedPackageForPickup] = useState<Package | null>(null);
@@ -61,8 +61,8 @@ const PackageTable: React.FC<PackageTableProps> = ({
                 key={pkg.id}
                 package={pkg}
                 userRole={userRole}
-                onUploadReceipt={onUploadReceipt}
-                onViewReceipt={onViewReceipt}
+                onUploadInvoice={onUploadInvoice}
+                onViewInvoice={onViewInvoice}
                 onViewDetails={onViewDetails}
                 onRecordPickup={setSelectedPackageForPickup}
               />

@@ -249,63 +249,6 @@ serve(async (req) => {
         await magayaAPI.logSyncAttempt(packageId, syncType, true, result);
         break;
 
-      case 'auto_sync_status':
-        // Automatic sync triggered by database trigger
-        const { oldStatus, newStatus, retryAttempts, retryDelay } = await req.json();
-        
-        const { data: packageInfo } = await supabase
-          .from('packages')
-          .select('*')
-          .eq('id', packageId)
-          .single();
-
-        if (!packageInfo) {
-          throw new Error('Package not found for auto-sync');
-        }
-
-        // If package has Magaya shipment, update status
-        if (packageInfo.magaya_shipment_id) {
-          try {
-            result = await magayaAPI.updateShipmentStatus(packageInfo.magaya_shipment_id, newStatus);
-            await magayaAPI.logSyncAttempt(packageId, 'auto_sync_status', true, result);
-          } catch (error) {
-            console.error('Auto-sync failed:', error);
-            await magayaAPI.logSyncAttempt(packageId, 'auto_sync_status', false, null, error.message);
-            
-            // If retries are configured, could implement retry logic here
-            if (retryAttempts > 0) {
-              console.log(`Will retry auto-sync for package ${packageId} in ${retryDelay} seconds`);
-            }
-            throw error;
-          }
-        } else {
-          // Create shipment if it doesn't exist
-          try {
-            result = await magayaAPI.createShipment({
-              ...packageInfo,
-              customer_name: packageInfo.sender_name || 'Unknown',
-            });
-            
-            if (result) {
-              await supabase
-                .from('packages')
-                .update({
-                  magaya_shipment_id: result.shipment_id,
-                  magaya_reference_number: result.reference_number,
-                  warehouse_location: result.warehouse_location,
-                })
-                .eq('id', packageId);
-            }
-            
-            await magayaAPI.logSyncAttempt(packageId, 'auto_sync_create', true, result);
-          } catch (error) {
-            console.error('Auto-sync create failed:', error);
-            await magayaAPI.logSyncAttempt(packageId, 'auto_sync_create', false, null, error.message);
-            throw error;
-          }
-        }
-        break;
-
       case 'sync_package':
         // Comprehensive sync for a specific package
         const { data: packageInfo } = await supabase

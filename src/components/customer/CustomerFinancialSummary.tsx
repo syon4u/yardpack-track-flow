@@ -7,13 +7,13 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface CustomerFinancialSummaryProps {
   totalValue: number;
   totalDue: number;
-  pendingReceipts: number;
+  pendingInvoices: number;
 }
 
 const CustomerFinancialSummary: React.FC<CustomerFinancialSummaryProps> = ({
   totalValue,
   totalDue,
-  pendingReceipts
+  pendingInvoices
 }) => {
   const isMobile = useIsMobile();
 
@@ -37,13 +37,13 @@ const CustomerFinancialSummary: React.FC<CustomerFinancialSummaryProps> = ({
         </div>
         <div className="flex items-center justify-between">
           <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
-            {isMobile ? 'Pending' : 'Pending Receipts'}
+            {isMobile ? 'Pending' : 'Pending Invoices'}
           </span>
           <Badge 
-            variant={pendingReceipts > 0 ? "destructive" : "outline"}
+            variant={pendingInvoices > 0 ? "destructive" : "outline"}
             className={isMobile ? 'text-xs px-2 py-1' : ''}
           >
-            {pendingReceipts}
+            {pendingInvoices}
           </Badge>
         </div>
       </CardContent>

@@ -11,7 +11,6 @@ import {
   SidebarInset
 } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useTrackingDialog } from '@/hooks/useTrackingDialog';
 import AppSidebar from './navigation/AppSidebar';
 import TrackingResults from './TrackingResults';
 
@@ -22,20 +21,23 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { profile } = useAuth();
   const isMobile = useIsMobile();
-  const {
-    trackingNumber,
-    setTrackingNumber,
-    showTrackingResults,
-    handleTrack,
-    handleBack,
-    handleKeyPress,
-  } = useTrackingDialog();
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [showTrackingResults, setShowTrackingResults] = useState(false);
+
+  const handleTrack = () => {
+    if (trackingNumber.trim()) {
+      setShowTrackingResults(true);
+    }
+  };
 
   if (showTrackingResults) {
     return (
       <TrackingResults 
         trackingNumber={trackingNumber} 
-        onBack={handleBack}
+        onBack={() => {
+          setShowTrackingResults(false);
+          setTrackingNumber('');
+        }} 
       />
     );
   }
@@ -77,7 +79,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                               placeholder="Enter tracking number"
                               value={trackingNumber}
                               onChange={(e) => setTrackingNumber(e.target.value)}
-                              onKeyPress={handleKeyPress}
+                              onKeyPress={(e) => e.key === 'Enter' && handleTrack()}
                               className="flex-1"
                             />
                             <Button onClick={handleTrack} size="sm" className="px-3">

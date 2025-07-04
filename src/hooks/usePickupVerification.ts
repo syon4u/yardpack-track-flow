@@ -121,26 +121,7 @@ export const useGeneratePickupCode = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['pickup-codes', data.package_id] });
-      queryClient.invalidateQueries({ queryKey: ['packages'] });
     },
-  });
-};
-
-// Fetch pickup codes for a package
-export const usePickupCodes = (packageId: string) => {
-  return useQuery({
-    queryKey: ['pickup-codes', packageId],
-    queryFn: async (): Promise<PickupCode[]> => {
-      const { data, error } = await supabase
-        .from('pickup_codes')
-        .select('*')
-        .eq('package_id', packageId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!packageId,
   });
 };
 

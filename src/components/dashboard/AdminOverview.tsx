@@ -1,20 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useOptimizedStats } from '@/hooks/useOptimizedCustomers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Package, Users, TrendingUp, Clock, Plus, Scan, Search } from 'lucide-react';
+import { Package, Users, TrendingUp, Clock, Plus, Scan } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import PackageList from '@/components/PackageList';
 
 const AdminOverview: React.FC = () => {
   const { data: stats, isPending } = useOptimizedStats();
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [customerFilter, setCustomerFilter] = useState('');
 
   if (isPending) {
     return (
@@ -48,8 +42,16 @@ const AdminOverview: React.FC = () => {
     active: 0,
   };
 
-  const handleCreatePackage = () => {
-    navigate('/dashboard?tab=packages&action=create');
+  const handlePackageManagement = () => {
+    navigate('/dashboard?tab=packages');
+  };
+
+  const handleCustomerManagement = () => {
+    navigate('/dashboard?tab=customers');
+  };
+
+  const handleAnalytics = () => {
+    navigate('/dashboard?tab=analytics');
   };
 
   return (
@@ -125,61 +127,52 @@ const AdminOverview: React.FC = () => {
         </Card>
       </div>
 
-      {/* Package Management Section */}
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-xl font-semibold text-gray-900">Package Management</h2>
-          <Button onClick={handleCreatePackage} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Create Package
-          </Button>
-        </div>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <CardHeader>
+            <CardTitle className="flex items-center text-lg">
+              <Package className="h-5 w-5 mr-2 text-blue-600" />
+              Package Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">View, create, and manage all packages in the system</p>
+            <Button variant="outline" className="w-full" onClick={handlePackageManagement}>
+              Manage Packages
+            </Button>
+          </CardContent>
+        </Card>
 
-        {/* Search and Filter Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 bg-gray-50 p-4 rounded-lg">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search packages..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-          <div className="sm:w-48">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="received">Received</SelectItem>
-                <SelectItem value="in_transit">In Transit</SelectItem>
-                <SelectItem value="arrived">Arrived</SelectItem>
-                <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
-                <SelectItem value="picked_up">Picked Up</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="sm:w-48">
-            <Input
-              placeholder="Filter by customer..."
-              value={customerFilter}
-              onChange={(e) => setCustomerFilter(e.target.value)}
-            />
-          </div>
-        </div>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <CardHeader>
+            <CardTitle className="flex items-center text-lg">
+              <Users className="h-5 w-5 mr-2 text-green-600" />
+              Customer Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">View customer profiles and manage accounts</p>
+            <Button variant="outline" className="w-full" onClick={handleCustomerManagement}>
+              Manage Customers
+            </Button>
+          </CardContent>
+        </Card>
 
-        {/* Packages Table */}
-        <PackageList
-          searchTerm={searchTerm}
-          statusFilter={statusFilter}
-          customerFilter={customerFilter}
-          viewMode="table"
-          itemsPerPage={15}
-        />
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <CardHeader>
+            <CardTitle className="flex items-center text-lg">
+              <TrendingUp className="h-5 w-5 mr-2 text-purple-600" />
+              Analytics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">View detailed reports and analytics</p>
+            <Button variant="outline" className="w-full" onClick={handleAnalytics}>
+              View Analytics
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

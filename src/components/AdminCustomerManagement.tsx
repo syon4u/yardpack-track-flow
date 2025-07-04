@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
 import { useCustomers } from '@/hooks/useCustomers';
-import { useFilters } from '@/hooks/useFilters';
 import { Button } from '@/components/ui/button';
+import { UserPlus, Search, Filter } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminCustomerStats from './admin/AdminCustomerStats';
 import AdminCustomerFilters from './admin/AdminCustomerFilters';
 import AdminCustomerTable from './admin/AdminCustomerTable';
@@ -10,7 +12,8 @@ import CreateCustomerForm from './admin/CreateCustomerForm';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const AdminCustomerManagement: React.FC = () => {
-  const { searchTerm, setSearchTerm, typeFilter, setTypeFilter, activityFilter, setActivityFilter } = useFilters();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const isMobile = useIsMobile();
 
@@ -43,17 +46,37 @@ const AdminCustomerManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <AdminCustomerFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        customerTypeFilter={typeFilter}
-        setCustomerTypeFilter={setTypeFilter}
-        activityFilter={activityFilter}
-        setActivityFilter={setActivityFilter}
-      />
+      <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'justify-between items-center'}`}>
+        <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center space-x-4'}`}>
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search customers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`pl-10 ${isMobile ? 'w-full' : 'w-64'}`}
+            />
+          </div>
+          
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className={isMobile ? 'w-full' : 'w-48'}>
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="registered">Registered</SelectItem>
+              <SelectItem value="guest">Guest</SelectItem>
+              <SelectItem value="package_only">Package Only</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => setShowCreateCustomer(true)}>
+        <Button 
+          onClick={() => setShowCreateCustomer(true)}
+          className={`flex items-center gap-2 ${isMobile ? 'w-full' : ''}`}
+        >
+          <UserPlus className="h-4 w-4" />
           Create Customer
         </Button>
       </div>

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
-import { useUploadReceipt, useDownloadReceipt } from '@/hooks/useInvoices';
+import { useUploadInvoice, useDownloadInvoice } from '@/hooks/useInvoices';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import PackageCard from './PackageCard';
@@ -23,7 +23,6 @@ interface PackageListProps {
   viewMode?: 'tiles' | 'table';
   onViewModeChange?: (mode: 'tiles' | 'table') => void;
   customerFilter?: string;
-  itemsPerPage?: number;
 }
 
 const PackageList: React.FC<PackageListProps> = ({ 
@@ -31,15 +30,14 @@ const PackageList: React.FC<PackageListProps> = ({
   statusFilter, 
   viewMode = 'tiles',
   onViewModeChange,
-  customerFilter,
-  itemsPerPage
+  customerFilter 
 }) => {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const { data: packages, isPending, error } = usePackages({ searchTerm, statusFilter, customerFilter });
   const updateStatusMutation = useUpdatePackageStatus();
-  const uploadReceiptMutation = useUploadReceipt();
-  const downloadReceiptMutation = useDownloadReceipt();
+  const uploadInvoiceMutation = useUploadInvoice();
+  const downloadInvoiceMutation = useDownloadInvoice();
 
   const handleStatusUpdate = async (packageId: string, status: PackageStatus) => {
     try {
@@ -49,7 +47,7 @@ const PackageList: React.FC<PackageListProps> = ({
     }
   };
 
-  const handleUploadReceipt = async (packageId: string) => {
+  const handleUploadInvoice = async (packageId: string) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf,.jpg,.jpeg,.png';
@@ -57,7 +55,7 @@ const PackageList: React.FC<PackageListProps> = ({
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         try {
-          await uploadReceiptMutation.mutateAsync({ packageId, file });
+          await uploadInvoiceMutation.mutateAsync({ packageId, file });
         } catch (error) {
           // Error handling is done by the mutation
         }
@@ -66,11 +64,11 @@ const PackageList: React.FC<PackageListProps> = ({
     input.click();
   };
 
-  const handleViewReceipt = async (packageId: string) => {
+  const handleViewInvoice = async (packageId: string) => {
     const pkg = packages?.find(p => p.id === packageId);
     if (pkg && pkg.invoices && pkg.invoices.length > 0) {
       try {
-        await downloadReceiptMutation.mutateAsync(pkg.invoices[0].file_path);
+        await downloadInvoiceMutation.mutateAsync(pkg.invoices[0].file_path);
       } catch (error) {
         // Error handling is done by the mutation
       }
@@ -80,18 +78,6 @@ const PackageList: React.FC<PackageListProps> = ({
   const handleViewDetails = (packageId: string) => {
     navigate(`/package/${packageId}`);
   };
-
-  // Pagination logic
-  const [currentPage, setCurrentPage] = useState(1);
-  const packagesPerPage = itemsPerPage || (viewMode === 'table' ? 10 : 12);
-  const totalPages = Math.ceil((packages?.length || 0) / packagesPerPage);
-  const startIndex = (currentPage - 1) * packagesPerPage;
-  const paginatedPackages = packages?.slice(startIndex, startIndex + packagesPerPage) || [];
-
-  // Reset to first page when filters change
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, customerFilter]);
 
   if (isPending) {
     return (
@@ -168,7 +154,7 @@ const PackageList: React.FC<PackageListProps> = ({
         {/* Package Content */}
         {viewMode === 'tiles' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedPackages.map((pkg) => (
+            {packages.map((pkg) => (
               <PackageCard
                 key={pkg.id}
                 package={{
@@ -178,7 +164,7 @@ const PackageList: React.FC<PackageListProps> = ({
                   status: pkg.status,
                   dateReceived: pkg.date_received,
                   estimatedDelivery: pkg.estimated_delivery || undefined,
-                  receiptUploaded: pkg.receipt_uploaded,
+                  invoiceUploaded: pkg.invoices && pkg.invoices.length > 0,
                   dutyAssessed: pkg.duty_amount !== null,
                   totalDue: pkg.total_due || undefined,
                   customerName: pkg.customer_name,
@@ -190,50 +176,20 @@ const PackageList: React.FC<PackageListProps> = ({
                 }}
                 userRole={profile?.role as 'customer' | 'admin' | 'warehouse' || 'customer'}
                 onStatusUpdate={handleStatusUpdate}
-                onUploadReceipt={handleUploadReceipt}
-                onViewReceipt={handleViewReceipt}
+                onUploadInvoice={handleUploadInvoice}
+                onViewInvoice={handleViewInvoice}
                 onViewDetails={handleViewDetails}
               />
             ))}
           </div>
         ) : (
           <PackageTable
-            packages={paginatedPackages}
+            packages={packages}
             userRole={profile?.role as 'customer' | 'admin' | 'warehouse' || 'customer'}
-            onUploadReceipt={handleUploadReceipt}
-            onViewReceipt={handleViewReceipt}
+            onUploadInvoice={handleUploadInvoice}
+            onViewInvoice={handleViewInvoice}
             onViewDetails={handleViewDetails}
           />
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-4">
-            <div className="text-sm text-gray-600">
-              Showing {startIndex + 1} to {Math.min(startIndex + packagesPerPage, packages?.length || 0)} of {packages?.length || 0} packages
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <span className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
         )}
       </div>
     </ErrorBoundary>

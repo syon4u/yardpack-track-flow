@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePackages, useUpdatePackageStatus } from '@/hooks/usePackages';
-import { useUSPSTracking, useFedExTracking, useUPSTracking, useCarrierDetection } from '@/hooks/useTrackingAPI';
+import { useUSPSTracking, useCarrierDetection } from '@/hooks/useTrackingAPI';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ApiStatusCard from '@/components/scanner/ApiStatusCard';
@@ -26,8 +26,6 @@ const PackageScanner: React.FC = () => {
   const { data: packages, isLoading: packagesLoading, error: packagesError } = usePackages();
   const updateStatusMutation = useUpdatePackageStatus();
   const uspsTrackingMutation = useUSPSTracking();
-  const fedexTrackingMutation = useFedExTracking();
-  const upsTrackingMutation = useUPSTracking();
   const { detectCarrier } = useCarrierDetection();
   const { toast } = useToast();
 
@@ -148,20 +146,10 @@ const PackageScanner: React.FC = () => {
               trackingNumber: trackingNumberToUse,
               packageId: foundPackage.id
             });
-          } else if (carrierToUse === 'FEDEX') {
-            await fedexTrackingMutation.mutateAsync({
-              trackingNumber: trackingNumberToUse,
-              packageId: foundPackage.id
-            });
-          } else if (carrierToUse === 'UPS') {
-            await upsTrackingMutation.mutateAsync({
-              trackingNumber: trackingNumberToUse,
-              packageId: foundPackage.id
-            });
           } else {
             toast({
               title: "API Sync",
-              description: `${carrierToUse} API integration not implemented yet`,
+              description: `${carrierToUse} API integration coming soon`,
             });
           }
         } catch (apiError) {
@@ -236,28 +224,10 @@ const PackageScanner: React.FC = () => {
       } catch (error) {
         console.error('Tracking sync error:', error);
       }
-    } else if (pkg.carrier === 'FEDEX') {
-      try {
-        await fedexTrackingMutation.mutateAsync({
-          trackingNumber: pkg.external_tracking_number,
-          packageId: pkg.id
-        });
-      } catch (error) {
-        console.error('FedEx tracking sync error:', error);
-      }
-    } else if (pkg.carrier === 'UPS') {
-      try {
-        await upsTrackingMutation.mutateAsync({
-          trackingNumber: pkg.external_tracking_number,
-          packageId: pkg.id
-        });
-      } catch (error) {
-        console.error('UPS tracking sync error:', error);
-      }
     } else {
       toast({
         title: "Carrier Not Supported",
-        description: `${pkg.carrier} tracking integration not implemented`,
+        description: `${pkg.carrier} tracking integration coming soon`,
         variant: "destructive",
       });
     }

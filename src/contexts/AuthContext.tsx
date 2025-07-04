@@ -38,102 +38,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('AuthContext - Fetching profile for userId:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle to handle cases where profile doesn't exist
+        .single();
       
       if (error) {
-        console.error('AuthContext - Error fetching profile:', error);
-        // Don't throw, just log and continue
+        console.error('Error fetching profile:', error);
         return;
       }
       
-      if (data) {
-        console.log('AuthContext - Profile found:', data);
-        setProfile(data);
-      } else {
-        console.warn('AuthContext - No profile found for user:', userId);
-        // Profile doesn't exist yet, this could be a new user
-        setProfile(null);
-      }
+      setProfile(data);
     } catch (error) {
-      console.error('AuthContext - Unexpected error fetching profile:', error);
-      // On error, set profile to null to allow the app to continue
-      setProfile(null);
+      console.error('Error fetching profile:', error);
     }
   };
 
   useEffect(() => {
-    let mounted = true;
-    
-    // Set up auth state listener FIRST to avoid race conditions
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('AuthContext - Auth state changed:', event, session?.user?.id);
-        
-        if (!mounted) return;
-        
+      async (event, session) => {
+        console.log('Auth state changed:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log('AuthContext - Fetching profile for user:', session.user.id);
-          // Use setTimeout to defer profile fetching and avoid blocking auth state changes
+          // Fetch profile after auth state changes
           setTimeout(() => {
-            if (mounted) {
-              fetchProfile(session.user.id);
-            }
-          }, 100); // Small delay to ensure auth state is fully processed
+            fetchProfile(session.user.id);
+          }, 0);
         } else {
-          console.log('AuthContext - No session, clearing profile');
           setProfile(null);
         }
         
-        // Always set loading to false after processing auth state
         setIsLoading(false);
       }
     );
 
-    // THEN check for existing session
-    const initializeAuth = async () => {
-      try {
-        console.log('AuthContext - Initializing auth...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-        
-        if (error) {
-          console.error('Error getting session:', error);
-          setIsLoading(false);
-          return;
-        }
-        
-        console.log('AuthContext - Initial session:', !!session);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        }
-        
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchProfile(session.user.id);
       }
-    };
+      
+      setIsLoading(false);
+    });
 
-    initializeAuth();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string, phoneNumber?: string) => {

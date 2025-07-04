@@ -60,7 +60,7 @@ export interface TransformedPackage {
   }>;
   customer_name: string;
   customer_email: string | null;
-  receipt_uploaded: boolean;
+  invoice_uploaded: boolean;
   duty_assessed: boolean;
 }
 

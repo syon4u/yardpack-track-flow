@@ -137,53 +137,32 @@ export type Database = {
       }
       invoices: {
         Row: {
-          document_type: string
-          due_date: string | null
           file_name: string
           file_path: string
           file_size: number | null
           file_type: string
           id: string
-          invoice_number: string | null
-          line_items: Json | null
-          notes: string | null
           package_id: string
-          status: string | null
-          total_amount: number | null
           uploaded_at: string
           uploaded_by: string
         }
         Insert: {
-          document_type?: string
-          due_date?: string | null
           file_name: string
           file_path: string
           file_size?: number | null
           file_type: string
           id?: string
-          invoice_number?: string | null
-          line_items?: Json | null
-          notes?: string | null
           package_id: string
-          status?: string | null
-          total_amount?: number | null
           uploaded_at?: string
           uploaded_by: string
         }
         Update: {
-          document_type?: string
-          due_date?: string | null
           file_name?: string
           file_path?: string
           file_size?: number | null
           file_type?: string
           id?: string
-          invoice_number?: string | null
-          line_items?: Json | null
-          notes?: string | null
           package_id?: string
-          status?: string | null
-          total_amount?: number | null
           uploaded_at?: string
           uploaded_by?: string
         }
@@ -217,36 +196,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      magaya_auto_sync_config: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_enabled: boolean | null
-          retry_attempts: number | null
-          retry_delay_seconds: number | null
-          sync_on_status_changes: string[] | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_enabled?: boolean | null
-          retry_attempts?: number | null
-          retry_delay_seconds?: number | null
-          sync_on_status_changes?: string[] | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_enabled?: boolean | null
-          retry_attempts?: number | null
-          retry_delay_seconds?: number | null
-          sync_on_status_changes?: string[] | null
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       magaya_sync_log: {
         Row: {
@@ -285,50 +234,6 @@ export type Database = {
             columns: ["package_id"]
             isOneToOne: false
             referencedRelation: "packages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      manual_notifications: {
-        Row: {
-          created_at: string
-          id: string
-          message_body: string
-          recipient_emails: Json
-          recipient_ids: Json
-          recipient_type: string
-          sender_id: string
-          sent_at: string
-          subject: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          message_body: string
-          recipient_emails?: Json
-          recipient_ids?: Json
-          recipient_type: string
-          sender_id: string
-          sent_at?: string
-          subject: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          message_body?: string
-          recipient_emails?: Json
-          recipient_ids?: Json
-          recipient_type?: string
-          sender_id?: string
-          sent_at?: string
-          subject?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_manual_notifications_sender"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -849,10 +754,6 @@ export type Database = {
       check_duplicate_customers: {
         Args: Record<PropertyKey, never>
         Returns: number
-      }
-      generate_invoice_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
       }
       is_admin: {
         Args: { user_id: string }

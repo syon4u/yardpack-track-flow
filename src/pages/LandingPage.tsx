@@ -1,26 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Search, Truck, CheckCircle, Star, ArrowRight, Users, Shield, Clock, MapPin, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import TrackingResults from '@/components/TrackingResults';
-import { useScrollThrottle } from '@/hooks/useThrottle';
 const LandingPage: React.FC = () => {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [showResults, setShowResults] = useState(false);
-  const heroRef = useRef<HTMLElement>(null);
-  
-  const updateParallax = useScrollThrottle(() => {
-    if (heroRef.current) {
-      const scrollY = window.scrollY;
-      heroRef.current.style.setProperty('--scroll-y', `${scrollY * 0.1}px`);
-    }
-  });
-
+  const [scrollY, setScrollY] = useState(0);
   useEffect(() => {
-    window.addEventListener('scroll', updateParallax, { passive: true });
-    return () => window.removeEventListener('scroll', updateParallax);
-  }, [updateParallax]);
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   const handleTrack = () => {
     if (trackingNumber.trim()) {
       setShowResults(true);
@@ -126,11 +118,9 @@ const LandingPage: React.FC = () => {
       </nav>
 
       {/* Hero Section with Video Background */}
-      <section 
-        ref={heroRef}
-        className="relative overflow-hidden pt-20 pb-32 hero-parallax"
-        style={{ '--scroll-y': '0px' } as React.CSSProperties}
-      >
+      <section className="relative overflow-hidden pt-20 pb-32" style={{
+      transform: `translateY(${scrollY * 0.1}px)`
+    }}>
         {/* Video Background */}
         <div className="absolute inset-0 z-0">
           <video className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline poster="/videos/jlvid.mp4">

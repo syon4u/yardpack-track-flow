@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePickupVerificationMethods, useCreatePickupRecord, useVerifyPickupCode } from '@/hooks/usePickupVerification';
+import { usePickupVerificationMethods, useCreatePickupRecord } from '@/hooks/usePickupVerification';
 import DigitalSignaturePad from './DigitalSignaturePad';
 import PhotoCaptureComponent from './PhotoCaptureComponent';
 
@@ -47,7 +47,6 @@ const PickupVerificationModal: React.FC<PickupVerificationModalProps> = ({
   const { toast } = useToast();
   const { data: verificationMethods } = usePickupVerificationMethods();
   const createPickupRecord = useCreatePickupRecord();
-  const verifyPickupCode = useVerifyPickupCode();
 
   const [formData, setFormData] = useState({
     verification_method_id: '',
@@ -61,8 +60,6 @@ const PickupVerificationModal: React.FC<PickupVerificationModalProps> = ({
 
   const [verificationData, setVerificationData] = useState<any>({});
   const [currentStep, setCurrentStep] = useState(1);
-  const [codeVerified, setCodeVerified] = useState(false);
-  const [verifyingCode, setVerifyingCode] = useState(false);
 
   const selectedMethod = verificationMethods?.find(m => m.id === formData.verification_method_id);
 
@@ -72,32 +69,6 @@ const PickupVerificationModal: React.FC<PickupVerificationModalProps> = ({
 
   const handleVerificationData = (data: any) => {
     setVerificationData(prev => ({ ...prev, ...data }));
-  };
-
-  const handleVerifyCode = async (code: string) => {
-    if (!pkg || !code.trim()) return;
-    
-    setVerifyingCode(true);
-    try {
-      await verifyPickupCode.mutateAsync({
-        package_id: pkg.id,
-        code_value: code.trim()
-      });
-      setCodeVerified(true);
-      setVerificationData(prev => ({ ...prev, verifiedCode: code }));
-      toast({
-        title: "Code Verified",
-        description: "Pickup code has been successfully verified.",
-      });
-    } catch (error) {
-      toast({
-        title: "Invalid Code",
-        description: "The pickup code is invalid or has expired.",
-        variant: "destructive",
-      });
-    } finally {
-      setVerifyingCode(false);
-    }
   };
 
   const handleSubmit = async () => {
@@ -271,25 +242,11 @@ const PickupVerificationModal: React.FC<PickupVerificationModalProps> = ({
               {selectedMethod?.requires_code && (
                 <div>
                   <Label htmlFor="verification_code">Verification Code</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="verification_code"
-                      placeholder="Enter pickup code"
-                      onChange={(e) => handleVerificationData({ code: e.target.value })}
-                      disabled={codeVerified}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleVerifyCode(verificationData.code || '')}
-                      disabled={!verificationData.code || verifyingCode || codeVerified}
-                    >
-                      {verifyingCode ? 'Verifying...' : codeVerified ? 'Verified' : 'Verify'}
-                    </Button>
-                  </div>
-                  {codeVerified && (
-                    <p className="text-sm text-green-600 mt-1">✓ Code verified successfully</p>
-                  )}
+                  <Input
+                    id="verification_code"
+                    placeholder="Enter pickup code"
+                    onChange={(e) => handleVerificationData({ code: e.target.value })}
+                  />
                 </div>
               )}
 
@@ -337,10 +294,7 @@ const PickupVerificationModal: React.FC<PickupVerificationModalProps> = ({
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  disabled={
-                    createPickupRecord.isPending || 
-                    (selectedMethod?.requires_code && !codeVerified)
-                  }
+                  disabled={createPickupRecord.isPending}
                   className="flex-1"
                 >
                   {createPickupRecord.isPending ? 'Recording...' : 'Complete Pickup'}

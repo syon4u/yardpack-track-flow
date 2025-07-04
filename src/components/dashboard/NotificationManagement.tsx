@@ -3,8 +3,6 @@ import React from 'react';
 import { usePackages } from '@/hooks/usePackages';
 import { useNotifications } from '@/hooks/useNotifications';
 import PackageNotificationCard from '@/components/notifications/PackageNotificationCard';
-import ManualMessageComposer from '@/components/notifications/ManualMessageComposer';
-import ManualMessageHistory from '@/components/notifications/ManualMessageHistory';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -95,7 +93,6 @@ const NotificationManagement: React.FC = () => {
             )}
           </TabsTrigger>
           <TabsTrigger value="all">All Packages</TabsTrigger>
-          <TabsTrigger value="manual">Manual Messages</TabsTrigger>
           <TabsTrigger value="history">Notification History</TabsTrigger>
         </TabsList>
 
@@ -147,11 +144,6 @@ const NotificationManagement: React.FC = () => {
               />
             ))}
           </div>
-        </TabsContent>
-
-        <TabsContent value="manual" className="space-y-6">
-          <ManualMessageComposer />
-          <ManualMessageHistory />
         </TabsContent>
 
         <TabsContent value="history">

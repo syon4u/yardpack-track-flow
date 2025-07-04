@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useFilters } from '@/hooks/useFilters';
 import CreateUserForm from './admin/CreateUserForm';
 import EditUserDialog from './admin/EditUserDialog';
 import AdminUserStats from './admin/AdminUserStats';
@@ -10,7 +9,7 @@ import AdminUserFilters from './admin/AdminUserFilters';
 import AdminUserTable from './admin/AdminUserTable';
 
 const AdminUserManagement: React.FC = () => {
-  const { searchTerm, setSearchTerm } = useFilters();
+  const [searchTerm, setSearchTerm] = useState('');
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
 

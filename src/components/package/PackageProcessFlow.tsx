@@ -1,4 +1,4 @@
-import React, { useState, memo, useCallback, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -22,7 +22,6 @@ import {
 import { Database } from '@/integrations/supabase/types';
 import { useUpdatePackageStatus } from '@/hooks/packages/useUpdatePackageStatus';
 import { useSendNotification } from '@/hooks/useNotifications';
-import { useGeneratePickupCode, usePickupCodes } from '@/hooks/usePickupVerification';
 import { format } from 'date-fns';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
@@ -44,7 +43,7 @@ interface PackageProcessFlowProps {
   onStatusChange?: () => void;
 }
 
-const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
+const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
   packageData,
   userRole,
   onStatusChange
@@ -53,8 +52,6 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
   const [confirmingStatus, setConfirmingStatus] = useState<PackageStatus | null>(null);
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdatePackageStatus();
   const { mutate: sendNotification, isPending: isSendingNotification } = useSendNotification();
-  const generatePickupCode = useGeneratePickupCode();
-  const { data: pickupCodes = [] } = usePickupCodes(packageData.id);
 
   // Define activities for each stage (like Dynamics 365 CRM)
   const getActivitiesForStage = (status: PackageStatus): Activity[] => {
@@ -139,11 +136,7 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
           name: 'Generate Pickup Code',
           description: 'Create unique pickup verification code',
           required: true,
-          completed: pickupCodes.some(code => 
-            code.is_active && 
-            new Date(code.expires_at) > new Date() && 
-            !code.used_at
-          ),
+          completed: false, // Would need to check pickup_codes table
           icon: QrCode
         },
         {
@@ -198,7 +191,7 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
     return baseActivities[status] || [];
   };
 
-  const stages = useMemo(() => [
+  const stages = [
     {
       status: 'received' as PackageStatus,
       label: 'Package Received',
@@ -229,11 +222,11 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
       icon: CheckCircle,
       description: 'Successfully delivered to customer',
     },
-  ], []);
+  ];
 
-  const getCurrentStageIndex = useCallback(() => {
+  const getCurrentStageIndex = () => {
     return stages.findIndex(stage => stage.status === packageData.status);
-  }, [stages, packageData.status]);
+  };
 
   const getStageStatus = (stageIndex: number) => {
     const currentIndex = getCurrentStageIndex();
@@ -251,7 +244,7 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
     return targetIndex === currentIndex + 1;
   };
 
-  const handleStatusChange = useCallback((newStatus: PackageStatus) => {
+  const handleStatusChange = (newStatus: PackageStatus) => {
     if (!canAdvanceToStatus(newStatus)) return;
     
     setConfirmingStatus(newStatus);
@@ -264,23 +257,11 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
         setConfirmingStatus(null);
       }
     });
-  }, [canAdvanceToStatus, updateStatus, packageData.id, onStatusChange]);
+  };
 
-  const handleSendNotification = useCallback((status: PackageStatus) => {
+  const handleSendNotification = (status: PackageStatus) => {
     sendNotification({ packageId: packageData.id, status });
-  }, [sendNotification, packageData.id]);
-
-  const handleGeneratePickupCode = useCallback(async (codeType: 'qr' | 'pin') => {
-    try {
-      await generatePickupCode.mutateAsync({
-        package_id: packageData.id,
-        code_type: codeType,
-        expires_in_hours: 48 // 2 days expiry
-      });
-    } catch (error) {
-      console.error('Failed to generate pickup code:', error);
-    }
-  }, [generatePickupCode, packageData.id]);
+  };
 
   const getRequiredActivitiesCount = (status: PackageStatus) => {
     const activities = getActivitiesForStage(status);
@@ -416,36 +397,6 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
                                 Completed: {format(new Date(activity.completedAt), 'MMM dd, yyyy HH:mm')}
                               </p>
                             )}
-                            
-                            {/* Show pickup codes if this is the generate-pickup-code activity */}
-                            {activity.id === 'generate-pickup-code' && pickupCodes.length > 0 && (
-                              <div className="mt-2 space-y-1">
-                                <p className="text-xs text-gray-600 font-medium">Generated Codes:</p>
-                                {pickupCodes
-                                  .filter(code => code.is_active)
-                                  .map((code) => {
-                                    const isExpired = new Date(code.expires_at) <= new Date();
-                                    const isUsed = !!code.used_at;
-                                    const status = isUsed ? 'used' : isExpired ? 'expired' : 'active';
-                                    
-                                    return (
-                                      <div key={code.id} className="flex items-center justify-between text-xs bg-gray-50 p-2 rounded">
-                                        <span className="font-mono">{code.code_value}</span>
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-gray-600">{code.code_type.toUpperCase()}</span>
-                                          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                                            status === 'active' ? 'bg-green-100 text-green-700' :
-                                            status === 'used' ? 'bg-gray-100 text-gray-700' :
-                                            'bg-red-100 text-red-700'
-                                          }`}>
-                                            {status}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                              </div>
-                            )}
                           </div>
                         </div>
                       ))}
@@ -466,7 +417,7 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
                               }
                             </Button>
                           )}
-                           <Button
+                          <Button
                             size="sm"
                             variant="outline"
                             className="text-xs"
@@ -475,28 +426,6 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
                           >
                             {isSendingNotification ? 'Sending...' : 'Send Notification'}
                           </Button>
-                          {stage.status === 'ready_for_pickup' && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-xs"
-                                onClick={() => handleGeneratePickupCode('pin')}
-                                disabled={generatePickupCode.isPending}
-                              >
-                                {generatePickupCode.isPending ? 'Generating...' : 'Generate PIN'}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-xs"
-                                onClick={() => handleGeneratePickupCode('qr')}
-                                disabled={generatePickupCode.isPending}
-                              >
-                                {generatePickupCode.isPending ? 'Generating...' : 'Generate QR'}
-                              </Button>
-                            </>
-                          )}
                         </div>
                       )}
                     </div>
@@ -546,8 +475,6 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
       </div>
     </div>
   );
-});
-
-PackageProcessFlow.displayName = 'PackageProcessFlow';
+};
 
 export default PackageProcessFlow;

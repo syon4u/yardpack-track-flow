@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, Upload, RotateCcw } from 'lucide-react';
 
@@ -13,17 +13,6 @@ const PhotoCaptureComponent: React.FC<PhotoCaptureComponentProps> = ({ onCapture
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCamera, setIsCamera] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
-
-  // Cleanup camera stream on component unmount
-  useEffect(() => {
-    return () => {
-      // Cleanup camera stream when component unmounts
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
 
   const startCamera = async () => {
     try {

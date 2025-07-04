@@ -20,7 +20,7 @@ export const fetchPackages = async (
     .select(`
       *,
       customers(*),
-      invoices!invoices_package_id_fkey(*)  
+      invoices!invoices_package_id_fkey(*)
     `)
     .order('created_at', { ascending: false });
 
@@ -87,7 +87,7 @@ export const fetchPackages = async (
       customer_name,
       customer_email,
       invoices: pkg.invoices || [],
-      receipt_uploaded: pkg.invoices && pkg.invoices.some(inv => inv.document_type === 'receipt'),
+      invoice_uploaded: pkg.invoices && pkg.invoices.length > 0,
       duty_assessed: pkg.duty_amount !== null,
     };
   });

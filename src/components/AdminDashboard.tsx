@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFilters } from '@/hooks/useFilters';
 import PackageList from './PackageList';
 import CreatePackageForm from './CreatePackageForm';
 import AdminDashboardHeader from './admin/AdminDashboardHeader';
@@ -11,7 +10,8 @@ import AdminPackageFilters from './admin/AdminPackageFilters';
 const AdminDashboard: React.FC = () => {
   const { profile } = useAuth();
   const [showCreatePackage, setShowCreatePackage] = useState(false);
-  const { searchTerm, setSearchTerm, statusFilter, setStatusFilter } = useFilters();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   if (profile?.role !== 'admin') {
     return (

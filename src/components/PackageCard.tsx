@@ -21,7 +21,7 @@ export interface Package {
   status: PackageStatus;
   dateReceived: string;
   estimatedDelivery?: string;
-  receiptUploaded: boolean;
+  invoiceUploaded: boolean;
   dutyAssessed: boolean;
   totalDue?: number;
   customerName?: string;
@@ -36,8 +36,8 @@ interface PackageCardProps {
   package: Package;
   userRole: 'customer' | 'admin' | 'warehouse';
   onStatusUpdate?: (packageId: string, status: PackageStatus) => void;
-  onUploadReceipt?: (packageId: string) => void;
-  onViewReceipt?: (packageId: string) => void;
+  onUploadInvoice?: (packageId: string) => void;
+  onViewInvoice?: (packageId: string) => void;
   onViewDetails?: (packageId: string) => void;
 }
 
@@ -45,8 +45,8 @@ const PackageCard: React.FC<PackageCardProps> = ({
   package: pkg,
   userRole,
   onStatusUpdate,
-  onUploadReceipt,
-  onViewReceipt,
+  onUploadInvoice,
+  onViewInvoice,
   onViewDetails
 }) => {
   const [selectedPackageForPickup, setSelectedPackageForPickup] = useState<any>(null);
@@ -110,10 +110,10 @@ const PackageCard: React.FC<PackageCardProps> = ({
   const swipeActions = isMobile ? {
     right: () => onViewDetails && onViewDetails(pkg.id),
     left: () => {
-      if (pkg.receiptUploaded && onViewReceipt) {
-        onViewReceipt(pkg.id);
-      } else if (!pkg.receiptUploaded && userRole === 'customer' && onUploadReceipt) {
-        onUploadReceipt(pkg.id);
+      if (pkg.invoiceUploaded && onViewInvoice) {
+        onViewInvoice(pkg.id);
+      } else if (!pkg.invoiceUploaded && userRole !== 'customer' && onUploadInvoice) {
+        onUploadInvoice(pkg.id);
       }
     }
   } : undefined;
@@ -224,30 +224,28 @@ const PackageCard: React.FC<PackageCardProps> = ({
 
           {/* Action Buttons */}
           <div className={`flex gap-2 pt-3 border-t ${isMobile ? 'flex-col' : 'flex-wrap'}`}>
-            {userRole === 'customer' && (
-              <>
-                {pkg.receiptUploaded ? (
-                  <Button 
-                    variant="secondary" 
-                    size={isMobile ? "default" : "sm"} 
-                    onClick={() => onViewReceipt && onViewReceipt(pkg.id)}
-                    className={`${isMobile ? 'touch-target w-full' : ''} animate-fade-in`}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Receipt
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    size={isMobile ? "default" : "sm"} 
-                    onClick={() => onUploadReceipt && onUploadReceipt(pkg.id)}
-                    className={`${isMobile ? 'touch-target w-full' : ''} animate-fade-in`}
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Receipt
-                  </Button>
-                )}
-              </>
+            {pkg.invoiceUploaded ? (
+              <Button 
+                variant="secondary" 
+                size={isMobile ? "default" : "sm"} 
+                onClick={() => onViewInvoice && onViewInvoice(pkg.id)}
+                className={`${isMobile ? 'touch-target w-full' : ''} animate-fade-in`}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Invoice
+              </Button>
+            ) : (
+              userRole !== 'customer' && (
+                <Button 
+                  variant="outline" 
+                  size={isMobile ? "default" : "sm"} 
+                  onClick={() => onUploadInvoice && onUploadInvoice(pkg.id)}
+                  className={`${isMobile ? 'touch-target w-full' : ''} animate-fade-in`}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Invoice
+                </Button>
+              )
             )}
             
             {canRecordPickup(pkg) && (
@@ -278,7 +276,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
           {/* Mobile Swipe Instructions */}
           {isMobile && (
             <div className="text-xs text-muted-foreground text-center mt-2 animate-fade-in" style={{ animationDelay: '500ms' }}>
-              ← Swipe for receipt • Swipe for details →
+              ← Swipe for invoice • Swipe for details →
             </div>
           )}
         </MobileOptimizedCardContent>
