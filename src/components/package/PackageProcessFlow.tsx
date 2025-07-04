@@ -22,7 +22,7 @@ import {
 import { Database } from '@/integrations/supabase/types';
 import { useUpdatePackageStatus } from '@/hooks/packages/useUpdatePackageStatus';
 import { useSendNotification } from '@/hooks/useNotifications';
-import { useGeneratePickupCode } from '@/hooks/usePickupVerification';
+import { useGeneratePickupCode, usePickupCodes } from '@/hooks/usePickupVerification';
 import { format } from 'date-fns';
 
 type PackageStatus = Database['public']['Enums']['package_status'];
@@ -54,6 +54,7 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdatePackageStatus();
   const { mutate: sendNotification, isPending: isSendingNotification } = useSendNotification();
   const generatePickupCode = useGeneratePickupCode();
+  const { data: pickupCodes = [] } = usePickupCodes(packageData.id);
 
   // Define activities for each stage (like Dynamics 365 CRM)
   const getActivitiesForStage = (status: PackageStatus): Activity[] => {
@@ -138,7 +139,11 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
           name: 'Generate Pickup Code',
           description: 'Create unique pickup verification code',
           required: true,
-          completed: false, // Would need to check pickup_codes table
+          completed: pickupCodes.some(code => 
+            code.is_active && 
+            new Date(code.expires_at) > new Date() && 
+            !code.used_at
+          ),
           icon: QrCode
         },
         {
@@ -410,6 +415,36 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
                               <p className="text-xs text-green-600 mt-1">
                                 Completed: {format(new Date(activity.completedAt), 'MMM dd, yyyy HH:mm')}
                               </p>
+                            )}
+                            
+                            {/* Show pickup codes if this is the generate-pickup-code activity */}
+                            {activity.id === 'generate-pickup-code' && pickupCodes.length > 0 && (
+                              <div className="mt-2 space-y-1">
+                                <p className="text-xs text-gray-600 font-medium">Generated Codes:</p>
+                                {pickupCodes
+                                  .filter(code => code.is_active)
+                                  .map((code) => {
+                                    const isExpired = new Date(code.expires_at) <= new Date();
+                                    const isUsed = !!code.used_at;
+                                    const status = isUsed ? 'used' : isExpired ? 'expired' : 'active';
+                                    
+                                    return (
+                                      <div key={code.id} className="flex items-center justify-between text-xs bg-gray-50 p-2 rounded">
+                                        <span className="font-mono">{code.code_value}</span>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-gray-600">{code.code_type.toUpperCase()}</span>
+                                          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                                            status === 'active' ? 'bg-green-100 text-green-700' :
+                                            status === 'used' ? 'bg-gray-100 text-gray-700' :
+                                            'bg-red-100 text-red-700'
+                                          }`}>
+                                            {status}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                              </div>
                             )}
                           </div>
                         </div>
