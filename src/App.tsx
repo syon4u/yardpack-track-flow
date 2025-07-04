@@ -37,7 +37,10 @@ const AppContent: React.FC = () => {
     console.log('[AppContent] Still loading auth...');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-green-900">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-400"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+          <p className="text-white">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }

@@ -39,15 +39,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchProfile = async (userId: string) => {
     try {
       console.log('AuthContext - Fetching profile for userId:', userId);
-      const { data, error } = await supabase
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+      );
+      
+      const fetchPromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle to handle cases where profile doesn't exist
+        .maybeSingle();
+      
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
       
       if (error) {
         console.error('AuthContext - Error fetching profile:', error);
-        // Don't throw, just log and continue
+        setProfile(null);
         return;
       }
       
@@ -56,18 +64,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setProfile(data);
       } else {
         console.warn('AuthContext - No profile found for user:', userId);
-        // Profile doesn't exist yet, this could be a new user
         setProfile(null);
       }
     } catch (error) {
       console.error('AuthContext - Unexpected error fetching profile:', error);
-      // On error, set profile to null to allow the app to continue
       setProfile(null);
     }
   };
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
+    
+    // Set timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      if (mounted) {
+        console.warn('AuthContext - Loading timeout, setting loading to false');
+        setIsLoading(false);
+      }
+    }, 15000);
     
     // Set up auth state listener FIRST to avoid race conditions
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -80,13 +95,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log('AuthContext - Fetching profile for user:', session.user.id);
-          // Use setTimeout to defer profile fetching and avoid blocking auth state changes
-          setTimeout(() => {
+          console.log('AuthContext - User found, fetching profile');
+          // Use setTimeout to defer profile fetching
+          timeoutId = setTimeout(() => {
             if (mounted) {
               fetchProfile(session.user.id);
             }
-          }, 100); // Small delay to ensure auth state is fully processed
+          }, 100);
         } else {
           console.log('AuthContext - No session, clearing profile');
           setProfile(null);
@@ -94,20 +109,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         // Always set loading to false after processing auth state
         setIsLoading(false);
+        clearTimeout(loadingTimeout);
       }
     );
 
-    // THEN check for existing session
+    // THEN check for existing session with timeout
     const initializeAuth = async () => {
       try {
         console.log('AuthContext - Initializing auth...');
-        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session fetch timeout')), 10000)
+        );
+        
+        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]) as any;
         
         if (!mounted) return;
         
         if (error) {
           console.error('Error getting session:', error);
           setIsLoading(false);
+          clearTimeout(loadingTimeout);
           return;
         }
         
@@ -120,10 +143,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         setIsLoading(false);
+        clearTimeout(loadingTimeout);
       } catch (error) {
         console.error('Error initializing auth:', error);
         if (mounted) {
           setIsLoading(false);
+          clearTimeout(loadingTimeout);
         }
       }
     };
@@ -132,6 +157,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     return () => {
       mounted = false;
+      clearTimeout(loadingTimeout);
+      if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);

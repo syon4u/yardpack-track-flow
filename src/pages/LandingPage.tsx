@@ -131,9 +131,21 @@ const LandingPage: React.FC = () => {
         className="relative overflow-hidden pt-20 pb-32 hero-parallax"
         style={{ '--scroll-y': '0px' } as React.CSSProperties}
       >
-        {/* Video Background */}
+        {/* Video Background with Error Handling */}
         <div className="absolute inset-0 z-0">
-          <video className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline poster="/videos/jlvid.mp4">
+          <video 
+            className="absolute inset-0 w-full h-full object-cover" 
+            autoPlay 
+            muted 
+            loop 
+            playsInline 
+            poster="/videos/jlvid.mp4"
+            onError={(e) => {
+              console.warn('Video failed to load, hiding video container');
+              e.currentTarget.style.display = 'none';
+            }}
+          >
+            <source src="/public/videos/jlvid.mp4" type="video/mp4" />
             <source src="/videos/jlvid.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
