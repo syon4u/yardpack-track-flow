@@ -14,7 +14,7 @@ export interface PushNotificationPreferences {
 
 export const usePushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
-  const [permissionStatus, setPermissionStatus] = useState<'prompt' | 'granted' | 'denied'>('prompt');
+  const [permissionStatus, setPermissionStatus] = useState<'prompt' | 'granted' | 'denied' | 'prompt-with-rationale'>('prompt');
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -97,7 +97,7 @@ export const usePushNotifications = () => {
         .update({ 
           push_token: token,
           push_notifications_enabled: true 
-        })
+        } as any)
         .eq('id', user.id);
 
       if (error) {
@@ -117,7 +117,7 @@ export const usePushNotifications = () => {
         .update({ 
           push_notifications_enabled: preferences.enabled,
           notification_preferences: preferences
-        })
+        } as any)
         .eq('id', user.id);
 
       if (error) {
