@@ -2,6 +2,7 @@ import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, Eye, ExternalLink, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Database } from '@/integrations/supabase/types';
@@ -43,6 +44,7 @@ interface PackageTableRowProps {
   onViewInvoice?: (packageId: string) => void;
   onViewDetails?: (packageId: string) => void;
   onRecordPickup?: (pkg: Package) => void;
+  onStatusUpdate?: (packageId: string, status: PackageStatus) => void;
 }
 
 const PackageTableRow: React.FC<PackageTableRowProps> = ({
@@ -52,6 +54,7 @@ const PackageTableRow: React.FC<PackageTableRowProps> = ({
   onViewInvoice,
   onViewDetails,
   onRecordPickup,
+  onStatusUpdate,
 }) => {
   const canRecordPickup = (pkg: Package) => {
     return userRole !== 'customer' && pkg.status === 'ready_for_pickup';
@@ -86,7 +89,25 @@ const PackageTableRow: React.FC<PackageTableRowProps> = ({
         </div>
       </TableCell>
       <TableCell>
-        <PackageStatusBadge status={pkg.status} />
+        {userRole === 'admin' && onStatusUpdate ? (
+          <Select
+            value={pkg.status}
+            onValueChange={(value) => onStatusUpdate(pkg.id, value as PackageStatus)}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="received">Received at Miami</SelectItem>
+              <SelectItem value="in_transit">In Transit</SelectItem>
+              <SelectItem value="arrived">Arrived in Jamaica</SelectItem>
+              <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
+              <SelectItem value="picked_up">Picked Up</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <PackageStatusBadge status={pkg.status} />
+        )}
       </TableCell>
       <TableCell>
         {pkg.date_received ? new Date(pkg.date_received).toLocaleDateString() : 'N/A'}

@@ -39,6 +39,7 @@ interface PackageTableProps {
   onUploadInvoice?: (packageId: string) => void;
   onViewInvoice?: (packageId: string) => void;
   onViewDetails?: (packageId: string) => void;
+  onStatusUpdate?: (packageId: string, status: PackageStatus) => void;
 }
 
 const PackageTable: React.FC<PackageTableProps> = ({
@@ -47,6 +48,7 @@ const PackageTable: React.FC<PackageTableProps> = ({
   onUploadInvoice,
   onViewInvoice,
   onViewDetails,
+  onStatusUpdate,
 }) => {
   const [selectedPackageForPickup, setSelectedPackageForPickup] = useState<Package | null>(null);
 
@@ -65,6 +67,7 @@ const PackageTable: React.FC<PackageTableProps> = ({
                 onViewInvoice={onViewInvoice}
                 onViewDetails={onViewDetails}
                 onRecordPickup={setSelectedPackageForPickup}
+                onStatusUpdate={onStatusUpdate}
               />
             ))}
           </TableBody>

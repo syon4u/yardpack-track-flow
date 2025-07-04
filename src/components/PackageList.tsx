@@ -189,6 +189,7 @@ const PackageList: React.FC<PackageListProps> = ({
             onUploadInvoice={handleUploadInvoice}
             onViewInvoice={handleViewInvoice}
             onViewDetails={handleViewDetails}
+            onStatusUpdate={handleStatusUpdate}
           />
         )}
       </div>

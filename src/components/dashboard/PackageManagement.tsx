@@ -49,6 +49,8 @@ const PackageManagement: React.FC = () => {
             searchTerm={searchTerm} 
             statusFilter={statusFilter}
             customerFilter={customerFilter}
+            viewMode="table"
+            onViewModeChange={() => {}} // Admin always uses table view
           />
         </div>
 
