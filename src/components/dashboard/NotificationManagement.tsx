@@ -3,6 +3,7 @@ import React from 'react';
 import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 import { useNotifications } from '@/hooks/useNotifications';
 import PackageNotificationCard from '@/components/notifications/PackageNotificationCard';
+import PushNotificationSettings from '@/components/notifications/PushNotificationSettings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -95,6 +96,7 @@ const NotificationManagement: React.FC = () => {
           </TabsTrigger>
           <TabsTrigger value="all">All Packages</TabsTrigger>
           <TabsTrigger value="history">Notification History</TabsTrigger>
+          <TabsTrigger value="settings">Push Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">
@@ -174,6 +176,10 @@ const NotificationManagement: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <PushNotificationSettings />
         </TabsContent>
       </Tabs>
     </div>

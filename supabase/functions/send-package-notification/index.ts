@@ -55,13 +55,24 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get customer email
+    // Get customer email and push notification info
     const customerEmail = packageData.customers?.email || packageData.customers?.profiles?.email;
     
-    if (!customerEmail) {
-      console.log('No email found for customer');
+    // Get customer profile for push notifications
+    const { data: customerProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('push_token, push_notifications_enabled, notification_preferences')
+      .eq('id', packageData.customers?.user_id)
+      .single();
+
+    if (profileError) {
+      console.log('Could not fetch customer profile:', profileError);
+    }
+    
+    if (!customerEmail && (!customerProfile?.push_token || !customerProfile?.push_notifications_enabled)) {
+      console.log('No email or push notification available for customer');
       return new Response(
-        JSON.stringify({ error: 'No email found for customer' }),
+        JSON.stringify({ error: 'No communication method available for customer' }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -127,26 +138,79 @@ const handler = async (req: Request): Promise<Response> => {
       htmlContent = htmlContent.replace(/{{#if total_due}}(.*?){{\/if}}/gs, '');
     }
 
-    console.log('Sending email to:', customerEmail);
+    console.log('Sending notifications - Email:', !!customerEmail, 'Push:', !!(customerProfile?.push_token && customerProfile?.push_notifications_enabled));
 
-    // Send email using Resend
-    const emailResponse = await resend.emails.send({
-      from: "YardPack <notifications@yardpack.com>",
-      to: [customerEmail],
-      subject: subject,
-      html: htmlContent,
-      text: textContent,
-    });
+    const results = {
+      email: { success: false, error: null as any },
+      push: { success: false, error: null as any }
+    };
 
-    if (emailResponse.error) {
-      console.error('Email sending failed:', emailResponse.error);
+    // Send email notification if available
+    if (customerEmail) {
+      try {
+        // Send email using Resend
+        const emailResponse = await resend.emails.send({
+          from: "YardPack <notifications@yardpack.com>",
+          to: [customerEmail],
+          subject: subject,
+          html: htmlContent,
+          text: textContent,
+        });
+
+        if (emailResponse.error) {
+          console.error('Email sending failed:', emailResponse.error);
+          results.email.error = emailResponse.error;
+        } else {
+          console.log('Email sent successfully:', emailResponse.data);
+          results.email.success = true;
+        }
+      } catch (error) {
+        console.error('Email sending error:', error);
+        results.email.error = error;
+      }
+    }
+
+    // Send push notification if available and enabled
+    if (customerProfile?.push_token && customerProfile?.push_notifications_enabled) {
+      try {
+        const pushMessage = `${packageData.tracking_number}: ${status.replace('_', ' ')}`;
+        
+        const pushResponse = await supabase.functions.invoke('send-push-notification', {
+          body: {
+            deviceToken: customerProfile.push_token,
+            title: subject,
+            body: pushMessage,
+            data: {
+              packageId: packageId,
+              status: status,
+              trackingNumber: packageData.tracking_number
+            }
+          }
+        });
+
+        if (pushResponse.error) {
+          console.error('Push notification failed:', pushResponse.error);
+          results.push.error = pushResponse.error;
+        } else {
+          console.log('Push notification sent successfully');
+          results.push.success = true;
+        }
+      } catch (error) {
+        console.error('Push notification error:', error);
+        results.push.error = error;
+      }
+    }
+
+    // If neither email nor push succeeded, return error
+    if (!results.email.success && !results.push.success) {
       return new Response(
-        JSON.stringify({ error: 'Failed to send email', details: emailResponse.error }),
+        JSON.stringify({ 
+          error: 'Failed to send notifications', 
+          details: { email: results.email.error, push: results.push.error }
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    console.log('Email sent successfully:', emailResponse.data);
 
     // Update notification record as sent and update package notification tracking
     const notificationUpdate = await supabase
@@ -178,7 +242,9 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        emailId: emailResponse.data?.id,
+        results: results,
+        emailSent: results.email.success,
+        pushSent: results.push.success,
         recipient: customerEmail
       }),
       { 

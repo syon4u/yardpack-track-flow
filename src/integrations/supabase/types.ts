@@ -764,7 +764,10 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          notification_preferences: Json | null
           phone_number: string | null
+          push_notifications_enabled: boolean | null
+          push_token: string | null
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
         }
@@ -774,7 +777,10 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          notification_preferences?: Json | null
           phone_number?: string | null
+          push_notifications_enabled?: boolean | null
+          push_token?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
@@ -784,7 +790,10 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          notification_preferences?: Json | null
           phone_number?: string | null
+          push_notifications_enabled?: boolean | null
+          push_token?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }

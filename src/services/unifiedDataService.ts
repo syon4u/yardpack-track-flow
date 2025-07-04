@@ -151,7 +151,10 @@ export class UnifiedDataService {
         const profileData = pkg.profiles && typeof pkg.profiles === 'object' && !('error' in pkg.profiles) 
           ? {
               ...pkg.profiles,
-              role: 'customer' as const // Default role since profiles table has role
+              role: 'customer' as const, // Default role since profiles table has role
+              push_token: null, // Default values for new fields
+              push_notifications_enabled: false,
+              notification_preferences: { enabled: false, packageStatusUpdates: true, deliveryNotifications: true, invoiceNotifications: true }
             } 
           : null;
           
