@@ -13,7 +13,8 @@ import CustomerFinancialSummary from './customer/CustomerFinancialSummary';
 import CustomerRecentActivity from './customer/CustomerRecentActivity';
 import CustomerPackagesTab from './customer/CustomerPackagesTab';
 import CustomerInvoicesTab from './customer/CustomerInvoicesTab';
-import CustomerProfileTab from './customer/CustomerProfileTab';
+import EnhancedCustomerProfileTab from './customer/EnhancedCustomerProfileTab';
+import PackageConsolidationRequest from './customer/PackageConsolidationRequest';
 import CustomerHelpSection from './customer/CustomerHelpSection';
 import DashboardSkeleton from './loading/DashboardSkeleton';
 import ErrorBoundary from './error/ErrorBoundary';
@@ -151,6 +152,9 @@ const CustomerDashboard: React.FC = () => {
                         packages={customerPackages}
                       />
                     </div>
+
+                    {/* Package Consolidation */}
+                    <PackageConsolidationRequest />
                   </div>
                 </TabsContent>
 
@@ -184,7 +188,7 @@ const CustomerDashboard: React.FC = () => {
                 </TabsContent>
 
                 <TabsContent value="profile" className="animate-slide-up">
-                  <CustomerProfileTab
+                  <EnhancedCustomerProfileTab
                     profile={profile}
                     totalPackages={totalPackages}
                     totalValue={totalValue}
@@ -244,7 +248,7 @@ const CustomerDashboard: React.FC = () => {
                 </TabsContent>
 
                 <TabsContent value="profile" className="animate-fade-in">
-                  <CustomerProfileTab
+                  <EnhancedCustomerProfileTab
                     profile={profile}
                     totalPackages={totalPackages}
                     totalValue={totalValue}
