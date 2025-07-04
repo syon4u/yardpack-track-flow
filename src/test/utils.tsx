@@ -36,7 +36,7 @@ function customRender(
   return render(ui, { wrapper: Wrapper, ...options });
 }
 
-// Re-export everything
+// Re-export everything from testing library
 export * from '@testing-library/react';
 export { default as fireEvent } from '@testing-library/user-event';
 export { customRender as render };
