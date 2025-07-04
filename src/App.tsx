@@ -27,91 +27,54 @@ const queryClient = new QueryClient({
 });
 
 const AppContent: React.FC = () => {
-  const { user, profile, isLoading } = useAuth();
-
-  // Debug logging
-  console.log('[AppContent] Auth state:', { user: !!user, profile, isLoading });
-  console.log('[AppContent] Current URL:', window.location.href);
-
-  if (isLoading) {
-    console.log('[AppContent] Still loading auth...');
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-green-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-400 mx-auto mb-4"></div>
-          <p className="text-white">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  console.log('[AppContent] Auth loaded, rendering routes...');
+  console.log('[AppContent] Auth disabled, rendering all routes...');
 
   return (
     <AppRouter>
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/auth" element={user ? <Navigate to={profile?.role === 'warehouse' ? "/warehouse" : "/dashboard"} replace /> : <AuthPage />} />
+        <Route path="/auth" element={<AuthPage />} />
         
-        {/* Protected routes */}
-        {user ? (
-          <>
-            <Route 
-              path="/dashboard" 
-              element={
-                profile?.role === 'warehouse' ? (
-                  <Navigate to="/warehouse" replace />
-                ) : (
-                  <RouteErrorBoundary>
-                    <Layout>
-                      <Dashboard />
-                    </Layout>
-                  </RouteErrorBoundary>
-                )
-              } 
-            />
-            <Route 
-              path="/admin" 
-              element={
-                profile?.role === 'admin' ? (
-                  <RouteErrorBoundary>
-                    <Layout><Dashboard /></Layout>
-                  </RouteErrorBoundary>
-                ) : (
-                  <Navigate to={profile?.role === 'warehouse' ? "/warehouse" : "/dashboard"} replace />
-                )
-              } 
-            />
-            <Route 
-              path="/warehouse" 
-              element={
-                (profile?.role === 'admin' || profile?.role === 'warehouse') ? (
-                  <RouteErrorBoundary>
-                    <Layout><WarehousePage /></Layout>
-                  </RouteErrorBoundary>
-                ) : (
-                  <Navigate to="/dashboard" replace />
-                )
-              } 
-            />
-            <Route 
-              path="/package/:id" 
-              element={
-                <RouteErrorBoundary>
-                  <Layout>
-                    <PackageDetailPage />
-                  </Layout>
-                </RouteErrorBoundary>
-              } 
-            />
-            {/* Catch-all for authenticated users - redirect based on role */}
-            <Route path="*" element={<Navigate to={profile?.role === 'warehouse' ? "/warehouse" : "/dashboard"} replace />} />
-          </>
-        ) : (
-          /* Unauthenticated users get redirected to auth */
-          <Route path="*" element={<Navigate to="/auth" replace />} />
-        )}
+        {/* All routes now accessible without authentication */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <RouteErrorBoundary>
+              <Layout>
+                <Dashboard />
+              </Layout>
+            </RouteErrorBoundary>
+          } 
+        />
+        <Route 
+          path="/admin" 
+          element={
+            <RouteErrorBoundary>
+              <Layout><Dashboard /></Layout>
+            </RouteErrorBoundary>
+          } 
+        />
+        <Route 
+          path="/warehouse" 
+          element={
+            <RouteErrorBoundary>
+              <Layout><WarehousePage /></Layout>
+            </RouteErrorBoundary>
+          } 
+        />
+        <Route 
+          path="/package/:id" 
+          element={
+            <RouteErrorBoundary>
+              <Layout>
+                <PackageDetailPage />
+              </Layout>
+            </RouteErrorBoundary>
+          } 
+        />
+        {/* 404 page for unmatched routes */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AppRouter>
   );
