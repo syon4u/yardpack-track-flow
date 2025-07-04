@@ -13,17 +13,25 @@ const AppRouter: React.FC<AppRouterProps> = ({ children }) => {
   // Detect Lovable preview environment and extract basename
   const getBasename = () => {
     const pathname = window.location.pathname;
+    const hostname = window.location.hostname;
     
     // Debug logging
     console.log('[AppRouter] Current URL:', window.location.href);
+    console.log('[AppRouter] Hostname:', hostname);
     console.log('[AppRouter] Pathname:', pathname);
     
-    // Check if we're in Lovable preview (contains /projects/ path)
-    if (pathname.includes('/projects/')) {
-      const match = pathname.match(/^(\/projects\/[^\/]+\/[^\/]+)/);
-      const basename = match ? match[1] : '';
-      console.log('[AppRouter] Lovable preview detected, basename:', basename);
-      return basename;
+    // Check if we're in Lovable preview environment
+    if (hostname === 'lovable.dev' && pathname.includes('/projects/')) {
+      // Match pattern: /projects/[project-id] (no additional segment required)
+      const match = pathname.match(/^(\/projects\/[^\/]+)/);
+      if (match) {
+        const basename = match[1];
+        console.log('[AppRouter] Lovable preview detected, basename:', basename);
+        return basename;
+      } else {
+        console.warn('[AppRouter] Failed to extract basename from Lovable URL:', pathname);
+        return '';
+      }
     }
     
     console.log('[AppRouter] Production environment, no basename needed');
