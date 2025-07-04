@@ -36,8 +36,19 @@ const AppContent: React.FC = () => {
     );
   }
 
+  // Detect if we're running in Lovable preview environment
+  const getBasename = () => {
+    const pathname = window.location.pathname;
+    // If we're in a Lovable preview (contains /projects/ path), extract the base path
+    if (pathname.includes('/projects/')) {
+      const match = pathname.match(/^(\/projects\/[^\/]+\/[^\/]+)/);
+      return match ? match[1] : '';
+    }
+    return '';
+  };
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={getBasename()}>
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
