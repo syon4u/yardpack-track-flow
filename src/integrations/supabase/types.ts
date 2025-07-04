@@ -855,6 +855,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_customer_clv: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          customerid: string
+          customername: string
+          totalspent: number
+          packagecount: number
+          avgpackagevalue: number
+          firstorderdate: string
+          lastorderdate: string
+          customertenuremonths: number
+          clvscore: number
+          segment: string
+          predictedvalue: number
+        }[]
+      }
       check_duplicate_customers: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -862,6 +878,27 @@ export type Database = {
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_customer_segmentation: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          segment: string
+          customercount: number
+          totalvalue: number
+          avgclv: number
+          percentage: number
+        }[]
+      }
+      get_seasonal_demand_analysis: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          month: string
+          year: number
+          packagecount: number
+          totalvalue: number
+          avgvalue: number
+          trend: string
+        }[]
       }
       is_admin: {
         Args: { user_id: string }
