@@ -61,7 +61,7 @@ export const useOptimizedPackages = (
         .select(`
           *,
           customers(*),
-          invoices(*)
+          invoices!invoices_package_id_fkey(*)
         `, { count: 'exact' });
 
       // For customers, automatically filter by their packages
