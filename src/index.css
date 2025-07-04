@@ -140,6 +140,72 @@
   }
 }
 
+/* Performance optimizations */
+.hero-parallax {
+  will-change: transform;
+  transform: translateY(var(--scroll-y, 0));
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .hero-parallax {
+    transform: none !important;
+  }
+  
+  .animate-pulse,
+  .animate-bounce,
+  .animate-spin,
+  .animate-ping {
+    animation: none !important;
+  }
+}
+
+/* Optimize backdrop blur for better performance */
+@supports (backdrop-filter: blur(10px)) {
+  .backdrop-blur-xl {
+    backdrop-filter: blur(16px);
+  }
+  .backdrop-blur-md {
+    backdrop-filter: blur(8px);
+  }
+}
+
+@supports not (backdrop-filter: blur(10px)) {
+  .backdrop-blur-xl,
+  .backdrop-blur-md {
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: none;
+  }
+}
+
+/* Intersection observer optimizations */
+.visible {
+  --animation-play-state: running;
+}
+
+.visible .animate-pulse,
+.visible .animate-bounce,
+.visible .animate-spin {
+  animation-play-state: var(--animation-play-state, paused);
+}
+
+/* Table performance optimizations */
+.optimized-table {
+  contain: layout style paint;
+}
+
+.optimized-table-row {
+  contain: layout style;
+  will-change: transform;
+}
+
+/* Reduce GPU layers for better performance */
+.gpu-optimized {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
 /* Enhanced animations */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(10px); }

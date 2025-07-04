@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useCallback, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -44,7 +44,7 @@ interface PackageProcessFlowProps {
   onStatusChange?: () => void;
 }
 
-const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
+const PackageProcessFlow: React.FC<PackageProcessFlowProps> = memo(({
   packageData,
   userRole,
   onStatusChange
@@ -198,7 +198,7 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
     return baseActivities[status] || [];
   };
 
-  const stages = [
+  const stages = useMemo(() => [
     {
       status: 'received' as PackageStatus,
       label: 'Package Received',
@@ -229,11 +229,11 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
       icon: CheckCircle,
       description: 'Successfully delivered to customer',
     },
-  ];
+  ], []);
 
-  const getCurrentStageIndex = () => {
+  const getCurrentStageIndex = useCallback(() => {
     return stages.findIndex(stage => stage.status === packageData.status);
-  };
+  }, [stages, packageData.status]);
 
   const getStageStatus = (stageIndex: number) => {
     const currentIndex = getCurrentStageIndex();
@@ -251,7 +251,7 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
     return targetIndex === currentIndex + 1;
   };
 
-  const handleStatusChange = (newStatus: PackageStatus) => {
+  const handleStatusChange = useCallback((newStatus: PackageStatus) => {
     if (!canAdvanceToStatus(newStatus)) return;
     
     setConfirmingStatus(newStatus);
@@ -264,13 +264,13 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
         setConfirmingStatus(null);
       }
     });
-  };
+  }, [canAdvanceToStatus, updateStatus, packageData.id, onStatusChange]);
 
-  const handleSendNotification = (status: PackageStatus) => {
+  const handleSendNotification = useCallback((status: PackageStatus) => {
     sendNotification({ packageId: packageData.id, status });
-  };
+  }, [sendNotification, packageData.id]);
 
-  const handleGeneratePickupCode = async (codeType: 'qr' | 'pin') => {
+  const handleGeneratePickupCode = useCallback(async (codeType: 'qr' | 'pin') => {
     try {
       await generatePickupCode.mutateAsync({
         package_id: packageData.id,
@@ -280,7 +280,7 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
     } catch (error) {
       console.error('Failed to generate pickup code:', error);
     }
-  };
+  }, [generatePickupCode, packageData.id]);
 
   const getRequiredActivitiesCount = (status: PackageStatus) => {
     const activities = getActivitiesForStage(status);
@@ -546,6 +546,8 @@ const PackageProcessFlow: React.FC<PackageProcessFlowProps> = ({
       </div>
     </div>
   );
-};
+});
+
+PackageProcessFlow.displayName = 'PackageProcessFlow';
 
 export default PackageProcessFlow;
