@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useFilters } from '@/hooks/useFilters';
+import { Button } from '@/components/ui/button';
 import AdminCustomerStats from './admin/AdminCustomerStats';
 import AdminCustomerFilters from './admin/AdminCustomerFilters';
 import AdminCustomerTable from './admin/AdminCustomerTable';
