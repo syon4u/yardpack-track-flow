@@ -48,16 +48,7 @@ export interface TransformedPackage {
     created_at: string;
     updated_at: string;
   } | null;
-  invoices: Array<{
-    id: string;
-    package_id: string;
-    file_name: string;
-    file_path: string;
-    file_type: string;
-    file_size: number | null;
-    uploaded_by: string;
-    uploaded_at: string;
-  }>;
+  invoices: Database['public']['Tables']['invoices']['Row'][];
   customer_name: string;
   customer_email: string | null;
   invoice_uploaded: boolean;

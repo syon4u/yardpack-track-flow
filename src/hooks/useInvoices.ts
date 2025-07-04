@@ -4,50 +4,111 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Database } from '@/integrations/supabase/types';
+import { InvoiceWithPackage } from '@/types/invoice';
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type InvoiceInsert = Database['public']['Tables']['invoices']['Insert'];
 type InvoiceUpdate = Database['public']['Tables']['invoices']['Update'];
 
-// Hook to get invoices for a user
+// Hook to get invoices for a user with package data
 export const useInvoices = (packageId?: string) => {
   const { user } = useAuth();
   
-  return useQuery({
+  return useQuery<InvoiceWithPackage[]>({
     queryKey: ['invoices', user?.id, packageId],
     queryFn: async () => {
       if (!user) throw new Error('Not authenticated');
       
-      const { data, error } = await supabase
+      const { data: invoices, error } = await supabase
         .from('invoices')
         .select('*')
         .eq('uploaded_by', user.id)
         .order('uploaded_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      
+      // Fetch package data separately
+      if (invoices && invoices.length > 0) {
+        const packageIds = [...new Set(invoices.map(inv => inv.package_id))];
+        const { data: packages } = await supabase
+          .from('packages')
+          .select('id, tracking_number, description')
+          .in('id', packageIds);
+        
+        // Merge the data
+        return invoices.map(invoice => ({
+          ...invoice,
+          packages: packages?.find(pkg => pkg.id === invoice.package_id) ? {
+            id: packages.find(pkg => pkg.id === invoice.package_id)!.id,
+            tracking_number: packages.find(pkg => pkg.id === invoice.package_id)!.tracking_number,
+            description: packages.find(pkg => pkg.id === invoice.package_id)!.description
+          } : null
+        }));
+      }
+      
+      return invoices || [];
     },
     enabled: !!user,
   });
 };
 
-// Hook to get all invoices for admin
+// Hook to get all invoices for admin with package and customer data
 export const useAllInvoices = (status?: string) => {
   const { profile } = useAuth();
   
-  return useQuery({
+  return useQuery<InvoiceWithPackage[]>({
     queryKey: ['all-invoices', status],
     queryFn: async () => {
-      let query = supabase.from('invoices').select('*');
+      let query = supabase
+        .from('invoices')
+        .select('*');
       
       if (status && status !== 'all') {
         query = query.eq('status', status);
       }
       
-      const { data, error } = await query.order('uploaded_at', { ascending: false });
+      const { data: invoices, error } = await query.order('uploaded_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      
+      // Fetch package and customer data separately to avoid complex joins
+      if (invoices && invoices.length > 0) {
+        const packageIds = [...new Set(invoices.map(inv => inv.package_id))];
+        
+        // Get packages first
+        const { data: packages } = await supabase
+          .from('packages')
+          .select('id, tracking_number, description, customer_id')
+          .in('id', packageIds);
+        
+        // Get customers for these packages
+        const customerIds = [...new Set(packages?.map(pkg => pkg.customer_id) || [])];
+        const { data: customers } = await supabase
+          .from('customers')
+          .select('id, full_name, email')
+          .in('id', customerIds);
+        
+        // Merge the data
+        return invoices.map(invoice => {
+          const packageData = packages?.find(pkg => pkg.id === invoice.package_id);
+          const customerData = packageData ? customers?.find(cust => cust.id === packageData.customer_id) : null;
+          
+          return {
+            ...invoice,
+            packages: packageData ? {
+              id: packageData.id,
+              tracking_number: packageData.tracking_number,
+              description: packageData.description,
+              customers: customerData ? {
+                full_name: customerData.full_name,
+                email: customerData.email
+              } : undefined
+            } : null
+          };
+        });
+      }
+      
+      return invoices || [];
     },
     enabled: profile?.role === 'admin',
   });
