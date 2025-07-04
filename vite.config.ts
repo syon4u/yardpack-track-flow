@@ -5,12 +5,9 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Detect Lovable preview environment and set appropriate base path
-  const isLovablePreview = process.env.NODE_ENV === 'production' && 
-    (process.env.CF_PAGES === '1' || process.env.VERCEL === '1');
-  
-  // Use relative paths in production to handle dynamic preview URLs
-  const base = isLovablePreview ? './' : '/';
+  // Use relative paths for all production builds to handle dynamic preview URLs
+  // This works for Lovable preview, Vercel, Netlify, and other hosting platforms
+  const base = mode === 'production' ? './' : '/';
   
   return {
     base,
