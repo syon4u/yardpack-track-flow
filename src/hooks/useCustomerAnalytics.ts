@@ -1,38 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { defaultQueryRetryOptions } from '@/utils/retryUtils';
+import { AnalyticsService } from '@/services';
 
-interface CustomerLifetimeValue {
-  customerId: string;
-  customerName: string;
-  totalSpent: number;
-  packageCount: number;
-  avgPackageValue: number;
-  firstOrderDate: string;
-  lastOrderDate: string;
-  customerTenureMonths: number;
-  clvScore: number;
-  segment: 'high' | 'medium' | 'low';
-  predictedValue: number;
-}
-
-interface SeasonalDemand {
-  month: string;
-  year: number;
-  packageCount: number;
-  totalValue: number;
-  avgValue: number;
-  trend: 'increasing' | 'decreasing' | 'stable';
-}
-
-interface CustomerSegmentation {
-  segment: string;
-  customerCount: number;
-  totalValue: number;
-  avgClv: number;
-  percentage: number;
-}
+// Import types from the analytics service
+import type {
+  CustomerLifetimeValue,
+  SeasonalDemand,
+  CustomerSegmentation
+} from '@/services';
 
 export const useCustomerAnalytics = () => {
   const { user, profile } = useAuth();
@@ -43,10 +19,7 @@ export const useCustomerAnalytics = () => {
       if (!user || profile?.role !== 'admin') return [];
       
       try {
-        const { data, error } = await supabase.rpc('calculate_customer_clv' as any);
-        
-        if (error) throw error;
-        return (data || []) as CustomerLifetimeValue[];
+        return await AnalyticsService.getCustomerLifetimeValue();
       } catch (error) {
         console.error('Error fetching CLV data:', error);
         return [];
@@ -63,10 +36,7 @@ export const useCustomerAnalytics = () => {
       if (!user || profile?.role !== 'admin') return [];
       
       try {
-        const { data, error } = await supabase.rpc('get_seasonal_demand_analysis' as any);
-        
-        if (error) throw error;
-        return (data || []) as SeasonalDemand[];
+        return await AnalyticsService.getSeasonalDemand();
       } catch (error) {
         console.error('Error fetching seasonal data:', error);
         return [];
@@ -83,10 +53,7 @@ export const useCustomerAnalytics = () => {
       if (!user || profile?.role !== 'admin') return [];
       
       try {
-        const { data, error } = await supabase.rpc('get_customer_segmentation' as any);
-        
-        if (error) throw error;
-        return (data || []) as CustomerSegmentation[];
+        return await AnalyticsService.getCustomerSegmentation();
       } catch (error) {
         console.error('Error fetching segmentation data:', error);
         return [];

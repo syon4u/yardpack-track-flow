@@ -1,11 +1,11 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect } from 'react';
-import { OptimizedDataService, CustomerFilters, PaginationOptions } from '@/services/optimizedDataService';
+import { CustomerService, AnalyticsService, QueryOptions, CustomerData } from '@/services';
 
 export const useOptimizedCustomers = (
-  filters: CustomerFilters = {},
-  pagination: PaginationOptions = { page: 1, limit: 50 }
+  filters: QueryOptions = {},
+  pagination: { page: number; limit: number } = { page: 1, limit: 50 }
 ) => {
   const queryClient = useQueryClient();
 
@@ -13,10 +13,13 @@ export const useOptimizedCustomers = (
 
   const query = useQuery({
     queryKey,
-    queryFn: () => OptimizedDataService.measureQueryPerformance(
-      'fetchCustomersPaginated',
-      () => OptimizedDataService.fetchCustomersPaginated(filters, pagination)
-    ),
+    queryFn: async () => {
+      const options: QueryOptions = {
+        ...filters,
+        ...pagination,
+      };
+      return await CustomerService.fetchCustomers(options);
+    },
     staleTime: 60000, // 1 minute - customers change less frequently
     gcTime: 600000, // 10 minutes
     refetchOnWindowFocus: false,
@@ -28,7 +31,13 @@ export const useOptimizedCustomers = (
       const nextPagination = { ...pagination, page: pagination.page + 1 };
       queryClient.prefetchQuery({
         queryKey: ['customers-optimized', filters, nextPagination],
-        queryFn: () => OptimizedDataService.fetchCustomersPaginated(filters, nextPagination),
+        queryFn: async () => {
+          const options: QueryOptions = {
+            ...filters,
+            ...nextPagination,
+          };
+          return await CustomerService.fetchCustomers(options);
+        },
         staleTime: 60000,
       });
     }
@@ -48,14 +57,11 @@ export const useOptimizedCustomers = (
   };
 };
 
-// Hook for customer statistics with caching
+// Hook for unified statistics with caching
 export const useOptimizedStats = () => {
   return useQuery({
     queryKey: ['stats-optimized'],
-    queryFn: () => OptimizedDataService.measureQueryPerformance(
-      'fetchOptimizedStats',
-      () => OptimizedDataService.fetchOptimizedStats()
-    ),
+    queryFn: () => AnalyticsService.getUnifiedStats(),
     staleTime: 120000, // 2 minutes - stats don't change very frequently
     gcTime: 600000, // 10 minutes
     refetchInterval: 300000, // Refetch every 5 minutes
