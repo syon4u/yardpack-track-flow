@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Package, TrendingUp, Users, DollarSign } from 'lucide-react';
+import { AnalyticsService } from '@/services';
 
 const AdminAnalytics: React.FC = () => {
   const { data: packages } = useQuery({
@@ -20,26 +21,98 @@ const AdminAnalytics: React.FC = () => {
     }
   });
 
-  // Sample data for charts (would be calculated from real data)
-  const monthlyData = [
-    { month: 'Jan', packages: 12, revenue: 1800 },
-    { month: 'Feb', packages: 19, revenue: 2850 },
-    { month: 'Mar', packages: 15, revenue: 2250 },
-    { month: 'Apr', packages: 22, revenue: 3300 },
-    { month: 'May', packages: 28, revenue: 4200 },
-    { month: 'Jun', packages: 35, revenue: 5250 }
-  ];
+  const { data: seasonalData } = useQuery({
+    queryKey: ['seasonal-demand-analytics'],
+    queryFn: () => AnalyticsService.getSeasonalDemand(),
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
 
-  const statusData = [
-    { name: 'Received', value: 8, color: '#3b82f6' },
-    { name: 'In Transit', value: 12, color: '#f59e0b' },
-    { name: 'Arrived', value: 6, color: '#10b981' },
-    { name: 'Ready for Pickup', value: 4, color: '#8b5cf6' },
-    { name: 'Completed', value: 15, color: '#06b6d4' }
-  ];
+  const { data: unifiedStats } = useQuery({
+    queryKey: ['unified-stats-analytics'],
+    queryFn: () => AnalyticsService.getUnifiedStats(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Transform seasonal data for charts
+  const monthlyData = seasonalData?.slice(0, 6).reverse().map(item => ({
+    month: item.month.substring(0, 3),
+    packages: item.packageCount,
+    revenue: item.totalValue
+  })) || [];
+
+  // Calculate status distribution from live data
+  const statusData = packages ? [
+    { 
+      name: 'Received', 
+      value: packages.filter(p => p.status === 'received').length,
+      color: '#3b82f6' 
+    },
+    { 
+      name: 'In Transit', 
+      value: packages.filter(p => p.status === 'in_transit').length,
+      color: '#f59e0b' 
+    },
+    { 
+      name: 'Arrived', 
+      value: packages.filter(p => p.status === 'arrived').length,
+      color: '#10b981' 
+    },
+    { 
+      name: 'Ready for Pickup', 
+      value: packages.filter(p => p.status === 'ready_for_pickup').length,
+      color: '#8b5cf6' 
+    },
+    { 
+      name: 'Picked Up', 
+      value: packages.filter(p => p.status === 'picked_up').length,
+      color: '#06b6d4' 
+    }
+  ] : [];
 
   const totalRevenue = packages?.reduce((sum, pkg) => sum + (pkg.total_due || 0), 0) || 0;
   const averagePackageValue = packages?.length ? totalRevenue / packages.length : 0;
+
+  // Calculate performance metrics from live data
+  const calculateAverageProcessingTime = () => {
+    if (!packages?.length) return 'N/A';
+    const processed = packages.filter(p => p.actual_delivery && p.date_received);
+    if (!processed.length) return 'N/A';
+    
+    const totalDays = processed.reduce((sum, pkg) => {
+      const received = new Date(pkg.date_received);
+      const delivered = new Date(pkg.actual_delivery!);
+      const days = Math.ceil((delivered.getTime() - received.getTime()) / (1000 * 60 * 60 * 24));
+      return sum + days;
+    }, 0);
+    
+    return `${(totalDays / processed.length).toFixed(1)} days`;
+  };
+
+  const calculateOnTimeDeliveryRate = () => {
+    if (!packages?.length) return 'N/A';
+    const withEstimates = packages.filter(p => p.estimated_delivery && p.actual_delivery);
+    if (!withEstimates.length) return 'N/A';
+    
+    const onTime = withEstimates.filter(p => {
+      const estimated = new Date(p.estimated_delivery!);
+      const actual = new Date(p.actual_delivery!);
+      return actual <= estimated;
+    }).length;
+    
+    return `${((onTime / withEstimates.length) * 100).toFixed(1)}%`;
+  };
+
+  const getMostCommonCarrier = () => {
+    if (!packages?.length) return 'N/A';
+    const carriers = packages.reduce((acc, pkg) => {
+      const carrier = pkg.carrier || 'Unknown';
+      acc[carrier] = (acc[carrier] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const mostCommon = Object.entries(carriers).sort(([,a], [,b]) => b - a)[0];
+    return mostCommon ? mostCommon[0] : 'N/A';
+  };
 
   return (
     <div className="space-y-6">
@@ -167,23 +240,23 @@ const AdminAnalytics: React.FC = () => {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Average Processing Time</span>
-              <span className="text-sm text-gray-600">2.3 days</span>
+              <span className="text-sm text-gray-600">{calculateAverageProcessingTime()}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">On-Time Delivery Rate</span>
-              <span className="text-sm text-gray-600">94.2%</span>
+              <span className="text-sm text-gray-600">{calculateOnTimeDeliveryRate()}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Customer Return Rate</span>
-              <span className="text-sm text-gray-600">2.1%</span>
+              <span className="text-sm font-medium">Total Packages</span>
+              <span className="text-sm text-gray-600">{packages?.length || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Peak Processing Hours</span>
-              <span className="text-sm text-gray-600">9 AM - 11 AM</span>
+              <span className="text-sm font-medium">Total Customers</span>
+              <span className="text-sm text-gray-600">{unifiedStats?.customers?.total || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Most Common Package Type</span>
-              <span className="text-sm text-gray-600">Electronics</span>
+              <span className="text-sm font-medium">Most Common Carrier</span>
+              <span className="text-sm text-gray-600">{getMostCommonCarrier()}</span>
             </div>
           </CardContent>
         </Card>
