@@ -20,10 +20,12 @@ import {
   Key,
   Eye,
   EyeOff,
-  Truck
+  Truck,
+  BarChart3
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useSystemSettings, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
 
 const AdminSettingsTab: React.FC = () => {
   const { toast } = useToast();
@@ -45,6 +47,10 @@ const AdminSettingsTab: React.FC = () => {
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
   const [loadingApiKeys, setLoadingApiKeys] = useState(false);
+
+  // System settings
+  const { data: performanceSettings, isLoading: settingsLoading } = useSystemSettings('performance');
+  const updateSetting = useUpdateSystemSetting();
 
   // Load API configurations on component mount
   useEffect(() => {
@@ -181,6 +187,10 @@ const AdminSettingsTab: React.FC = () => {
       title: "Settings Reset",
       description: "All settings have been reset to default values.",
     });
+  };
+
+  const handleUpdatePerformanceMetric = async (settingId: string, value: string) => {
+    updateSetting.mutate({ id: settingId, setting_value: value });
   };
 
   return (
@@ -469,6 +479,51 @@ const AdminSettingsTab: React.FC = () => {
               <option value="monthly">Monthly</option>
             </select>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Performance Metrics Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Performance Metrics
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {settingsLoading ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {performanceSettings?.map((setting) => (
+                <div key={setting.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-1">
+                    <Label>{setting.display_name}</Label>
+                    {setting.description && (
+                      <p className="text-sm text-muted-foreground">{setting.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      className="w-20"
+                      defaultValue={setting.setting_value}
+                      onBlur={(e) => {
+                        if (e.target.value !== setting.setting_value) {
+                          handleUpdatePerformanceMetric(setting.id, e.target.value);
+                        }
+                      }}
+                    />
+                    {setting.setting_type === 'number' && 
+                     (setting.setting_key.includes('percentage') ? '%' : '')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

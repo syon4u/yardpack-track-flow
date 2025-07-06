@@ -5,6 +5,7 @@ import CustomerLifetimeValueDashboard from '@/components/analytics/CustomerLifet
 import SeasonalDemandForecast from '@/components/analytics/SeasonalDemandForecast';
 import RouteOptimizationAnalytics from '@/components/analytics/RouteOptimizationAnalytics';
 import AdminAnalytics from '../AdminAnalytics';
+import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { 
   TrendingUp, 
   Users, 
@@ -14,6 +15,10 @@ import {
 } from 'lucide-react';
 
 const AnalyticsDashboard: React.FC = () => {
+  // Get configurable performance metrics
+  const customerSatisfaction = useSystemSetting('customer_satisfaction_percentage');
+  const deliveryEfficiency = useSystemSetting('delivery_efficiency_percentage');
+  const costOptimization = useSystemSetting('cost_optimization_percentage');
   return (
     <div className="space-y-6">
       <div>
@@ -68,15 +73,21 @@ const AnalyticsDashboard: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Customer Satisfaction</span>
-                  <span className="font-semibold">94.2%</span>
+                  <span className="font-semibold">
+                    {customerSatisfaction.loading ? '...' : `${customerSatisfaction.value || 0}%`}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Delivery Efficiency</span>
-                  <span className="font-semibold">87.8%</span>
+                  <span className="font-semibold">
+                    {deliveryEfficiency.loading ? '...' : `${deliveryEfficiency.value || 0}%`}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Cost Optimization</span>
-                  <span className="font-semibold">+12.5%</span>
+                  <span className="font-semibold">
+                    {costOptimization.loading ? '...' : `+${costOptimization.value || 0}%`}
+                  </span>
                 </div>
               </div>
             </div>
