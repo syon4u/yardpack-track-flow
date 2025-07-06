@@ -10,44 +10,11 @@ import { Search, Filter } from 'lucide-react';
 import { getStatusConfig } from '@/utils/dataTransforms';
 import { useDebounce } from '@/hooks/useDebounce';
 
-// Define the expected data type for the table
-interface OptimizedPackageData {
-  id: string;
-  tracking_number: string;
-  external_tracking_number: string | null;
-  description: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  date_received: string;
-  estimated_delivery: string | null;
-  delivery_estimate: string | null;
-  actual_delivery: string | null;
-  customer_id: string;
-  customer_name: string;
-  customer_email: string | null;
-  sender_name: string | null;
-  sender_address: string | null;
-  delivery_address: string;
-  carrier: string | null;
-  weight: number | null;
-  dimensions: string | null;
-  package_value: number | null;
-  duty_amount: number | null;
-  duty_rate: number | null;
-  total_due: number | null;
-  invoice_uploaded: boolean;
-  duty_assessed: boolean;
-  notes: string | null;
-  api_sync_status: string | null;
-  last_api_sync: string | null;
-  customers: any;
-  invoices: any[];
-}
+import { PackageData } from '@/services';
 
 interface OptimizedPackageTableProps {
   customerId?: string;
-  onPackageClick?: (packageItem: OptimizedPackageData) => void;
+  onPackageClick?: (packageItem: PackageData) => void;
 }
 
 export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
@@ -87,13 +54,13 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
     hasMore: queryResult.hasMore
   } : null;
 
-  // Define table columns - use OptimizedPackageData type
+  // Define table columns using PackageData type
   const columns = useMemo(() => [
     {
       key: 'tracking_number',
       header: 'Tracking Number',
       width: 150,
-      render: (pkg: OptimizedPackageData) => (
+      render: (pkg: PackageData) => (
         <span className="font-mono text-sm font-medium">{pkg.tracking_number}</span>
       ),
     },
@@ -101,7 +68,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       key: 'customer_name',
       header: 'Customer',
       width: 200,
-      render: (pkg: OptimizedPackageData) => (
+      render: (pkg: PackageData) => (
         <div>
           <div className="font-medium">{pkg.customer_name}</div>
           {pkg.customer_email && (
@@ -114,7 +81,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       key: 'description',
       header: 'Description',
       width: 250,
-      render: (pkg: OptimizedPackageData) => (
+      render: (pkg: PackageData) => (
         <span className="text-sm">{pkg.description}</span>
       ),
     },
@@ -122,7 +89,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       key: 'status',
       header: 'Status',
       width: 150,
-      render: (pkg: OptimizedPackageData) => {
+      render: (pkg: PackageData) => {
         const statusConfig = getStatusConfig(pkg.status as any);
         return (
           <Badge 
@@ -138,7 +105,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       key: 'package_value',
       header: 'Value',
       width: 100,
-      render: (pkg: OptimizedPackageData) => (
+      render: (pkg: PackageData) => (
         <span className="text-sm font-medium">
           {pkg.package_value ? `$${pkg.package_value.toFixed(2)}` : '-'}
         </span>
@@ -148,7 +115,7 @@ export const OptimizedPackageTable: React.FC<OptimizedPackageTableProps> = ({
       key: 'date_received',
       header: 'Date Received',
       width: 120,
-      render: (pkg: OptimizedPackageData) => (
+      render: (pkg: PackageData) => (
         <span className="text-sm">
           {new Date(pkg.date_received).toLocaleDateString()}
         </span>
