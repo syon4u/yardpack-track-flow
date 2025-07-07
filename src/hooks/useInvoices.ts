@@ -206,6 +206,66 @@ export const useUploadInvoice = () => {
   });
 };
 
+// Hook for admin to create invoice for customer package
+export const useCreateInvoice = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async ({ 
+      packageId, 
+      invoiceNumber, 
+      totalAmount, 
+      dueDate, 
+      notes 
+    }: { 
+      packageId: string; 
+      invoiceNumber: string;
+      totalAmount: number;
+      dueDate?: string;
+      notes?: string;
+    }) => {
+      if (!user) throw new Error('Not authenticated');
+      
+      // Create invoice record
+      const { error: dbError } = await supabase
+        .from('invoices')
+        .insert({
+          package_id: packageId,
+          document_type: 'invoice',
+          invoice_number: invoiceNumber,
+          total_amount: totalAmount,
+          due_date: dueDate,
+          notes: notes,
+          uploaded_by: user.id,
+          status: 'pending',
+          file_name: `Invoice_${invoiceNumber}.pdf`,
+          file_path: `invoices/${invoiceNumber}.pdf`,
+          file_type: 'application/pdf',
+        });
+      
+      if (dbError) throw dbError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['packages'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['all-invoices'] });
+      toast({
+        title: "Invoice Created",
+        description: "Invoice has been created successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Creation Failed",
+        description: "Failed to create invoice. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
 export const useDownloadInvoice = () => {
   const { toast } = useToast();
   

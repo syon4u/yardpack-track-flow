@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { useAllInvoices, useUpdateInvoiceStatus, useDownloadInvoice } from '@/hooks/useInvoices';
+import { useAllInvoices, useUpdateInvoiceStatus, useDownloadInvoice, useCreateInvoice } from '@/hooks/useInvoices';
+import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, Download, Search, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
+import { FileText, Download, Search, CheckCircle, XCircle, Clock, Eye, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -22,10 +23,19 @@ const AdminInvoiceManagement: React.FC = () => {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [reviewNotes, setReviewNotes] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedPackageId, setSelectedPackageId] = useState('');
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [totalAmount, setTotalAmount] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [createNotes, setCreateNotes] = useState('');
 
   const { data: invoices, isPending } = useAllInvoices(statusFilter);
+  const { data: packagesResult } = useOptimizedPackages({});
+  const packages = packagesResult?.data || [];
   const updateStatusMutation = useUpdateInvoiceStatus();
   const downloadMutation = useDownloadInvoice();
+  const createInvoiceMutation = useCreateInvoice();
 
   // Filter invoices based on search
   const filteredInvoices = invoices?.filter(invoice => {
@@ -57,6 +67,35 @@ const AdminInvoiceManagement: React.FC = () => {
   const handleDownload = async (filePath: string) => {
     await downloadMutation.mutateAsync(filePath);
   };
+
+  const handleCreateInvoice = async () => {
+    if (!selectedPackageId || !invoiceNumber || !totalAmount) return;
+
+    try {
+      await createInvoiceMutation.mutateAsync({
+        packageId: selectedPackageId,
+        invoiceNumber,
+        totalAmount: parseFloat(totalAmount),
+        dueDate: dueDate || undefined,
+        notes: createNotes || undefined,
+      });
+      
+      // Reset form
+      setShowCreateDialog(false);
+      setSelectedPackageId('');
+      setInvoiceNumber('');
+      setTotalAmount('');
+      setDueDate('');
+      setCreateNotes('');
+    } catch (error) {
+      // Error handled by mutation
+    }
+  };
+
+  // Get packages that don't have invoices yet
+  const packagesWithoutInvoices = packages?.filter(pkg => 
+    !invoices?.some(inv => inv.package_id === pkg.id && inv.document_type === 'invoice')
+  ) || [];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -185,6 +224,86 @@ const AdminInvoiceManagement: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
+            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Invoice
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Create New Invoice</DialogTitle>
+                  <DialogDescription>
+                    Create an invoice for a customer package.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="package-select">Package</Label>
+                    <Select value={selectedPackageId} onValueChange={setSelectedPackageId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a package" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {packagesWithoutInvoices.map((pkg) => (
+                          <SelectItem key={pkg.id} value={pkg.id}>
+                            {pkg.tracking_number} - {pkg.description}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="invoice-number">Invoice Number</Label>
+                    <Input
+                      id="invoice-number"
+                      value={invoiceNumber}
+                      onChange={(e) => setInvoiceNumber(e.target.value)}
+                      placeholder="INV-2025-001"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="total-amount">Total Amount ($)</Label>
+                    <Input
+                      id="total-amount"
+                      type="number"
+                      step="0.01"
+                      value={totalAmount}
+                      onChange={(e) => setTotalAmount(e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="due-date">Due Date (Optional)</Label>
+                    <Input
+                      id="due-date"
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="create-notes">Notes (Optional)</Label>
+                    <Textarea
+                      id="create-notes"
+                      value={createNotes}
+                      onChange={(e) => setCreateNotes(e.target.value)}
+                      placeholder="Additional notes..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    onClick={handleCreateInvoice}
+                    disabled={createInvoiceMutation.isPending || !selectedPackageId || !invoiceNumber || !totalAmount}
+                  >
+                    Create Invoice
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent>
