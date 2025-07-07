@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,12 +15,26 @@ import PackageDetailPage from "@/pages/PackageDetailPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "@/components/error/ErrorBoundary";
 import RouteErrorBoundary from "@/components/error/RouteErrorBoundary";
+import { config, validateConfig } from "@/config/environment";
+import { initializeSecurity } from "@/utils/security";
+
+// Initialize security measures
+initializeSecurity();
+
+// Validate configuration on startup
+if (!validateConfig()) {
+  console.error('❌ Invalid application configuration detected');
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: config.limits.cacheTime,
+      gcTime: config.limits.cacheTime * 2,
+      retry: config.isProduction ? 3 : 1,
+    },
+    mutations: {
+      retry: config.isProduction ? 2 : 0,
     },
   },
 });
@@ -107,6 +121,23 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  useEffect(() => {
+    // Log application startup
+    console.log(`🚀 ${config.app.name} v${config.app.version} starting in ${config.environment} mode`);
+    
+    // Performance monitoring
+    if (config.features.enablePerformanceMonitoring) {
+      performance.mark('app-start');
+    }
+    
+    return () => {
+      if (config.features.enablePerformanceMonitoring) {
+        performance.mark('app-end');
+        performance.measure('app-lifetime', 'app-start', 'app-end');
+      }
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
