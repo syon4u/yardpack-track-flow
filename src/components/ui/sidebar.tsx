@@ -32,6 +32,12 @@ type SidebarContext = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  isHovered: boolean
+  setIsHovered: (hovered: boolean) => void
+  hoverExpandEnabled: boolean
+  setHoverExpandEnabled: (enabled: boolean) => void
+  handleSidebarMouseEnter: () => void
+  handleSidebarMouseLeave: () => void
 }
 
 const SidebarContext = React.createContext<SidebarContext | null>(null)
@@ -67,6 +73,11 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
+    
+    // Hover state management
+    const [isHovered, setIsHovered] = React.useState(false)
+    const [hoverExpandEnabled, setHoverExpandEnabled] = React.useState(true)
+    const hoverTimeoutRef = React.useRef<NodeJS.Timeout>()
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
@@ -110,9 +121,39 @@ const SidebarProvider = React.forwardRef<
       return () => window.removeEventListener("keydown", handleKeyDown)
     }, [toggleSidebar])
 
+    // Clear hover timeout on cleanup
+    React.useEffect(() => {
+      return () => {
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current)
+        }
+      }
+    }, [])
+
+    // Calculate effective state for hover logic
+    const effectiveState = open || isHovered ? "expanded" : "collapsed"
+
+    // Handle hover expand logic
+    const handleSidebarMouseEnter = React.useCallback(() => {
+      if (!isMobile && hoverExpandEnabled && !open) {
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current)
+        }
+        setIsHovered(true)
+      }
+    }, [isMobile, hoverExpandEnabled, open])
+
+    const handleSidebarMouseLeave = React.useCallback(() => {
+      if (!isMobile && hoverExpandEnabled && isHovered) {
+        hoverTimeoutRef.current = setTimeout(() => {
+          setIsHovered(false)
+        }, 300) // 300ms delay before auto-collapse
+      }
+    }, [isMobile, hoverExpandEnabled, isHovered])
+
     // We add a state so that we can do data-state="expanded" or "collapsed".
     // This makes it easier to style the sidebar with Tailwind classes.
-    const state = open ? "expanded" : "collapsed"
+    const state = effectiveState
 
     const contextValue = React.useMemo<SidebarContext>(
       () => ({
@@ -123,8 +164,14 @@ const SidebarProvider = React.forwardRef<
         openMobile,
         setOpenMobile,
         toggleSidebar,
+        isHovered,
+        setIsHovered,
+        hoverExpandEnabled,
+        setHoverExpandEnabled,
+        handleSidebarMouseEnter,
+        handleSidebarMouseLeave,
       }),
-      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, isHovered, setIsHovered, hoverExpandEnabled, setHoverExpandEnabled, handleSidebarMouseEnter, handleSidebarMouseLeave]
     )
 
     return (
@@ -173,7 +220,7 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, state, openMobile, setOpenMobile, handleSidebarMouseEnter, handleSidebarMouseLeave } = useSidebar()
 
     if (collapsible === "none") {
       return (
@@ -247,6 +294,8 @@ const Sidebar = React.forwardRef<
           <div
             data-sidebar="sidebar"
             className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+            onMouseEnter={handleSidebarMouseEnter}
+            onMouseLeave={handleSidebarMouseLeave}
           >
             {children}
           </div>

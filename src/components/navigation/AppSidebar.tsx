@@ -98,6 +98,7 @@ const AppSidebar: React.FC = () => {
                     onClick={() => handleNavigation(item.url)}
                     isActive={isActive(item.url.split('?')[0])}
                     className="w-full justify-start px-3 py-2.5 text-sm font-medium rounded-lg transition-colors"
+                    tooltip={item.title}
                   >
                     <item.icon className="h-4 w-4 mr-3" />
                     <span>{item.title}</span>
@@ -115,7 +116,10 @@ const AppSidebar: React.FC = () => {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1 px-2">
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full justify-start px-3 py-2.5 text-sm font-medium rounded-lg transition-colors">
+                <SidebarMenuButton 
+                  className="w-full justify-start px-3 py-2.5 text-sm font-medium rounded-lg transition-colors"
+                  tooltip="Help & Support"
+                >
                   <HelpCircle className="h-4 w-4 mr-3" />
                   <span>Help & Support</span>
                 </SidebarMenuButton>
