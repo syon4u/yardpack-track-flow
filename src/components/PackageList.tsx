@@ -139,7 +139,8 @@ const PackageList: React.FC<PackageListProps> = ({
                 onClick={() => onViewModeChange('tiles')}
                 className="rounded-r-none"
               >
-                <LayoutGrid className="h-4 w-4" />
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                Grid
               </Button>
               <Button
                 variant={viewMode === 'table' ? 'default' : 'ghost'}
@@ -147,7 +148,8 @@ const PackageList: React.FC<PackageListProps> = ({
                 onClick={() => onViewModeChange('table')}
                 className="rounded-l-none"
               >
-                <LayoutList className="h-4 w-4" />
+                <LayoutList className="h-4 w-4 mr-2" />
+                List
               </Button>
             </div>
           </div>
