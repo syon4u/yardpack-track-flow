@@ -37,19 +37,6 @@ const SignupForm: React.FC = () => {
     setIsLoading(false);
   };
 
-  const fillDemoAccount = (type: 'admin' | 'customer') => {
-    if (type === 'admin') {
-      setEmail('admin@yardpack.com');
-      setPassword('admin123');
-      setFullName('YardPack Admin');
-      setPhoneNumber('+1-305-555-0100');
-    } else {
-      setEmail('customer@example.com');
-      setPassword('customer123');
-      setFullName('Demo Customer');
-      setPhoneNumber('+1-876-555-0201');
-    }
-  };
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-background via-muted/30 to-accent/20">
@@ -186,38 +173,6 @@ const SignupForm: React.FC = () => {
                 </Button>
               </form>
 
-              {/* Demo Accounts */}
-              <div className="pt-4 border-t border-border/50">
-                <div className="flex items-start space-x-3 p-4 bg-info/10 rounded-lg border border-info/20">
-                  <div className="text-sm">
-                    <p className="font-medium text-info-foreground mb-3">Quick Demo Setup:</p>
-                    <div className="space-y-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fillDemoAccount('admin')}
-                        className="w-full text-left justify-start h-auto p-3 bg-background/50 border-border/50 hover:bg-accent/50 hover:border-accent text-foreground"
-                      >
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">Fill Admin Details</span>
-                          <span className="text-xs text-muted-foreground">Pre-fill admin account info</span>
-                        </div>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fillDemoAccount('customer')}
-                        className="w-full text-left justify-start h-auto p-3 bg-background/50 border-border/50 hover:bg-accent/50 hover:border-accent text-foreground"
-                      >
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">Fill Customer Details</span>
-                          <span className="text-xs text-muted-foreground">Pre-fill customer account info</span>
-                        </div>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Package, AlertCircle, Info, Anchor, Ship } from 'lucide-react';
+import { Package, AlertCircle, Ship } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const LoginForm: React.FC = () => {
@@ -26,15 +26,6 @@ const LoginForm: React.FC = () => {
     setIsLoading(false);
   };
 
-  const fillDemoAccount = (type: 'admin' | 'customer') => {
-    if (type === 'admin') {
-      setEmail('admin@yardpack.com');
-      setPassword('admin123');
-    } else {
-      setEmail('customer@example.com');
-      setPassword('customer123');
-    }
-  };
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-background via-muted/30 to-accent/20">
@@ -157,39 +148,6 @@ const LoginForm: React.FC = () => {
                 </Button>
               </form>
 
-              {/* Demo Accounts */}
-              <div className="pt-4 border-t border-border/50">
-                <div className="flex items-start space-x-3 p-4 bg-info/10 rounded-lg border border-info/20">
-                  <Info className="h-4 w-4 text-info mt-0.5 flex-shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-medium text-info-foreground mb-3">Demo Accounts:</p>
-                    <div className="space-y-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fillDemoAccount('admin')}
-                        className="w-full text-left justify-start h-auto p-3 bg-background/50 border-border/50 hover:bg-accent/50 hover:border-accent text-foreground"
-                      >
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">Admin Account</span>
-                          <span className="text-xs text-muted-foreground">admin@yardpack.com</span>
-                        </div>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fillDemoAccount('customer')}
-                        className="w-full text-left justify-start h-auto p-3 bg-background/50 border-border/50 hover:bg-accent/50 hover:border-accent text-foreground"
-                      >
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">Customer Account</span>
-                          <span className="text-xs text-muted-foreground">customer@example.com</span>
-                        </div>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
