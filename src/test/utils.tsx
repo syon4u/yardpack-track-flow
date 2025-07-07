@@ -135,4 +135,10 @@ export const waitForLoadingToFinish = () =>
 // Re-export everything from testing library
 export * from '@testing-library/react';
 export { default as userEvent } from '@testing-library/user-event';
-export { screen } from '@testing-library/react';
+
+// Re-export screen from render function
+export const screen = {
+  getByText: (text: string) => global.document.querySelector(`*:contains("${text}")`),
+  getByDisplayValue: (value: string) => global.document.querySelector(`input[value="${value}"], select[value="${value}"]`),
+  getByTestId: (testId: string) => global.document.querySelector(`[data-testid="${testId}"]`),
+};

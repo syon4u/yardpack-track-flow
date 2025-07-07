@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/utils';
+import userEvent from '@testing-library/user-event';
 import PackageCard from '@/components/PackageCard';
 
 const mockPackage = {
@@ -32,33 +31,37 @@ const mockProps = {
 
 describe('PackageCard', () => {
   it('renders package information correctly', () => {
-    renderWithProviders(<PackageCard {...mockProps} />);
+    const { getByText } = renderWithProviders(<PackageCard {...mockProps} />);
 
-    expect(screen.getByText('TEST123')).toBeInTheDocument();
-    expect(screen.getByText('Test Package Description')).toBeInTheDocument();
-    expect(screen.getByText('Test Customer')).toBeInTheDocument();
+    expect(getByText('TEST123')).toBeInTheDocument();
+    expect(getByText('Test Package Description')).toBeInTheDocument();
+    expect(getByText('Test Customer')).toBeInTheDocument();
   });
 
   it('displays received status badge', () => {
-    renderWithProviders(<PackageCard {...mockProps} />);
+    const { getByText } = renderWithProviders(<PackageCard {...mockProps} />);
 
-    expect(screen.getByText('Received')).toBeInTheDocument();
+    expect(getByText('Received')).toBeInTheDocument();
   });
 
   it('calls onViewDetails when view details button is clicked', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<PackageCard {...mockProps} />);
+    const { getByText } = renderWithProviders(<PackageCard {...mockProps} />);
 
-    const viewDetailsButton = screen.getByText('View Details');
+    const viewDetailsButton = getByText('Details');
     await user.click(viewDetailsButton);
 
     expect(mockProps.onViewDetails).toHaveBeenCalledWith('test-package-id');
   });
 
   it('shows invoice upload button when no invoice uploaded', () => {
-    renderWithProviders(<PackageCard {...mockProps} />);
+    const adminProps = {
+      ...mockProps,
+      userRole: 'admin' as const,
+    };
+    const { getByText } = renderWithProviders(<PackageCard {...adminProps} />);
 
-    expect(screen.getByText('Upload Invoice')).toBeInTheDocument();
+    expect(getByText('Upload Invoice')).toBeInTheDocument();
   });
 
   it('shows view invoice button when invoice is uploaded', () => {
@@ -67,9 +70,9 @@ describe('PackageCard', () => {
       package: { ...mockPackage, invoiceUploaded: true },
     };
 
-    renderWithProviders(<PackageCard {...propsWithInvoice} />);
+    const { getByText } = renderWithProviders(<PackageCard {...propsWithInvoice} />);
 
-    expect(screen.getByText('View Invoice')).toBeInTheDocument();
+    expect(getByText('View Invoice')).toBeInTheDocument();
   });
 
   it('displays total due when available', () => {
@@ -78,9 +81,9 @@ describe('PackageCard', () => {
       package: { ...mockPackage, totalDue: 150.50 },
     };
 
-    renderWithProviders(<PackageCard {...propsWithTotal} />);
+    const { getByText } = renderWithProviders(<PackageCard {...propsWithTotal} />);
 
-    expect(screen.getByText('$150.50')).toBeInTheDocument();
+    expect(getByText('$150.50')).toBeInTheDocument();
   });
 
   it('handles admin role correctly', () => {
@@ -89,9 +92,9 @@ describe('PackageCard', () => {
       userRole: 'admin' as const,
     };
 
-    renderWithProviders(<PackageCard {...adminProps} />);
+    const { getByDisplayValue } = renderWithProviders(<PackageCard {...adminProps} />);
 
-    // Admin should see additional controls
-    expect(screen.getByText('Update Status')).toBeInTheDocument();
+    // Admin should see status update dropdown
+    expect(getByDisplayValue('received')).toBeInTheDocument();
   });
 });
