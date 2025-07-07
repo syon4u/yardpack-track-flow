@@ -18,10 +18,8 @@ const PackageCustomerField: React.FC<PackageCustomerFieldProps> = ({
 }) => {
   const { data: customers, isPending: customersLoading } = useCustomers();
 
-  // Filter to only show registered customers for the dropdown
-  const registeredCustomers = customers?.filter(customer => 
-    customer.customer_type === 'registered' && customer.user_id
-  ) || [];
+  // Show all customers - packages can be sent to any customer type
+  const availableCustomers = customers || [];
 
   return (
     <FormField 
@@ -39,12 +37,23 @@ const PackageCustomerField: React.FC<PackageCustomerFieldProps> = ({
           <SelectTrigger className={fieldErrors.customer_id ? 'border-destructive' : ''}>
             <SelectValue placeholder="Select customer" />
           </SelectTrigger>
-          <SelectContent>
-            {registeredCustomers.map((customer) => (
-              <SelectItem key={customer.id} value={customer.id}>
-                {customer.full_name} {customer.email ? `(${customer.email})` : ''}
+          <SelectContent className="bg-background border border-border shadow-lg z-50">
+            {availableCustomers.length === 0 ? (
+              <SelectItem value="" disabled>
+                No customers available
               </SelectItem>
-            ))}
+            ) : (
+              availableCustomers.map((customer) => (
+                <SelectItem key={customer.id} value={customer.id}>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{customer.full_name}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {customer.email || customer.phone_number || 'No contact info'} • {customer.customer_type}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
       )}
