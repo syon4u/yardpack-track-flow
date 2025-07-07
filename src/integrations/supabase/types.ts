@@ -135,54 +135,119 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_line_items: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          invoice_id: string
+          item_type: string
+          quantity: number | null
+          total_amount: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          invoice_id: string
+          item_type: string
+          quantity?: number | null
+          total_amount: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          invoice_id?: string
+          item_type?: string
+          quantity?: number | null
+          total_amount?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
+          auto_generated: boolean | null
+          customs_duty: number | null
           document_type: string
           due_date: string | null
           file_name: string
           file_path: string
           file_size: number | null
           file_type: string
+          handling_fee: number | null
           id: string
           invoice_number: string | null
+          invoice_type: Database["public"]["Enums"]["invoice_type"] | null
           line_items: Json | null
           notes: string | null
           package_id: string
+          payment_due_date: string | null
+          payment_status: string | null
+          shipping_cost: number | null
           status: string | null
+          tax_amount: number | null
           total_amount: number | null
           uploaded_at: string
           uploaded_by: string
         }
         Insert: {
+          auto_generated?: boolean | null
+          customs_duty?: number | null
           document_type?: string
           due_date?: string | null
           file_name: string
           file_path: string
           file_size?: number | null
           file_type: string
+          handling_fee?: number | null
           id?: string
           invoice_number?: string | null
+          invoice_type?: Database["public"]["Enums"]["invoice_type"] | null
           line_items?: Json | null
           notes?: string | null
           package_id: string
+          payment_due_date?: string | null
+          payment_status?: string | null
+          shipping_cost?: number | null
           status?: string | null
+          tax_amount?: number | null
           total_amount?: number | null
           uploaded_at?: string
           uploaded_by: string
         }
         Update: {
+          auto_generated?: boolean | null
+          customs_duty?: number | null
           document_type?: string
           due_date?: string | null
           file_name?: string
           file_path?: string
           file_size?: number | null
           file_type?: string
+          handling_fee?: number | null
           id?: string
           invoice_number?: string | null
+          invoice_type?: Database["public"]["Enums"]["invoice_type"] | null
           line_items?: Json | null
           notes?: string | null
           package_id?: string
+          payment_due_date?: string | null
+          payment_status?: string | null
+          shipping_cost?: number | null
           status?: string | null
+          tax_amount?: number | null
           total_amount?: number | null
           uploaded_at?: string
           uploaded_by?: string
@@ -947,6 +1012,7 @@ export type Database = {
     Enums: {
       app_role: "customer" | "admin" | "warehouse"
       customer_type: "registered" | "guest" | "package_only"
+      invoice_type: "shipping_invoice" | "receipt"
       notification_type: "email" | "sms"
       package_status:
         | "received"
@@ -1071,6 +1137,7 @@ export const Constants = {
     Enums: {
       app_role: ["customer", "admin", "warehouse"],
       customer_type: ["registered", "guest", "package_only"],
+      invoice_type: ["shipping_invoice", "receipt"],
       notification_type: ["email", "sms"],
       package_status: [
         "received",

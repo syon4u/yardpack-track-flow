@@ -148,11 +148,61 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email notification if available
     if (customerEmail) {
       try {
+        // Check if this is an "in_transit" status change and get shipping invoice
+        let attachmentData = null;
+        let invoiceEmailContent = '';
+        
+        if (status === 'in_transit') {
+          // Get shipping invoice for this package
+          const { data: shippingInvoice, error: invoiceError } = await supabase
+            .from('invoices')
+            .select(`
+              *,
+              invoice_line_items (*)
+            `)
+            .eq('package_id', packageId)
+            .eq('invoice_type', 'shipping_invoice')
+            .eq('auto_generated', true)
+            .single();
+          
+          if (!invoiceError && shippingInvoice) {
+            // Create invoice content for email
+            const lineItems = shippingInvoice.invoice_line_items || [];
+            invoiceEmailContent = `
+              <div style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+                <h3>Shipping Invoice Details</h3>
+                <p><strong>Invoice Number:</strong> ${shippingInvoice.invoice_number || 'Auto-Generated'}</p>
+                <p><strong>Due Date:</strong> ${shippingInvoice.payment_due_date ? new Date(shippingInvoice.payment_due_date).toLocaleDateString() : 'N/A'}</p>
+                <div style="margin-top: 10px;">
+                  <h4>Charges:</h4>
+                  <ul>
+                    ${lineItems.map(item => 
+                      `<li>${item.description}: $${item.total_amount?.toFixed(2) || '0.00'}</li>`
+                    ).join('')}
+                  </ul>
+                  <p style="font-weight: bold; margin-top: 10px;">
+                    Total Amount Due: $${shippingInvoice.total_amount?.toFixed(2) || '0.00'}
+                  </p>
+                </div>
+                <p style="color: #666; font-size: 12px; margin-top: 15px;">
+                  Please settle this invoice within 30 days to avoid any delays in package delivery.
+                </p>
+              </div>
+            `;
+          }
+        }
+        
+        // Add invoice content to email if available
+        if (invoiceEmailContent) {
+          htmlContent = htmlContent.replace('</body>', invoiceEmailContent + '</body>');
+        }
+
         // Send email using Resend
         const emailResponse = await resend.emails.send({
           from: "YardPack <notifications@yardpack.com>",
           to: [customerEmail],
-          subject: subject,
+          subject: status === 'in_transit' && invoiceEmailContent ? 
+            `${subject} - Shipping Invoice Attached` : subject,
           html: htmlContent,
           text: textContent,
         });

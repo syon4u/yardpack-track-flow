@@ -11,19 +11,31 @@ type InvoiceInsert = Database['public']['Tables']['invoices']['Insert'];
 type InvoiceUpdate = Database['public']['Tables']['invoices']['Update'];
 
 // Hook to get invoices for a user with package data
-export const useInvoices = (packageId?: string) => {
+export const useInvoices = (packageId?: string, invoiceType?: 'shipping_invoice' | 'receipt') => {
   const { user } = useAuth();
   
   return useQuery<InvoiceWithPackage[]>({
-    queryKey: ['invoices', user?.id, packageId],
+    queryKey: ['invoices', user?.id, packageId, invoiceType],
     queryFn: async () => {
       if (!user) throw new Error('Not authenticated');
       
-      const { data: invoices, error } = await supabase
+      let query = supabase
         .from('invoices')
-        .select('*')
-        .eq('uploaded_by', user.id)
-        .order('uploaded_at', { ascending: false });
+        .select(`
+          *,
+          invoice_line_items (*)
+        `)
+        .eq('uploaded_by', user.id);
+      
+      if (packageId) {
+        query = query.eq('package_id', packageId);
+      }
+      
+      if (invoiceType) {
+        query = query.eq('invoice_type', invoiceType);
+      }
+      
+      const { data: invoices, error } = await query.order('uploaded_at', { ascending: false });
       
       if (error) throw error;
       
@@ -53,18 +65,29 @@ export const useInvoices = (packageId?: string) => {
 };
 
 // Hook to get all invoices for admin with package and customer data
-export const useAllInvoices = (status?: string) => {
+export const useAllInvoices = (status?: string, invoiceType?: 'shipping_invoice' | 'receipt') => {
   const { profile } = useAuth();
   
   return useQuery<InvoiceWithPackage[]>({
-    queryKey: ['all-invoices', status],
+    queryKey: ['all-invoices', status, invoiceType],
     queryFn: async () => {
       let query = supabase
         .from('invoices')
-        .select('*');
+        .select(`
+          *,
+          invoice_line_items (*)
+        `);
       
       if (status && status !== 'all') {
-        query = query.eq('status', status);
+        if (invoiceType === 'shipping_invoice') {
+          query = query.eq('payment_status', status);
+        } else {
+          query = query.eq('status', status);
+        }
+      }
+      
+      if (invoiceType) {
+        query = query.eq('invoice_type', invoiceType);
       }
       
       const { data: invoices, error } = await query.order('uploaded_at', { ascending: false });
