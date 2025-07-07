@@ -10,6 +10,7 @@ import PackageBasicFields from './forms/package/PackageBasicFields';
 import PackageCustomerField from './forms/package/PackageCustomerField';
 import PackageCarrierFields from './forms/package/PackageCarrierFields';
 import PackageDetailsFields from './forms/package/PackageDetailsFields';
+import PackageAddressFields from './forms/package/PackageAddressFields';
 
 interface CreatePackageFormProps {
   onClose: () => void;
@@ -18,12 +19,15 @@ interface CreatePackageFormProps {
 const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
   const isMobile = useIsMobile();
   const { data: customers, isPending: customersLoading } = useCustomers();
-  const { formData, fieldErrors, updateFormData } = usePackageFormData();
-  const { handleSubmit, isSubmitting } = usePackageFormSubmit(onClose);
+  const { formData, fieldErrors, isValidating, updateFormData, validateForm, resetForm } = usePackageFormData();
+  const { handleSubmit, isSubmitting } = usePackageFormSubmit(onClose, validateForm, resetForm);
 
   const onSubmit = async () => {
     await handleSubmit(formData);
   };
+
+  const hasValidationErrors = Object.values(fieldErrors).some(error => error.length > 0);
+  const isFormValidating = Object.values(isValidating).some(validating => validating);
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -46,6 +50,13 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
             onFieldChange={updateFormData}
           />
 
+          <PackageAddressFields
+            formData={formData}
+            fieldErrors={fieldErrors}
+            onFieldChange={updateFormData}
+            isMobile={isMobile}
+          />
+
           <PackageCarrierFields
             formData={formData}
             onFieldChange={updateFormData}
@@ -54,16 +65,17 @@ const CreatePackageForm: React.FC<CreatePackageFormProps> = ({ onClose }) => {
 
           <PackageDetailsFields
             formData={formData}
+            fieldErrors={fieldErrors}
             onFieldChange={updateFormData}
             isMobile={isMobile}
           />
 
           <FormActions
             primaryAction={{
-              label: 'Create Package',
+              label: isSubmitting ? 'Creating...' : 'Create Package',
               onClick: onSubmit,
-              loading: isSubmitting,
-              disabled: customersLoading
+              loading: isSubmitting || isFormValidating,
+              disabled: customersLoading || hasValidationErrors || isFormValidating
             }}
             secondaryAction={{
               label: 'Cancel',

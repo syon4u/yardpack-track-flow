@@ -30,11 +30,16 @@ const PackageBasicFields: React.FC<PackageBasicFieldsProps> = ({
         />
       </FormField>
       
-      <FormField label="Description" required>
+      <FormField 
+        label="Description" 
+        required
+        error={fieldErrors.description}
+      >
         <EnhancedInput
           value={formData.description}
           onChange={(e) => onFieldChange('description', e.target.value)}
           placeholder="Package contents description"
+          error={!!fieldErrors.description}
         />
       </FormField>
     </div>
