@@ -8,11 +8,13 @@ import AdminDashboardHeader from '../admin/AdminDashboardHeader';
 import AdminDashboardStats from '../admin/AdminDashboardStats';
 import AdminPackageFilters from '../admin/AdminPackageFilters';
 import CustomerPackagesTab from '../customer/CustomerPackagesTab';
+import MagayaBulkSyncModal from '../magaya/MagayaBulkSyncModal';
 
 const PackageManagement: React.FC = () => {
   const { profile } = useAuth();
   const [searchParams] = useSearchParams();
   const [showCreatePackage, setShowCreatePackage] = useState(false);
+  const [showMagayaSync, setShowMagayaSync] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -33,7 +35,10 @@ const PackageManagement: React.FC = () => {
           )}
         </div>
 
-        <AdminDashboardHeader onCreatePackage={() => setShowCreatePackage(true)} />
+        <AdminDashboardHeader 
+          onCreatePackage={() => setShowCreatePackage(true)}
+          onMagayaSync={() => setShowMagayaSync(true)}
+        />
 
         <AdminDashboardStats />
 
@@ -56,6 +61,13 @@ const PackageManagement: React.FC = () => {
 
         {showCreatePackage && (
           <CreatePackageForm onClose={() => setShowCreatePackage(false)} />
+        )}
+
+        {showMagayaSync && (
+          <MagayaBulkSyncModal 
+            open={showMagayaSync}
+            onClose={() => setShowMagayaSync(false)}
+          />
         )}
       </div>
     );

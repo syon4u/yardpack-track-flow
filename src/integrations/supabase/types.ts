@@ -23,6 +23,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           rate_limit_per_minute: number | null
+          supplier_filter: string[] | null
           updated_at: string
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           rate_limit_per_minute?: number | null
+          supplier_filter?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -43,9 +45,61 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           rate_limit_per_minute?: number | null
+          supplier_filter?: string[] | null
           updated_at?: string
         }
         Relationships: []
+      }
+      customer_mapping_rules: {
+        Row: {
+          created_at: string
+          id: string
+          magaya_customer_data: Json
+          mapping_confidence: number | null
+          mapping_status: string
+          mapping_type: string
+          sync_session_id: string | null
+          updated_at: string
+          yardpack_customer_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          magaya_customer_data: Json
+          mapping_confidence?: number | null
+          mapping_status?: string
+          mapping_type?: string
+          sync_session_id?: string | null
+          updated_at?: string
+          yardpack_customer_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          magaya_customer_data?: Json
+          mapping_confidence?: number | null
+          mapping_status?: string
+          mapping_type?: string
+          sync_session_id?: string | null
+          updated_at?: string
+          yardpack_customer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_mapping_rules_sync_session_id_fkey"
+            columns: ["sync_session_id"]
+            isOneToOne: false
+            referencedRelation: "magaya_sync_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_mapping_rules_yardpack_customer_id_fkey"
+            columns: ["yardpack_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customers: {
         Row: {
@@ -355,6 +409,74 @@ export type Database = {
             columns: ["package_id"]
             isOneToOne: false
             referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      magaya_sync_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_customers: number | null
+          created_packages: number | null
+          error_count: number | null
+          id: string
+          initiated_by: string
+          mapped_customers: number | null
+          processed_shipments: number | null
+          session_data: Json | null
+          session_type: string
+          started_at: string
+          status: string
+          supplier_filter: string
+          total_shipments: number | null
+          updated_at: string
+          updated_packages: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_customers?: number | null
+          created_packages?: number | null
+          error_count?: number | null
+          id?: string
+          initiated_by: string
+          mapped_customers?: number | null
+          processed_shipments?: number | null
+          session_data?: Json | null
+          session_type?: string
+          started_at?: string
+          status?: string
+          supplier_filter?: string
+          total_shipments?: number | null
+          updated_at?: string
+          updated_packages?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_customers?: number | null
+          created_packages?: number | null
+          error_count?: number | null
+          id?: string
+          initiated_by?: string
+          mapped_customers?: number | null
+          processed_shipments?: number | null
+          session_data?: Json | null
+          session_type?: string
+          started_at?: string
+          status?: string
+          supplier_filter?: string
+          total_shipments?: number | null
+          updated_at?: string
+          updated_packages?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "magaya_sync_sessions_initiated_by_fkey"
+            columns: ["initiated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

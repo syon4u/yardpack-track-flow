@@ -1,15 +1,16 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Scan } from 'lucide-react';
+import { Plus, Scan, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AdminDashboardHeaderProps {
   onCreatePackage: () => void;
+  onMagayaSync?: () => void;
 }
 
-const AdminDashboardHeader: React.FC<AdminDashboardHeaderProps> = ({ onCreatePackage }) => {
+const AdminDashboardHeader: React.FC<AdminDashboardHeaderProps> = ({ onCreatePackage, onMagayaSync }) => {
   const isMobile = useIsMobile();
 
   return (
@@ -32,6 +33,16 @@ const AdminDashboardHeader: React.FC<AdminDashboardHeaderProps> = ({ onCreatePac
             {isMobile ? 'Scanner' : 'Warehouse Scanner'}
           </Button>
         </Link>
+        {onMagayaSync && (
+          <Button 
+            variant="outline"
+            onClick={onMagayaSync} 
+            className={`flex items-center gap-2 ${isMobile ? 'w-full justify-center' : ''}`}
+          >
+            <RefreshCw className="h-4 w-4" />
+            {isMobile ? 'Sync Magaya' : 'Sync from Magaya'}
+          </Button>
+        )}
         <Button 
           onClick={onCreatePackage} 
           className={`flex items-center gap-2 ${isMobile ? 'w-full justify-center' : ''}`}

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -173,6 +172,101 @@ class MagayaAPI {
     }
   }
 
+  async bulkSyncFromSupplier(supplierName: string, sessionId: string): Promise<any> {
+    if (!this.accessToken && !(await this.authenticate())) {
+      throw new Error('Failed to authenticate with Magaya API');
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/shipments?supplier=${encodeURIComponent(supplierName)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch shipments: ${response.status}`);
+      }
+
+      const shipments = await response.json();
+      console.log(`Found ${shipments.length} shipments for supplier: ${supplierName}`);
+
+      // Update session with total shipments
+      await this.supabase
+        .from('magaya_sync_sessions')
+        .update({ total_shipments: shipments.length })
+        .eq('id', sessionId);
+
+      return shipments;
+    } catch (error) {
+      console.error('Error fetching Magaya shipments:', error);
+      throw error;
+    }
+  }
+
+  async findSimilarCustomers(magayaCustomer: any): Promise<any[]> {
+    try {
+      const { data: customers, error } = await this.supabase
+        .from('customers')
+        .select('*');
+
+      if (error) throw error;
+
+      // Simple similarity matching based on name and address
+      const similar = customers?.filter(customer => {
+        const nameSimilarity = this.calculateSimilarity(
+          customer.full_name.toLowerCase(),
+          magayaCustomer.name?.toLowerCase() || ''
+        );
+        const addressSimilarity = magayaCustomer.address ? this.calculateSimilarity(
+          customer.address?.toLowerCase() || '',
+          magayaCustomer.address.toLowerCase()
+        ) : 0;
+
+        return nameSimilarity > 0.7 || addressSimilarity > 0.8;
+      }) || [];
+
+      return similar.map(customer => ({
+        ...customer,
+        confidence: Math.max(
+          this.calculateSimilarity(customer.full_name.toLowerCase(), magayaCustomer.name?.toLowerCase() || ''),
+          magayaCustomer.address ? this.calculateSimilarity(customer.address?.toLowerCase() || '', magayaCustomer.address.toLowerCase()) : 0
+        )
+      }));
+    } catch (error) {
+      console.error('Error finding similar customers:', error);
+      return [];
+    }
+  }
+
+  private calculateSimilarity(str1: string, str2: string): number {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    const editDistance = this.levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  }
+
+  private levenshteinDistance(str1: string, str2: string): number {
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const substitutionCost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,
+          matrix[j - 1][i] + 1,
+          matrix[j - 1][i - 1] + substitutionCost
+        );
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }
+
   async logSyncAttempt(packageId: string, syncType: string, success: boolean, response?: any, error?: string) {
     try {
       await this.supabase
@@ -196,7 +290,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, packageId, shipmentId, status, packageData } = await req.json();
+    const { action, packageId, shipmentId, status, packageData, sessionId, supplierName } = await req.json();
     
     // Get Magaya API configuration
     const supabase = createClient(
@@ -293,6 +387,184 @@ serve(async (req) => {
         }
         
         await magayaAPI.logSyncAttempt(packageId, syncType, true, result);
+        break;
+
+      case 'bulk_sync_from_supplier':
+        if (!sessionId || !supplierName) {
+          throw new Error('Session ID and supplier name are required for bulk sync');
+        }
+
+        // Start background task for bulk sync
+        EdgeRuntime.waitUntil(
+          (async () => {
+            try {
+              const shipments = await magayaAPI.bulkSyncFromSupplier(supplierName, sessionId);
+              let processedCount = 0;
+              let createdPackages = 0;
+              let updatedPackages = 0;
+              let createdCustomers = 0;
+              let errorCount = 0;
+
+              for (const shipment of shipments) {
+                try {
+                  // Find or create customer
+                  let customerId = null;
+                  const customerData = {
+                    name: shipment.consignee?.name || 'Unknown',
+                    address: shipment.consignee?.address || '',
+                    email: shipment.consignee?.email || null,
+                    phone: shipment.consignee?.phone || null,
+                  };
+
+                  // Try to find similar customers
+                  const similarCustomers = await magayaAPI.findSimilarCustomers(customerData);
+                  
+                  if (similarCustomers.length > 0 && similarCustomers[0].confidence > 0.8) {
+                    // Use the most similar customer
+                    customerId = similarCustomers[0].id;
+                  } else {
+                    // Create new customer
+                    const { data: newCustomer, error: customerError } = await supabase
+                      .from('customers')
+                      .insert({
+                        full_name: customerData.name,
+                        address: customerData.address,
+                        email: customerData.email,
+                        phone_number: customerData.phone,
+                        customer_type: 'guest',
+                        notes: `Auto-created from Magaya sync - Supplier: ${supplierName}`,
+                      })
+                      .select()
+                      .single();
+
+                    if (customerError) {
+                      console.error('Error creating customer:', customerError);
+                      errorCount++;
+                      continue;
+                    }
+
+                    customerId = newCustomer.id;
+                    createdCustomers++;
+                  }
+
+                  // Check if package already exists
+                  const { data: existingPackage } = await supabase
+                    .from('packages')
+                    .select('id')
+                    .or(`tracking_number.eq.${shipment.reference_number},magaya_shipment_id.eq.${shipment.shipment_id}`)
+                    .single();
+
+                  const packageData = {
+                    customer_id: customerId,
+                    tracking_number: shipment.reference_number || `MAG-${shipment.shipment_id}`,
+                    external_tracking_number: shipment.tracking_number,
+                    description: shipment.description || 'Magaya Import',
+                    delivery_address: customerData.address,
+                    sender_name: shipment.sender?.name,
+                    sender_address: shipment.sender?.address,
+                    weight: shipment.weight,
+                    dimensions: shipment.dimensions,
+                    package_value: shipment.declared_value,
+                    magaya_shipment_id: shipment.shipment_id,
+                    magaya_reference_number: shipment.reference_number,
+                    warehouse_location: shipment.warehouse_location,
+                    consolidation_status: shipment.status || 'pending',
+                    api_sync_status: 'synced',
+                    last_api_sync: new Date().toISOString(),
+                  };
+
+                  if (existingPackage) {
+                    // Update existing package (Magaya data takes precedence)
+                    const { error: updateError } = await supabase
+                      .from('packages')
+                      .update(packageData)
+                      .eq('id', existingPackage.id);
+
+                    if (updateError) {
+                      console.error('Error updating package:', updateError);
+                      errorCount++;
+                    } else {
+                      updatedPackages++;
+                    }
+                  } else {
+                    // Create new package
+                    const { error: createError } = await supabase
+                      .from('packages')
+                      .insert(packageData);
+
+                    if (createError) {
+                      console.error('Error creating package:', createError);
+                      errorCount++;
+                    } else {
+                      createdPackages++;
+                    }
+                  }
+
+                  processedCount++;
+
+                  // Update session progress
+                  await supabase
+                    .from('magaya_sync_sessions')
+                    .update({
+                      processed_shipments: processedCount,
+                      created_packages: createdPackages,
+                      updated_packages: updatedPackages,
+                      created_customers: createdCustomers,
+                      error_count: errorCount,
+                    })
+                    .eq('id', sessionId);
+
+                } catch (error) {
+                  console.error('Error processing shipment:', error);
+                  errorCount++;
+                  processedCount++;
+                }
+              }
+
+              // Mark session as completed
+              await supabase
+                .from('magaya_sync_sessions')
+                .update({
+                  status: 'completed',
+                  completed_at: new Date().toISOString(),
+                  processed_shipments: processedCount,
+                  created_packages: createdPackages,
+                  updated_packages: updatedPackages,
+                  created_customers: createdCustomers,
+                  error_count: errorCount,
+                })
+                .eq('id', sessionId);
+
+            } catch (error) {
+              console.error('Bulk sync error:', error);
+              await supabase
+                .from('magaya_sync_sessions')
+                .update({
+                  status: 'failed',
+                  completed_at: new Date().toISOString(),
+                  session_data: { error: error.message },
+                })
+                .eq('id', sessionId);
+            }
+          })()
+        );
+
+        result = { message: 'Bulk sync started', sessionId };
+        break;
+
+      case 'get_sync_session':
+        if (!sessionId) {
+          throw new Error('Session ID is required');
+        }
+        
+        const { data: session, error: sessionError } = await supabase
+          .from('magaya_sync_sessions')
+          .select('*')
+          .eq('id', sessionId)
+          .single();
+
+        if (sessionError) throw sessionError;
+        result = session;
         break;
 
       default:
