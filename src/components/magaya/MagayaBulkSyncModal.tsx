@@ -133,7 +133,7 @@ const MagayaBulkSyncModal: React.FC<MagayaBulkSyncModalProps> = ({
             </Badge>
             {syncSession && (
               <span className="text-sm text-muted-foreground">
-                Session started: {new Date(syncSession.started_at).toLocaleString()}
+                Session started: {syncSession.started_at ? new Date(syncSession.started_at).toLocaleString() : 'Unknown'}
               </span>
             )}
           </div>
@@ -164,7 +164,7 @@ const MagayaBulkSyncModal: React.FC<MagayaBulkSyncModalProps> = ({
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="text-2xl font-bold text-green-600">
-                    {syncSession.created_packages}
+                    {syncSession?.created_packages ?? '-'}
                   </div>
                   <CardDescription>Created</CardDescription>
                 </CardContent>
@@ -179,7 +179,7 @@ const MagayaBulkSyncModal: React.FC<MagayaBulkSyncModalProps> = ({
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="text-2xl font-bold text-blue-600">
-                    {syncSession.updated_packages}
+                    {syncSession?.updated_packages ?? '-'}
                   </div>
                   <CardDescription>Updated</CardDescription>
                 </CardContent>
@@ -194,7 +194,7 @@ const MagayaBulkSyncModal: React.FC<MagayaBulkSyncModalProps> = ({
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="text-2xl font-bold text-purple-600">
-                    {syncSession.created_customers}
+                    {syncSession?.created_customers ?? '-'}
                   </div>
                   <CardDescription>Created</CardDescription>
                 </CardContent>
@@ -209,7 +209,7 @@ const MagayaBulkSyncModal: React.FC<MagayaBulkSyncModalProps> = ({
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="text-2xl font-bold text-red-600">
-                    {syncSession.error_count}
+                    {syncSession?.error_count ?? '-'}
                   </div>
                   <CardDescription>Failed</CardDescription>
                 </CardContent>

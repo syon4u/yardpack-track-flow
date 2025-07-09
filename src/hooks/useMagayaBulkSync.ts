@@ -20,20 +20,23 @@ export const useMagayaBulkSync = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  // Query for sync session status
+  // Query for sync session status directly from database
   const { data: syncSession, isLoading: isSessionLoading } = useQuery({
     queryKey: ['magaya-sync-session', currentSessionId],
     queryFn: async () => {
       if (!currentSessionId) return null;
       
-      const { data, error } = await supabase.functions.invoke('magaya-api', {
-        body: {
-          action: 'get_sync_session',
-          sessionId: currentSessionId,
-        },
-      });
+      const { data, error } = await supabase
+        .from('magaya_sync_sessions')
+        .select('*')
+        .eq('id', currentSessionId)
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching sync session:', error);
+        throw error;
+      }
+      
       return data as SyncSession;
     },
     enabled: !!currentSessionId,
@@ -87,9 +90,9 @@ export const useMagayaBulkSync = () => {
     setCurrentSessionId(null);
   };
 
-  // Calculate progress percentage
-  const progress = syncSession ? 
-    (syncSession.processed_shipments / Math.max(syncSession.total_shipments, 1)) * 100 : 0;
+  // Calculate progress percentage with fallbacks
+  const progress = syncSession && syncSession.total_shipments > 0 ? 
+    Math.min((syncSession.processed_shipments / syncSession.total_shipments) * 100, 100) : 0;
 
   // Check if sync is still in progress
   const isInProgress = syncSession?.status === 'in_progress';
