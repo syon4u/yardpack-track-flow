@@ -76,11 +76,11 @@ const AdminDashboardStats: React.FC = () => {
       
       <Card 
         className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
-        onClick={() => handleCardClick('/dashboard?tab=customers')}
+        onClick={() => handleCardClick('/dashboard?tab=customers', 'active=true')}
         role="button"
         tabIndex={0}
         aria-label="View active customers"
-        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=customers')}
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=customers', 'active=true')}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Active Customers</CardTitle>
