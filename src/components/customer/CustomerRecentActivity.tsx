@@ -31,12 +31,12 @@ const CustomerRecentActivity: React.FC<CustomerRecentActivityProps> = ({ package
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'received': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'in_transit': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'arrived': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'ready_for_pickup': return 'bg-green-100 text-green-800 border-green-200';
-      case 'picked_up': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'received': return 'bg-blue-100 text-blue-800';
+      case 'in_transit': return 'bg-yellow-100 text-yellow-800';
+      case 'arrived': return 'bg-purple-100 text-purple-800';
+      case 'ready_for_pickup': return 'bg-green-100 text-green-800';
+      case 'picked_up': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -47,9 +47,9 @@ const CustomerRecentActivity: React.FC<CustomerRecentActivityProps> = ({ package
   };
 
   return (
-    <Card className="vibrant-card">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-card-foreground">Recent Package Activity</CardTitle>
+        <CardTitle>Recent Package Activity</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
@@ -73,9 +73,9 @@ const CustomerRecentActivity: React.FC<CustomerRecentActivityProps> = ({ package
                 aria-label={`View details for package ${pkg.tracking_number}`}
                 onKeyDown={(e) => e.key === 'Enter' && handlePackageClick(pkg.id, pkg.tracking_number)}
               >
-                <TableCell className="font-medium text-card-foreground">{pkg.tracking_number}</TableCell>
+                <TableCell className="font-medium">{pkg.tracking_number}</TableCell>
                 <TableCell>
-                  <div className="max-w-[200px] truncate text-card-foreground">{pkg.description}</div>
+                  <div className="max-w-[200px] truncate">{pkg.description}</div>
                 </TableCell>
                 <TableCell>
                   <Badge className={getStatusColor(pkg.status)}>
@@ -96,8 +96,8 @@ const CustomerRecentActivity: React.FC<CustomerRecentActivityProps> = ({ package
           </TableBody>
         </Table>
         {packages && packages.length === 0 && (
-          <div className="text-center py-4 text-foreground/70">
-            <p className="font-medium">No packages found. Your packages will appear here once they're registered.</p>
+          <div className="text-center py-4 text-gray-500">
+            No packages found. Your packages will appear here once they're registered.
           </div>
         )}
       </CardContent>

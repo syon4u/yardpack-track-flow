@@ -31,7 +31,7 @@ const CustomerHeader: React.FC<CustomerHeaderProps> = ({ fullName }) => {
           Track and manage your packages from Miami to Jamaica
         </p>
         {fullName && (
-          <p className={`text-muted-foreground mt-1 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+          <p className={`text-gray-500 mt-1 ${isMobile ? 'text-xs' : 'text-sm'}`}>
             Account: {displayName}
           </p>
         )}

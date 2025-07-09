@@ -30,7 +30,7 @@ const AdminUserStats: React.FC<AdminUserStatsProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <Card 
-        className="cursor-pointer vibrant-card bg-gradient-hero text-white border-0 hover:scale-105 transition-all duration-500 animate-fade-in"
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
         onClick={() => handleCardClick('/dashboard?tab=users')}
         role="button"
         tabIndex={0}
@@ -38,12 +38,12 @@ const AdminUserStats: React.FC<AdminUserStatsProps> = ({
         onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=users')}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-white">Total System Users</CardTitle>
-          <Users className="h-4 w-4 text-white/80" />
+          <CardTitle className="text-sm font-medium">Total System Users</CardTitle>
+          <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-white">{totalUsers}</div>
-          <div className="text-xs text-white/80">Active system accounts</div>
+          <div className="text-2xl font-bold">{totalUsers}</div>
+          <div className="text-xs text-muted-foreground">Active system accounts</div>
         </CardContent>
       </Card>
 

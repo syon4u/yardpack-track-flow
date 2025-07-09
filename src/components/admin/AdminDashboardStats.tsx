@@ -55,87 +55,79 @@ const AdminDashboardStats: React.FC = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <Card 
-        className="cursor-pointer vibrant-card group relative overflow-hidden bg-gradient-hero border-0 text-white hover:scale-105 transition-all duration-500 animate-fade-in"
-        style={{ animationDelay: '0ms' }}
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
         onClick={() => handleCardClick('/dashboard?tab=packages')}
         role="button"
         tabIndex={0}
         aria-label="View all packages"
         onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages')}
       >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Packages</CardTitle>
-          <Package className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+          <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent className="relative z-10">
-          <div className="text-3xl font-bold animate-count-up">{packageStats.total}</div>
-          <p className="text-xs text-white font-medium">
+        <CardContent>
+          <div className="text-2xl font-bold">{packageStats.total}</div>
+          <p className="text-xs text-muted-foreground">
             {packageStats.received} received this period
           </p>
         </CardContent>
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Card>
       
       <Card 
-        className="cursor-pointer vibrant-card group relative overflow-hidden bg-gradient-warm border-0 text-white hover:scale-105 transition-all duration-500 animate-fade-in"
-        style={{ animationDelay: '100ms' }}
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
         onClick={() => handleCardClick('/dashboard?tab=customers', 'active=true')}
         role="button"
         tabIndex={0}
         aria-label="View active customers"
         onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=customers', 'active=true')}
       >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Active Customers</CardTitle>
-          <Users className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+          <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent className="relative z-10">
-          <div className="text-3xl font-bold animate-count-up">{customerStats.active}</div>
-          <p className="text-xs text-white font-medium">
+        <CardContent>
+          <div className="text-2xl font-bold">{customerStats.active}</div>
+          <p className="text-xs text-muted-foreground">
             {customerStats.registered} registered users
           </p>
         </CardContent>
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Card>
       
       <Card 
-        className="cursor-pointer vibrant-card group relative overflow-hidden bg-gradient-cool border-0 text-white hover:scale-105 transition-all duration-500 animate-fade-in"
-        style={{ animationDelay: '200ms' }}
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
         onClick={() => handleCardClick('/dashboard?tab=packages', 'in_transit')}
         role="button"
         tabIndex={0}
         aria-label="View packages in transit"
         onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages', 'in_transit')}
       >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">In Transit</CardTitle>
-          <TrendingUp className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent className="relative z-10">
-          <div className="text-3xl font-bold animate-count-up">{packageStats.in_transit}</div>
-          <p className="text-xs text-white font-medium">Currently shipping</p>
+        <CardContent>
+          <div className="text-2xl font-bold">{packageStats.in_transit}</div>
+          <p className="text-xs text-muted-foreground">Currently shipping</p>
         </CardContent>
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Card>
       
       <Card 
-        className="cursor-pointer vibrant-card group relative overflow-hidden bg-gradient-success border-0 text-white hover:scale-105 transition-all duration-500 animate-fade-in animate-pulse-glow"
-        style={{ animationDelay: '300ms' }}
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
         onClick={() => handleCardClick('/dashboard?tab=packages', 'ready_for_pickup')}
         role="button"
         tabIndex={0}
         aria-label="View packages ready for pickup"
         onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages', 'ready_for_pickup')}
       >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Pending Pickup</CardTitle>
-          <Clock className="h-5 w-5 group-hover:animate-pulse transition-all duration-300" />
+          <Clock className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent className="relative z-10">
-          <div className="text-3xl font-bold animate-count-up">{packageStats.ready_for_pickup}</div>
-          <p className="text-xs text-white font-medium">Ready for customers</p>
+        <CardContent>
+          <div className="text-2xl font-bold">{packageStats.ready_for_pickup}</div>
+          <p className="text-xs text-muted-foreground">Ready for customers</p>
         </CardContent>
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Card>
     </div>
   );
