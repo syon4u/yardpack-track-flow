@@ -46,16 +46,16 @@ const ActionAlerts: React.FC = () => {
 
   if (urgentAlerts.length === 0) {
     return (
-      <Card>
+      <Card className="vibrant-card glass-card border-0 backdrop-blur-sm bg-gradient-success animate-fade-in" style={{ animationDelay: '600ms' }}>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-green-500" />
+          <CardTitle className="text-lg font-semibold flex items-center gap-2 text-white">
+            <AlertTriangle className="h-5 w-5 animate-pulse" />
             All Clear
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            No urgent actions required at this time.
+          <p className="text-sm text-white/80">
+            No urgent actions required at this time. ✨
           </p>
         </CardContent>
       </Card>
@@ -63,29 +63,35 @@ const ActionAlerts: React.FC = () => {
   }
 
   return (
-    <Card>
+    <Card className="vibrant-card glass-card border-0 backdrop-blur-sm bg-gradient-warm animate-fade-in" style={{ animationDelay: '700ms' }}>
       <CardHeader>
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-amber-500" />
+        <CardTitle className="text-lg font-semibold flex items-center gap-2 text-white">
+          <AlertTriangle className="h-5 w-5 animate-pulse-glow" />
           Action Required
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {urgentAlerts.map((alert) => (
+      <CardContent className="space-y-4">
+        {urgentAlerts.map((alert, index) => (
           <div
             key={alert.id}
-            className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+            className="flex items-center justify-between p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02] animate-fade-in"
+            style={{ animationDelay: `${800 + index * 100}ms` }}
           >
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-full ${alert.color}`}>
-                <alert.icon className="h-4 w-4 text-white" />
+              <div className="p-3 rounded-full bg-white/20 backdrop-blur-sm animate-float">
+                <alert.icon className="h-5 w-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">{alert.title}</span>
-                  <Badge variant="secondary">{alert.count}</Badge>
+                  <span className="font-semibold text-sm text-white">{alert.title}</span>
+                  <Badge 
+                    variant="secondary" 
+                    className="bg-white/20 text-white border-white/30 px-2 py-1 rounded-full animate-pulse-glow"
+                  >
+                    {alert.count}
+                  </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-white/80">
                   {alert.description}
                 </p>
               </div>
@@ -94,7 +100,7 @@ const ActionAlerts: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={alert.action}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white border-white/20 transition-all duration-300"
             >
               View
               <ExternalLink className="h-3 w-3" />

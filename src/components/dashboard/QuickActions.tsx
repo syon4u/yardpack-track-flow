@@ -38,20 +38,25 @@ const QuickActions: React.FC = () => {
 
   return (
     <>
-      <Card>
+      <Card className="vibrant-card glass-card border-0 backdrop-blur-sm animate-fade-in" style={{ animationDelay: '500ms' }}>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
+          <CardTitle className="text-lg font-semibold text-gradient-hero animate-gradient">Quick Actions</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-3">
+        <CardContent className="grid grid-cols-2 gap-4">
           {actions.map((action, index) => (
             <Button
               key={index}
               variant={action.variant}
               onClick={action.action}
-              className="flex flex-col items-center gap-2 h-auto py-4"
+              className={`flex flex-col items-center gap-3 h-auto py-6 px-4 rounded-xl transition-all duration-300 hover:scale-105 animate-fade-in ${
+                index === 0 
+                  ? 'bg-gradient-hero text-white border-0 hover:shadow-xl hover:shadow-primary/30' 
+                  : 'bg-gradient-to-br from-card to-muted/50 hover:from-accent/20 hover:to-primary/10 border border-border/50 hover:border-primary/30'
+              }`}
+              style={{ animationDelay: `${600 + index * 100}ms` }}
             >
-              <action.icon className="h-5 w-5" />
-              <span className="text-sm font-medium">{action.label}</span>
+              <action.icon className="h-6 w-6 group-hover:rotate-6 transition-transform duration-300" />
+              <span className="text-sm font-medium text-center leading-tight">{action.label}</span>
             </Button>
           ))}
         </CardContent>

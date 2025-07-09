@@ -36,14 +36,14 @@ const RecentActivity: React.FC = () => {
   };
 
   return (
-    <Card>
+    <Card className="vibrant-card glass-card border-0 backdrop-blur-sm animate-fade-in" style={{ animationDelay: '400ms' }}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
+        <CardTitle className="text-lg font-semibold text-gradient-hero animate-gradient">Recent Activity</CardTitle>
         <Button 
           variant="outline" 
           size="sm"
           onClick={() => navigate('/dashboard?tab=packages')}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-primary/10 border-primary/20 hover:bg-primary hover:text-primary-foreground transition-all duration-300"
         >
           View All
           <ExternalLink className="h-3 w-3" />
@@ -51,24 +51,31 @@ const RecentActivity: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-3">
         {recentPackages.length > 0 ? (
-          recentPackages.map((pkg) => (
-            <div key={pkg.id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
+          recentPackages.map((pkg, index) => (
+            <div 
+              key={pkg.id} 
+              className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-card to-muted/30 hover:from-primary/5 hover:to-accent/10 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:scale-[1.02] animate-fade-in"
+              style={{ animationDelay: `${500 + index * 100}ms` }}
+            >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
+                    <p className="font-semibold text-sm truncate text-foreground">
                       {pkg.tracking_number}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {pkg.customer_name || 'Unknown Customer'}
                     </p>
                   </div>
-                  <Badge variant={getStatusVariant(pkg.status)} className="text-xs">
+                  <Badge 
+                    variant={getStatusVariant(pkg.status)} 
+                    className="text-xs px-3 py-1 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 animate-pulse-glow"
+                  >
                     {getStatusLabel(pkg.status)}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-1 mt-1">
-                  <Clock className="h-3 w-3 text-muted-foreground" />
+                <div className="flex items-center gap-1 mt-2">
+                  <Clock className="h-3 w-3 text-primary" />
                   <span className="text-xs text-muted-foreground">
                     {format(new Date(pkg.updated_at), 'MMM d, HH:mm')}
                   </span>

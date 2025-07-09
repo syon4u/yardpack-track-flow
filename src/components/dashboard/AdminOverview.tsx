@@ -25,11 +25,15 @@ const AdminOverview: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="text-gray-600 mt-1">Monitor your package management system at a glance</p>
+      <div className="text-center space-y-2">
+        <h1 className="text-4xl font-bold text-gradient-hero animate-gradient bg-clip-text">
+          Dashboard Overview
+        </h1>
+        <p className="text-muted-foreground text-lg">
+          Monitor your package management system at a glance ✨
+        </p>
       </div>
 
       {/* Stats Grid */}
