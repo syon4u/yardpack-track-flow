@@ -47,6 +47,7 @@ const AdminSettingsTab: React.FC = () => {
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
   const [loadingApiKeys, setLoadingApiKeys] = useState(false);
+  const [credentials, setCredentials] = useState<Record<string, any>>({});
 
   // System settings
   const { data: performanceSettings, isLoading: settingsLoading } = useSystemSettings('performance');
@@ -72,12 +73,15 @@ const AdminSettingsTab: React.FC = () => {
       // Initialize API keys state
       const initialKeys: Record<string, string> = {};
       const initialShow: Record<string, boolean> = {};
+      const initialCredentials: Record<string, any> = {};
       data?.forEach(config => {
         initialKeys[config.carrier] = '';
         initialShow[config.carrier] = false;
+        initialCredentials[config.carrier] = config.credentials || {};
       });
       setApiKeys(initialKeys);
       setShowApiKeys(initialShow);
+      setCredentials(initialCredentials);
     } catch (error) {
       console.error('Error loading API configurations:', error);
       toast({
@@ -94,6 +98,16 @@ const AdminSettingsTab: React.FC = () => {
     setApiKeys(prev => ({
       ...prev,
       [carrier]: value
+    }));
+  };
+
+  const handleCredentialChange = (carrier: string, field: string, value: string) => {
+    setCredentials(prev => ({
+      ...prev,
+      [carrier]: {
+        ...prev[carrier],
+        [field]: value
+      }
     }));
   };
 
@@ -133,6 +147,49 @@ const AdminSettingsTab: React.FC = () => {
       toast({
         title: "Error",
         description: "Failed to save API key",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveCredentials = async (carrier: string) => {
+    const creds = credentials[carrier];
+    const requiredFields = carrier === 'MAGAYA' 
+      ? ['network_id', 'username', 'password'] 
+      : ['api_key'];
+
+    // Validate required fields
+    for (const field of requiredFields) {
+      if (!creds[field]?.trim()) {
+        toast({
+          title: "Error",
+          description: `Please enter ${field.replace('_', ' ')}`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    try {
+      const { error } = await supabase
+        .from('api_configurations')
+        .update({ credentials: creds })
+        .eq('carrier', carrier);
+
+      if (error) throw error;
+
+      toast({
+        title: "Credentials Saved",
+        description: `${carrier} credentials have been saved securely`,
+      });
+      
+      // Reload configurations to get updated data
+      loadApiConfigurations();
+    } catch (error) {
+      console.error('Error saving credentials:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save credentials",
         variant: "destructive",
       });
     }
@@ -224,61 +281,146 @@ const AdminSettingsTab: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`api-key-${config.carrier}`}>
-                        {config.api_key_name}
-                      </Label>
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
+                  {/* Dynamic rendering based on API type */}
+                  {config.carrier === 'MAGAYA' ? (
+                    /* SOAP Credentials for Magaya */
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor={`network-id-${config.carrier}`}>Network ID</Label>
                           <Input
-                            id={`api-key-${config.carrier}`}
-                            type={showApiKeys[config.carrier] ? "text" : "password"}
-                            value={apiKeys[config.carrier] || ''}
-                            onChange={(e) => handleApiKeyChange(config.carrier, e.target.value)}
-                            placeholder="Enter API key..."
+                            id={`network-id-${config.carrier}`}
+                            value={credentials[config.carrier]?.network_id || ''}
+                            onChange={(e) => handleCredentialChange(config.carrier, 'network_id', e.target.value)}
+                            placeholder="Enter Network ID (e.g., 14337)"
                           />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`username-${config.carrier}`}>Username</Label>
+                          <Input
+                            id={`username-${config.carrier}`}
+                            value={credentials[config.carrier]?.username || ''}
+                            onChange={(e) => handleCredentialChange(config.carrier, 'username', e.target.value)}
+                            placeholder="Enter username"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor={`password-${config.carrier}`}>Password</Label>
+                          <div className="relative">
+                            <Input
+                              id={`password-${config.carrier}`}
+                              type={showApiKeys[config.carrier] ? "text" : "password"}
+                              value={credentials[config.carrier]?.password || ''}
+                              onChange={(e) => handleCredentialChange(config.carrier, 'password', e.target.value)}
+                              placeholder="Enter password"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => toggleApiKeyVisibility(config.carrier)}
+                            >
+                              {showApiKeys[config.carrier] ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`api-url-${config.carrier}`}>API URL</Label>
+                          <Input
+                            id={`api-url-${config.carrier}`}
+                            value={credentials[config.carrier]?.api_url || config.base_url}
+                            onChange={(e) => handleCredentialChange(config.carrier, 'api_url', e.target.value)}
+                            placeholder="SOAP API URL"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pt-2">
+                        <div className="text-sm text-muted-foreground">
+                          SOAP Web Service Configuration
+                        </div>
+                        <div className="flex gap-2">
                           <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                            onClick={() => toggleApiKeyVisibility(config.carrier)}
+                            variant="outline"
+                            onClick={() => handleTestApiConnection(config.carrier)}
                           >
-                            {showApiKeys[config.carrier] ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
+                            Test Connection
+                          </Button>
+                          <Button
+                            onClick={() => handleSaveCredentials(config.carrier)}
+                          >
+                            <Key className="h-4 w-4 mr-2" />
+                            Save Credentials
                           </Button>
                         </div>
-                        <Button
-                          onClick={() => handleSaveApiKey(config.carrier)}
-                          disabled={!apiKeys[config.carrier]?.trim()}
-                        >
-                          <Key className="h-4 w-4 mr-2" />
-                          Save
-                        </Button>
                       </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label>API Endpoint</Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={config.base_url}
-                          readOnly
-                          className="bg-gray-50"
-                        />
-                        <Button
-                          variant="outline"
-                          onClick={() => handleTestApiConnection(config.carrier)}
-                        >
-                          Test
-                        </Button>
+                  ) : (
+                    /* REST API Key for other carriers */
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor={`api-key-${config.carrier}`}>
+                          {config.api_key_name}
+                        </Label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              id={`api-key-${config.carrier}`}
+                              type={showApiKeys[config.carrier] ? "text" : "password"}
+                              value={apiKeys[config.carrier] || ''}
+                              onChange={(e) => handleApiKeyChange(config.carrier, e.target.value)}
+                              placeholder="Enter API key..."
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => toggleApiKeyVisibility(config.carrier)}
+                            >
+                              {showApiKeys[config.carrier] ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                          <Button
+                            onClick={() => handleSaveApiKey(config.carrier)}
+                            disabled={!apiKeys[config.carrier]?.trim()}
+                          >
+                            <Key className="h-4 w-4 mr-2" />
+                            Save
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>API Endpoint</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={config.base_url}
+                            readOnly
+                            className="bg-gray-50"
+                          />
+                          <Button
+                            variant="outline"
+                            onClick={() => handleTestApiConnection(config.carrier)}
+                          >
+                            Test
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>

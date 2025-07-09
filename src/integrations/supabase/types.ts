@@ -20,6 +20,7 @@ export type Database = {
           base_url: string
           carrier: string
           created_at: string
+          credentials: Json | null
           id: string
           is_active: boolean | null
           rate_limit_per_minute: number | null
@@ -31,6 +32,7 @@ export type Database = {
           base_url: string
           carrier: string
           created_at?: string
+          credentials?: Json | null
           id?: string
           is_active?: boolean | null
           rate_limit_per_minute?: number | null
@@ -42,6 +44,7 @@ export type Database = {
           base_url?: string
           carrier?: string
           created_at?: string
+          credentials?: Json | null
           id?: string
           is_active?: boolean | null
           rate_limit_per_minute?: number | null
