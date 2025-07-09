@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Calendar } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
+import { useNavigate } from 'react-router-dom';
 
 type Package = {
   id: string;
@@ -22,6 +23,12 @@ interface CustomerRecentActivityProps {
 }
 
 const CustomerRecentActivity: React.FC<CustomerRecentActivityProps> = ({ packages }) => {
+  const navigate = useNavigate();
+
+  const handlePackageClick = (packageId: string, trackingNumber: string) => {
+    navigate(`/dashboard?tab=packages&search=${trackingNumber}`);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'received': return 'bg-blue-100 text-blue-800';
@@ -57,7 +64,15 @@ const CustomerRecentActivity: React.FC<CustomerRecentActivityProps> = ({ package
           </TableHeader>
           <TableBody>
             {packages?.slice(0, 5).map((pkg) => (
-              <TableRow key={pkg.id}>
+              <TableRow 
+                key={pkg.id}
+                className="cursor-pointer transition-colors duration-200 hover:bg-muted/50 interactive-hover"
+                onClick={() => handlePackageClick(pkg.id, pkg.tracking_number)}
+                role="button"
+                tabIndex={0}
+                aria-label={`View details for package ${pkg.tracking_number}`}
+                onKeyDown={(e) => e.key === 'Enter' && handlePackageClick(pkg.id, pkg.tracking_number)}
+              >
                 <TableCell className="font-medium">{pkg.tracking_number}</TableCell>
                 <TableCell>
                   <div className="max-w-[200px] truncate">{pkg.description}</div>

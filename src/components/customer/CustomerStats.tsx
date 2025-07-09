@@ -5,10 +5,20 @@ import { Package, Truck, CheckCircle, DollarSign } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOptimizedPackages } from '@/hooks/useOptimizedPackages';
+import { useNavigate } from 'react-router-dom';
 
 const CustomerStats: React.FC = () => {
   const isMobile = useIsMobile();
   const { profile } = useAuth();
+  const navigate = useNavigate();
+
+  const handleCardClick = (path: string, status?: string) => {
+    if (status) {
+      navigate(`${path}?status=${status}`);
+    } else {
+      navigate(path);
+    }
+  };
   
   // Fetch packages for the current customer
   const { data: packageData, isPending } = useOptimizedPackages(
@@ -45,7 +55,15 @@ const CustomerStats: React.FC = () => {
 
   return (
     <div className={`grid gap-3 sm:gap-4 md:gap-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-4'}`}>
-      <Card className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target`} style={{ animationDelay: '0ms' }}>
+      <Card 
+        className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10`} 
+        style={{ animationDelay: '0ms' }}
+        onClick={() => handleCardClick('/dashboard?tab=packages')}
+        role="button"
+        tabIndex={0}
+        aria-label="View all packages"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages')}
+      >
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
           <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
             {isMobile ? 'Total' : 'Total Packages'}
@@ -60,7 +78,15 @@ const CustomerStats: React.FC = () => {
         </CardContent>
       </Card>
       
-      <Card className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target`} style={{ animationDelay: '100ms' }}>
+      <Card 
+        className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10`} 
+        style={{ animationDelay: '100ms' }}
+        onClick={() => handleCardClick('/dashboard?tab=packages', 'in_transit')}
+        role="button"
+        tabIndex={0}
+        aria-label="View packages in transit"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages', 'in_transit')}
+      >
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
           <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
             {isMobile ? 'Transit' : 'In Transit'}
@@ -75,7 +101,15 @@ const CustomerStats: React.FC = () => {
         </CardContent>
       </Card>
       
-      <Card className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target`} style={{ animationDelay: '200ms' }}>
+      <Card 
+        className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10`} 
+        style={{ animationDelay: '200ms' }}
+        onClick={() => handleCardClick('/dashboard?tab=packages', 'ready_for_pickup')}
+        role="button"
+        tabIndex={0}
+        aria-label="View packages ready for pickup"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages', 'ready_for_pickup')}
+      >
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
           <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
             {isMobile ? 'Ready' : 'Ready for Pickup'}
@@ -90,7 +124,15 @@ const CustomerStats: React.FC = () => {
         </CardContent>
       </Card>
       
-      <Card className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target`} style={{ animationDelay: '300ms' }}>
+      <Card 
+        className={`${isMobile ? 'p-3' : ''} interactive-hover animate-fade-in touch-target cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10`} 
+        style={{ animationDelay: '300ms' }}
+        onClick={() => handleCardClick('/dashboard?tab=invoices')}
+        role="button"
+        tabIndex={0}
+        aria-label="View invoices and outstanding balance"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=invoices')}
+      >
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 ${isMobile ? 'pb-1' : 'pb-2'}`}>
           <CardTitle className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
             {isMobile ? 'Due' : 'Total Due'}

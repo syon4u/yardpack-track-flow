@@ -3,9 +3,19 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Users, TrendingUp, Clock } from 'lucide-react';
 import { useOptimizedStats } from '@/hooks/useOptimizedCustomers';
+import { useNavigate } from 'react-router-dom';
 
 const AdminDashboardStats: React.FC = () => {
   const { data: stats, isPending } = useOptimizedStats();
+  const navigate = useNavigate();
+
+  const handleCardClick = (path: string, status?: string) => {
+    if (status) {
+      navigate(`${path}?status=${status}`);
+    } else {
+      navigate(path);
+    }
+  };
 
   if (isPending) {
     return (
@@ -44,7 +54,14 @@ const AdminDashboardStats: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <Card>
+      <Card 
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        onClick={() => handleCardClick('/dashboard?tab=packages')}
+        role="button"
+        tabIndex={0}
+        aria-label="View all packages"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages')}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Packages</CardTitle>
           <Package className="h-4 w-4 text-muted-foreground" />
@@ -57,7 +74,14 @@ const AdminDashboardStats: React.FC = () => {
         </CardContent>
       </Card>
       
-      <Card>
+      <Card 
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        onClick={() => handleCardClick('/dashboard?tab=customers')}
+        role="button"
+        tabIndex={0}
+        aria-label="View active customers"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=customers')}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Active Customers</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
@@ -70,7 +94,14 @@ const AdminDashboardStats: React.FC = () => {
         </CardContent>
       </Card>
       
-      <Card>
+      <Card 
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        onClick={() => handleCardClick('/dashboard?tab=packages', 'in_transit')}
+        role="button"
+        tabIndex={0}
+        aria-label="View packages in transit"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages', 'in_transit')}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">In Transit</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -81,7 +112,14 @@ const AdminDashboardStats: React.FC = () => {
         </CardContent>
       </Card>
       
-      <Card>
+      <Card 
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        onClick={() => handleCardClick('/dashboard?tab=packages', 'ready_for_pickup')}
+        role="button"
+        tabIndex={0}
+        aria-label="View packages ready for pickup"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages', 'ready_for_pickup')}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Pending Pickup</CardTitle>
           <Clock className="h-4 w-4 text-muted-foreground" />

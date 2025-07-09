@@ -18,8 +18,20 @@ const PackageManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Get customer filter from URL params
+  // Get filters from URL params
   const customerFilter = searchParams.get('customer') || undefined;
+  const urlStatus = searchParams.get('status');
+  const urlSearch = searchParams.get('search');
+
+  // Set filters from URL params on mount
+  useEffect(() => {
+    if (urlStatus && urlStatus !== 'all') {
+      setStatusFilter(urlStatus);
+    }
+    if (urlSearch) {
+      setSearchTerm(urlSearch);
+    }
+  }, [urlStatus, urlSearch]);
 
   // Admin view with full package management features
   if (profile?.role === 'admin') {
