@@ -64,7 +64,7 @@ const CustomerOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-            <p className="text-xs text-gray-500 mt-1">All time</p>
+            <p className="text-xs text-muted-foreground mt-1">All time</p>
           </CardContent>
         </Card>
 
@@ -75,7 +75,7 @@ const CustomerOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats.inTransit}</div>
-            <p className="text-xs text-gray-500 mt-1">On the way</p>
+            <p className="text-xs text-muted-foreground mt-1">On the way</p>
           </CardContent>
         </Card>
 
@@ -86,18 +86,18 @@ const CustomerOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats.readyForPickup}</div>
-            <p className="text-xs text-gray-500 mt-1">Awaiting collection</p>
+            <p className="text-xs text-muted-foreground mt-1">Awaiting collection</p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-gray-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Delivered</CardTitle>
-            <CheckCircle className="h-4 w-4 text-gray-500" />
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats.pickedUp}</div>
-            <p className="text-xs text-gray-500 mt-1">Completed</p>
+            <p className="text-xs text-muted-foreground mt-1">Completed</p>
           </CardContent>
         </Card>
       </div>
@@ -176,7 +176,7 @@ const CustomerOverview: React.FC = () => {
             <div className="text-center py-8">
               <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600">No packages yet</p>
-              <p className="text-sm text-gray-500">Your packages will appear here once they arrive</p>
+              <p className="text-sm text-muted-foreground">Your packages will appear here once they arrive</p>
             </div>
           )}
         </CardContent>

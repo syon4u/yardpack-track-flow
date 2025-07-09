@@ -70,22 +70,22 @@
 
     /* Brighter teal for dark mode */
     --primary: 171 85% 45%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 225 25% 6%;
 
     /* Warm orange secondary */
     --secondary: 13 90% 65%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary-foreground: 225 25% 6%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
     /* Purple accent for dark mode */
     --accent: 258 70% 68%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 225 25% 6%;
 
     /* Coral destructive */
     --destructive: 356 75% 70%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 225 25% 6%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
@@ -293,6 +293,34 @@
 
 .vibrant-card:hover::before {
   left: 100%;
+}
+
+/* Text color overrides for better readability */
+.text-on-gradient {
+  color: hsl(var(--foreground)) !important;
+}
+
+.text-on-gradient-light {
+  color: hsl(0 0% 100%) !important;
+}
+
+.text-on-card {
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* Enhanced badge styles for better readability */
+.badge-readable {
+  background: hsl(var(--background) / 0.9) !important;
+  color: hsl(var(--foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+/* Ensure proper contrast on colored backgrounds */
+.bg-gradient-hero .text-muted-foreground,
+.bg-gradient-warm .text-muted-foreground,
+.bg-gradient-cool .text-muted-foreground,
+.bg-gradient-success .text-muted-foreground {
+  color: hsl(0 0% 100% / 0.8) !important;
 }
 
 /* Focus improvements */

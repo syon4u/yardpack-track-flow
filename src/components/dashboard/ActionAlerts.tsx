@@ -86,7 +86,7 @@ const ActionAlerts: React.FC = () => {
                   <span className="font-semibold text-sm text-white">{alert.title}</span>
                   <Badge 
                     variant="secondary" 
-                    className="bg-white/20 text-white border-white/30 px-2 py-1 rounded-full animate-pulse-glow"
+                    className="bg-white/30 text-white border-white/50 px-2 py-1 rounded-full font-semibold"
                   >
                     {alert.count}
                   </Badge>

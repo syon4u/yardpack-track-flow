@@ -51,7 +51,7 @@ const QuickActions: React.FC = () => {
               className={`flex flex-col items-center gap-3 h-auto py-6 px-4 rounded-xl transition-all duration-300 hover:scale-105 animate-fade-in ${
                 index === 0 
                   ? 'bg-gradient-hero text-white border-0 hover:shadow-xl hover:shadow-primary/30' 
-                  : 'bg-gradient-to-br from-card to-muted/50 hover:from-accent/20 hover:to-primary/10 border border-border/50 hover:border-primary/30'
+                  : 'bg-gradient-to-br from-card to-muted/50 hover:from-accent/20 hover:to-primary/10 border border-border/50 hover:border-primary/30 text-card-foreground'
               }`}
               style={{ animationDelay: `${600 + index * 100}ms` }}
             >
