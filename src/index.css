@@ -3,46 +3,37 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Masculine Vibrant Design System - Dark theme with strong contrasts */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
 
 @layer base {
   :root {
-    /* Dark backgrounds with masculine palette */
-    --background: 210 40% 6%;  /* Deep slate background */
-    --foreground: 0 0% 100%;   /* Pure white text */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-    --card: 215 28% 17%;       /* Dark charcoal cards */
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-    --popover: 215 28% 17%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    /* Electric blue primary for strong contrast */
-    --primary: 217 91% 60%;    /* Electric blue */
-    --primary-foreground: 0 0% 100%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-    /* Dark secondary with light text */
-    --secondary: 215 16% 47%;  /* Steel blue */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    /* Muted dark tones */
-    --muted: 215 28% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    /* Accent with cyan highlight */
-    --accent: 188 86% 53%;     /* Cyan accent */
-    --accent-foreground: 0 0% 100%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
-    /* Crimson destructive */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    /* Dark borders and inputs */
-    --border: 215 28% 25%;
-    --input: 215 28% 25%;
-    --ring: 217 91% 60%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
 
@@ -64,34 +55,33 @@
   }
 
   .dark {
-    /* Enhanced dark mode with deeper contrast */
-    --background: 222 84% 3%;     /* Deeper navy background */
-    --foreground: 0 0% 100%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-    --card: 222 47% 11%;          /* Darker card background */
-    --card-foreground: 0 0% 100%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 217 91% 60%;       /* Bright electric blue */
-    --primary-foreground: 0 0% 100%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 217 32% 18%;     /* Dark steel */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 32% 18%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 188 86% 53%;        /* Bright cyan */
-    --accent-foreground: 0 0% 100%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 84% 60%;     /* Bright crimson */
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 217 32% 25%;
-    --input: 217 32% 25%;
-    --ring: 217 91% 60%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -109,68 +99,44 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
-    @apply font-bold text-foreground;
+    @apply bg-background text-foreground;
   }
 }
 
-/* Enhanced Masculine Design System Variables */
+/* Enhanced Design System Variables */
 @layer base {
   :root {
-    /* Masculine color palette */
-    --emerald: 142 71% 45%;       /* Success green */
-    --emerald-foreground: 0 0% 100%;
-    --amber: 38 92% 50%;          /* Warning orange */
-    --amber-foreground: 0 0% 100%;
-    --cyan: 188 86% 53%;          /* Highlight cyan */
-    --cyan-foreground: 0 0% 100%;
-    --lime: 84 81% 44%;           /* Positive lime */
-    --lime-foreground: 0 0% 100%;
-    --purple: 262 83% 58%;        /* Special purple */
-    --purple-foreground: 0 0% 100%;
-    
-    /* Gradients for cards and elements */
-    --gradient-slate-blue: linear-gradient(135deg, hsl(215 28% 17%), hsl(217 91% 60%));
-    --gradient-slate-emerald: linear-gradient(135deg, hsl(215 28% 17%), hsl(142 71% 45%));
-    --gradient-slate-cyan: linear-gradient(135deg, hsl(215 28% 17%), hsl(188 86% 53%));
-    --gradient-slate-amber: linear-gradient(135deg, hsl(215 28% 17%), hsl(38 92% 50%));
-    
     /* Loading & Animation */
-    --loading-skeleton: 215 28% 17%;
-    --loading-shimmer: 215 28% 25%;
+    --loading-skeleton: 210 40% 96.1%;
+    --loading-shimmer: 210 40% 90%;
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
-    /* Semantic colors with high contrast */
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
+    /* Semantic colors for UX */
+    --success: 142 76% 36%;
+    --success-foreground: 142 76% 96%;
     --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --info: 217 91% 60%;
-    --info-foreground: 0 0% 100%;
+    --warning-foreground: 48 96% 89%;
+    --info: 213 94% 68%;
+    --info-foreground: 213 31% 91%;
     
     /* Interactive states */
-    --hover-overlay: 255 255% 255% / 0.1;
-    --active-overlay: 255 255% 255% / 0.2;
-    --focus-ring: 217 91% 60% / 0.6;
+    --hover-overlay: 0 0% 0% / 0.1;
+    --active-overlay: 0 0% 0% / 0.2;
+    --focus-ring: 222.2 84% 4.9% / 0.4;
   }
 
   .dark {
-    --loading-skeleton: 222 47% 11%;
-    --loading-shimmer: 222 47% 15%;
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
+    --loading-skeleton: 217.2 32.6% 17.5%;
+    --loading-shimmer: 217.2 32.6% 25%;
+    --success: 142 70% 45%;
+    --success-foreground: 142 76% 6%;
     --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --info: 217 91% 60%;
-    --info-foreground: 0 0% 100%;
+    --warning-foreground: 48 96% 11%;
+    --info: 213 94% 68%;
+    --info-foreground: 213 31% 9%;
     --hover-overlay: 255 255% 255% / 0.1;
     --active-overlay: 255 255% 255% / 0.2;
-    --focus-ring: 217 91% 60% / 0.6;
+    --focus-ring: 212.7 26.8% 83.9% / 0.4;
   }
 }
 
@@ -200,40 +166,6 @@
   100% { background-position: calc(200px + 100%) 0; }
 }
 
-/* Masculine gradient utilities */
-.gradient-slate-blue {
-  background: var(--gradient-slate-blue);
-}
-
-.gradient-slate-emerald {
-  background: var(--gradient-slate-emerald);
-}
-
-.gradient-slate-cyan {
-  background: var(--gradient-slate-cyan);
-}
-
-.gradient-slate-amber {
-  background: var(--gradient-slate-amber);
-}
-
-/* Glass morphism effects */
-.glass-card {
-  backdrop-filter: blur(12px);
-  background: hsl(var(--card) / 0.8);
-  border: 1px solid hsl(var(--border) / 0.5);
-}
-
-/* Enhanced hover effects */
-.hover-glow {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hover-glow:hover {
-  box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
-  transform: translateY(-2px) scale(1.02);
-}
-
 /* Utility classes */
 .animate-fade-in { animation: fade-in 0.3s ease-out; }
 .animate-scale-in { animation: scale-in 0.2s ease-out; }
@@ -251,7 +183,7 @@
   animation: shimmer 1.5s infinite;
 }
 
-/* Interactive elements with masculine styling */
+/* Interactive elements */
 .interactive-hover {
   transition: var(--transition-smooth);
 }
@@ -266,11 +198,10 @@
   transform: translateY(0);
 }
 
-/* Strong focus indicators */
+/* Focus improvements */
 .focus-ring:focus-visible {
   outline: 2px solid hsl(var(--focus-ring));
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px hsl(var(--focus-ring) / 0.3);
 }
 
 /* Mobile touch improvements */
