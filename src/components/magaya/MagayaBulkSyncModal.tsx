@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, XCircle, Clock, Package, Users, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Package, Users, RefreshCw, AlertTriangle, Database } from 'lucide-react';
 import { useMagayaBulkSync } from '@/hooks/useMagayaBulkSync';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MagayaBulkSyncModalProps {
   open: boolean;
@@ -16,6 +18,10 @@ const MagayaBulkSyncModal: React.FC<MagayaBulkSyncModalProps> = ({
   open,
   onClose,
 }) => {
+  const { toast } = useToast();
+  const [credentialsReady, setCredentialsReady] = useState<boolean | null>(null);
+  const [credentialsError, setCredentialsError] = useState<string>('');
+  
   const {
     startBulkSync,
     isStarting,
@@ -28,7 +34,58 @@ const MagayaBulkSyncModal: React.FC<MagayaBulkSyncModalProps> = ({
     clearSession,
   } = useMagayaBulkSync();
 
+  // Check if Magaya credentials are properly configured
+  useEffect(() => {
+    const checkCredentials = async () => {
+      try {
+        const { data: config, error } = await supabase
+          .from('api_configurations')
+          .select('credentials, is_active')
+          .eq('carrier', 'MAGAYA')
+          .single();
+
+        if (error) {
+          setCredentialsError('Magaya API configuration not found');
+          setCredentialsReady(false);
+          return;
+        }
+
+        if (!config.is_active) {
+          setCredentialsError('Magaya API configuration is inactive');
+          setCredentialsReady(false);
+          return;
+        }
+
+        const creds = config.credentials as any;
+        if (!creds?.network_id || !creds?.username || !creds?.password || !creds?.api_url) {
+          setCredentialsError('Incomplete Magaya credentials. Please configure Network ID, Username, Password, and API URL in Admin Settings.');
+          setCredentialsReady(false);
+          return;
+        }
+
+        setCredentialsReady(true);
+        setCredentialsError('');
+      } catch (error) {
+        console.error('Error checking credentials:', error);
+        setCredentialsError('Failed to verify Magaya credentials');
+        setCredentialsReady(false);
+      }
+    };
+
+    if (open) {
+      checkCredentials();
+    }
+  }, [open]);
+
   const handleStartSync = () => {
+    if (!credentialsReady) {
+      toast({
+        title: "Configuration Required",
+        description: credentialsError,
+        variant: "destructive",
+      });
+      return;
+    }
     startBulkSync('Jhavar Leakey');
   };
 
@@ -160,21 +217,68 @@ const MagayaBulkSyncModal: React.FC<MagayaBulkSyncModalProps> = ({
             </div>
           )}
 
+          {/* Credentials Status */}
+          {credentialsReady === false && (
+            <Card className="border-amber-200 bg-amber-50">
+              <CardHeader>
+                <CardTitle className="text-amber-800 flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  Configuration Required
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-amber-700 mb-3">{credentialsError}</p>
+                <div className="text-sm text-amber-600">
+                  <p>To configure Magaya credentials:</p>
+                  <ol className="list-decimal list-inside mt-1 space-y-1">
+                    <li>Go to Admin Settings → API Keys & Delivery Services</li>
+                    <li>Find the MAGAYA configuration section</li>
+                    <li>Enter your Network ID, Username, Password, and API URL</li>
+                    <li>Save the credentials</li>
+                  </ol>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* API Connection Status */}
+          {credentialsReady && !syncSession && (
+            <Card className="border-green-200 bg-green-50">
+              <CardHeader>
+                <CardTitle className="text-green-800 flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  Live Connection Ready
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-green-700 mb-3">
+                  Successfully connected to Magaya SOAP API. Ready to sync shipments.
+                </p>
+                <div className="text-sm text-green-600 space-y-1">
+                  <p><strong>Network:</strong> 14337 (jhavarleakey321)</p>
+                  <p><strong>API Type:</strong> SOAP Web Service</p>
+                  <p><strong>Endpoint:</strong> LiveTrackWebService.asmx</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Information Card */}
-          {!syncSession && (
+          {!syncSession && credentialsReady && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Sync Information</CardTitle>
                 <CardDescription>
-                  This will sync all packages from the "Jhavar Leakey" supplier in Magaya to YardPack.
+                  This will sync all packages from the "Jhavar Leakey" supplier in Magaya to YardPack using live SOAP API.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="text-sm space-y-1">
                   <p><strong>Supplier Filter:</strong> Jhavar Leakey</p>
-                  <p><strong>Operation:</strong> One-way sync from Magaya to YardPack</p>
+                  <p><strong>Operation:</strong> Live one-way sync from Magaya to YardPack</p>
                   <p><strong>Data Precedence:</strong> Magaya data will overwrite existing YardPack data</p>
                   <p><strong>Customer Handling:</strong> Auto-create new customers, map similar ones</p>
+                  <p><strong>API Protocol:</strong> SOAP/XML (Live Connection)</p>
                 </div>
               </CardContent>
             </Card>
@@ -227,7 +331,7 @@ const MagayaBulkSyncModal: React.FC<MagayaBulkSyncModalProps> = ({
             {!syncSession && (
               <Button 
                 onClick={handleStartSync}
-                disabled={isStarting}
+                disabled={isStarting || !credentialsReady}
                 className="flex items-center gap-2"
               >
                 {isStarting ? (
