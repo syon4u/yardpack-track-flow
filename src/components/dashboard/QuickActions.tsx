@@ -38,9 +38,9 @@ const QuickActions: React.FC = () => {
 
   return (
     <>
-      <Card>
+      <Card className="glass-card">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
+          <CardTitle className="text-lg font-semibold text-foreground">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-3">
           {actions.map((action, index) => (
@@ -48,9 +48,9 @@ const QuickActions: React.FC = () => {
               key={index}
               variant={action.variant}
               onClick={action.action}
-              className="flex flex-col items-center gap-2 h-auto py-4"
+              className="flex flex-col items-center gap-2 h-auto py-6 hover-glow bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
             >
-              <action.icon className="h-5 w-5" />
+              <action.icon className="h-6 w-6" />
               <span className="text-sm font-medium">{action.label}</span>
             </Button>
           ))}

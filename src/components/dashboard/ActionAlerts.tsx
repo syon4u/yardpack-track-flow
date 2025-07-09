@@ -46,10 +46,10 @@ const ActionAlerts: React.FC = () => {
 
   if (urgentAlerts.length === 0) {
     return (
-      <Card>
+      <Card className="glass-card border-emerald/20">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-green-500" />
+          <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
+            <AlertTriangle className="h-5 w-5 text-emerald" />
             All Clear
           </CardTitle>
         </CardHeader>
@@ -63,10 +63,10 @@ const ActionAlerts: React.FC = () => {
   }
 
   return (
-    <Card>
+    <Card className="glass-card border-amber/20">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-amber-500" />
+        <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
+          <AlertTriangle className="h-5 w-5 text-amber" />
           Action Required
         </CardTitle>
       </CardHeader>
@@ -74,16 +74,16 @@ const ActionAlerts: React.FC = () => {
         {urgentAlerts.map((alert) => (
           <div
             key={alert.id}
-            className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+            className="flex items-center justify-between p-4 rounded-lg border border-border bg-card/50 hover:bg-accent/30 transition-colors backdrop-blur-sm"
           >
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-full ${alert.color}`}>
-                <alert.icon className="h-4 w-4 text-white" />
+              <div className={`p-3 rounded-full ${alert.color}`}>
+                <alert.icon className="h-5 w-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">{alert.title}</span>
-                  <Badge variant="secondary">{alert.count}</Badge>
+                  <span className="font-medium text-sm text-foreground">{alert.title}</span>
+                  <Badge variant="secondary" className="bg-accent text-accent-foreground font-medium">{alert.count}</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {alert.description}
@@ -94,7 +94,7 @@ const ActionAlerts: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={alert.action}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 text-foreground hover:bg-accent"
             >
               View
               <ExternalLink className="h-3 w-3" />

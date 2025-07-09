@@ -55,7 +55,7 @@ const AdminDashboardStats: React.FC = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <Card 
-        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        className="cursor-pointer gradient-slate-blue hover-glow glass-card"
         onClick={() => handleCardClick('/dashboard?tab=packages')}
         role="button"
         tabIndex={0}
@@ -63,19 +63,19 @@ const AdminDashboardStats: React.FC = () => {
         onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages')}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Packages</CardTitle>
-          <Package className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium text-white">Total Packages</CardTitle>
+          <Package className="h-5 w-5 text-white" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{packageStats.total}</div>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-3xl font-bold text-white">{packageStats.total}</div>
+          <p className="text-xs text-white/80">
             {packageStats.received} received this period
           </p>
         </CardContent>
       </Card>
       
       <Card 
-        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        className="cursor-pointer gradient-slate-emerald hover-glow glass-card"
         onClick={() => handleCardClick('/dashboard?tab=customers', 'active=true')}
         role="button"
         tabIndex={0}
@@ -83,19 +83,19 @@ const AdminDashboardStats: React.FC = () => {
         onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=customers', 'active=true')}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Customers</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium text-white">Active Customers</CardTitle>
+          <Users className="h-5 w-5 text-white" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{customerStats.active}</div>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-3xl font-bold text-white">{customerStats.active}</div>
+          <p className="text-xs text-white/80">
             {customerStats.registered} registered users
           </p>
         </CardContent>
       </Card>
       
       <Card 
-        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        className="cursor-pointer gradient-slate-cyan hover-glow glass-card"
         onClick={() => handleCardClick('/dashboard?tab=packages', 'in_transit')}
         role="button"
         tabIndex={0}
@@ -103,17 +103,17 @@ const AdminDashboardStats: React.FC = () => {
         onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages', 'in_transit')}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">In Transit</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium text-white">In Transit</CardTitle>
+          <TrendingUp className="h-5 w-5 text-white" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{packageStats.in_transit}</div>
-          <p className="text-xs text-muted-foreground">Currently shipping</p>
+          <div className="text-3xl font-bold text-white">{packageStats.in_transit}</div>
+          <p className="text-xs text-white/80">Currently shipping</p>
         </CardContent>
       </Card>
       
       <Card 
-        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        className="cursor-pointer gradient-slate-amber hover-glow glass-card"
         onClick={() => handleCardClick('/dashboard?tab=packages', 'ready_for_pickup')}
         role="button"
         tabIndex={0}
@@ -121,12 +121,12 @@ const AdminDashboardStats: React.FC = () => {
         onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=packages', 'ready_for_pickup')}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Pending Pickup</CardTitle>
-          <Clock className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium text-white">Pending Pickup</CardTitle>
+          <Clock className="h-5 w-5 text-white" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{packageStats.ready_for_pickup}</div>
-          <p className="text-xs text-muted-foreground">Ready for customers</p>
+          <div className="text-3xl font-bold text-white">{packageStats.ready_for_pickup}</div>
+          <p className="text-xs text-white/80">Ready for customers</p>
         </CardContent>
       </Card>
     </div>
