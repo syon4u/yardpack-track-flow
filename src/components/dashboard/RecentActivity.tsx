@@ -42,7 +42,7 @@ const RecentActivity: React.FC = () => {
   return (
     <Card className="vibrant-card glass-card border-0 backdrop-blur-sm animate-fade-in" style={{ animationDelay: '400ms' }}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="text-lg font-semibold text-gradient-hero animate-gradient">Recent Activity</CardTitle>
+        <CardTitle className="text-lg font-semibold text-foreground">Recent Activity</CardTitle>
         <Button 
           variant="outline" 
           size="sm"

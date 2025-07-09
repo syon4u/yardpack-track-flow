@@ -28,7 +28,7 @@ const AdminOverview: React.FC = () => {
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold text-gradient-hero animate-gradient bg-clip-text">
+        <h1 className="text-4xl font-bold text-foreground">
           Dashboard Overview
         </h1>
         <p className="text-foreground/80 text-lg font-medium">

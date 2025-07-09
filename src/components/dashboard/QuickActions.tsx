@@ -40,7 +40,7 @@ const QuickActions: React.FC = () => {
     <>
       <Card className="vibrant-card glass-card border-0 backdrop-blur-sm animate-fade-in" style={{ animationDelay: '500ms' }}>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gradient-hero animate-gradient">Quick Actions</CardTitle>
+          <CardTitle className="text-lg font-semibold text-foreground">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
           {actions.map((action, index) => (
