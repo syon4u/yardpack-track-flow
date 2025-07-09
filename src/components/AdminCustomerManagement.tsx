@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCustomers } from '@/hooks/useCustomers';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { UserPlus, Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -12,10 +13,26 @@ import CreateCustomerForm from './admin/CreateCustomerForm';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const AdminCustomerManagement: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [activeFilter, setActiveFilter] = useState(false);
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const isMobile = useIsMobile();
+
+  // Get filters from URL params
+  const urlType = searchParams.get('type');
+  const urlActive = searchParams.get('active');
+
+  // Set filters from URL params on mount
+  useEffect(() => {
+    if (urlType && urlType !== 'all') {
+      setTypeFilter(urlType);
+    }
+    if (urlActive === 'true') {
+      setActiveFilter(true);
+    }
+  }, [urlType, urlActive]);
 
   const { data: customers, isPending, error } = useCustomers();
 
@@ -26,8 +43,9 @@ const AdminCustomerManagement: React.FC = () => {
       customer.customer_number.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesType = typeFilter === 'all' || customer.customer_type === typeFilter;
+    const matchesActive = !activeFilter || (customer.active_packages && customer.active_packages > 0);
     
-    return matchesSearch && matchesType;
+    return matchesSearch && matchesType && matchesActive;
   });
 
   // Calculate stats from customers data

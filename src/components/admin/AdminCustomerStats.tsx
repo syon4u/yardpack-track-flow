@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, Package, DollarSign } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface AdminCustomerStatsProps {
   totalCustomers: number;
@@ -16,9 +17,26 @@ const AdminCustomerStats: React.FC<AdminCustomerStatsProps> = ({
   packageOnlyCustomers,
   activeCustomers
 }) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = (path: string, filter?: string) => {
+    if (filter) {
+      navigate(`${path}&${filter}`);
+    } else {
+      navigate(path);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <Card>
+      <Card 
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        onClick={() => handleCardClick('/dashboard?tab=customers')}
+        role="button"
+        tabIndex={0}
+        aria-label="View all customers"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=customers')}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
@@ -29,7 +47,14 @@ const AdminCustomerStats: React.FC<AdminCustomerStatsProps> = ({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card 
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        onClick={() => handleCardClick('/dashboard?tab=customers', 'type=registered')}
+        role="button"
+        tabIndex={0}
+        aria-label="View registered customers"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=customers', 'type=registered')}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Registered Users</CardTitle>
           <UserCheck className="h-4 w-4 text-muted-foreground" />
@@ -40,7 +65,14 @@ const AdminCustomerStats: React.FC<AdminCustomerStatsProps> = ({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card 
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        onClick={() => handleCardClick('/dashboard?tab=customers', 'type=package_only')}
+        role="button"
+        tabIndex={0}
+        aria-label="View package-only customers"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=customers', 'type=package_only')}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Package-Only</CardTitle>
           <Package className="h-4 w-4 text-muted-foreground" />
@@ -51,7 +83,14 @@ const AdminCustomerStats: React.FC<AdminCustomerStatsProps> = ({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card 
+        className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 interactive-hover"
+        onClick={() => handleCardClick('/dashboard?tab=customers', 'active=true')}
+        role="button"
+        tabIndex={0}
+        aria-label="View active customers"
+        onKeyDown={(e) => e.key === 'Enter' && handleCardClick('/dashboard?tab=customers', 'active=true')}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Active Customers</CardTitle>
           <DollarSign className="h-4 w-4 text-muted-foreground" />
