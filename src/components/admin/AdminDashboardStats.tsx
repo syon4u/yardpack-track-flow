@@ -69,7 +69,7 @@ const AdminDashboardStats: React.FC = () => {
         </CardHeader>
         <CardContent className="relative z-10">
           <div className="text-3xl font-bold animate-count-up">{packageStats.total}</div>
-          <p className="text-xs text-white/80">
+          <p className="text-xs text-white font-medium">
             {packageStats.received} received this period
           </p>
         </CardContent>
@@ -91,7 +91,7 @@ const AdminDashboardStats: React.FC = () => {
         </CardHeader>
         <CardContent className="relative z-10">
           <div className="text-3xl font-bold animate-count-up">{customerStats.active}</div>
-          <p className="text-xs text-white/80">
+          <p className="text-xs text-white font-medium">
             {customerStats.registered} registered users
           </p>
         </CardContent>
@@ -113,7 +113,7 @@ const AdminDashboardStats: React.FC = () => {
         </CardHeader>
         <CardContent className="relative z-10">
           <div className="text-3xl font-bold animate-count-up">{packageStats.in_transit}</div>
-          <p className="text-xs text-white/80">Currently shipping</p>
+          <p className="text-xs text-white font-medium">Currently shipping</p>
         </CardContent>
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Card>
@@ -133,7 +133,7 @@ const AdminDashboardStats: React.FC = () => {
         </CardHeader>
         <CardContent className="relative z-10">
           <div className="text-3xl font-bold animate-count-up">{packageStats.ready_for_pickup}</div>
-          <p className="text-xs text-white/80">Ready for customers</p>
+          <p className="text-xs text-white font-medium">Ready for customers</p>
         </CardContent>
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Card>

@@ -31,7 +31,7 @@ const AdminOverview: React.FC = () => {
         <h1 className="text-4xl font-bold text-gradient-hero animate-gradient bg-clip-text">
           Dashboard Overview
         </h1>
-        <p className="text-muted-foreground text-lg">
+        <p className="text-foreground/80 text-lg font-medium">
           Monitor your package management system at a glance ✨
         </p>
       </div>

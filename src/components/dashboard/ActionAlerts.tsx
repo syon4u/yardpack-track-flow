@@ -54,7 +54,7 @@ const ActionAlerts: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-white/80">
+          <p className="text-sm text-white font-medium">
             No urgent actions required at this time. ✨
           </p>
         </CardContent>
@@ -91,7 +91,7 @@ const ActionAlerts: React.FC = () => {
                     {alert.count}
                   </Badge>
                 </div>
-                <p className="text-xs text-white/80">
+                <p className="text-xs text-white font-medium">
                   {alert.description}
                 </p>
               </div>

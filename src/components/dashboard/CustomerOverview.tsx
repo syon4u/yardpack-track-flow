@@ -50,7 +50,7 @@ const CustomerOverview: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900">
           Welcome back, {profile?.full_name?.split(' ')[0]}!
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-foreground/80 mt-1 font-medium">
           Here's what's happening with your packages
         </p>
       </div>
@@ -64,7 +64,7 @@ const CustomerOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-            <p className="text-xs text-muted-foreground mt-1">All time</p>
+            <p className="text-xs text-foreground/70 mt-1 font-medium">All time</p>
           </CardContent>
         </Card>
 
@@ -75,7 +75,7 @@ const CustomerOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats.inTransit}</div>
-            <p className="text-xs text-muted-foreground mt-1">On the way</p>
+            <p className="text-xs text-foreground/70 mt-1 font-medium">On the way</p>
           </CardContent>
         </Card>
 
@@ -86,7 +86,7 @@ const CustomerOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats.readyForPickup}</div>
-            <p className="text-xs text-muted-foreground mt-1">Awaiting collection</p>
+            <p className="text-xs text-foreground/70 mt-1 font-medium">Awaiting collection</p>
           </CardContent>
         </Card>
 
@@ -97,7 +97,7 @@ const CustomerOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats.pickedUp}</div>
-            <p className="text-xs text-muted-foreground mt-1">Completed</p>
+            <p className="text-xs text-foreground/70 mt-1 font-medium">Completed</p>
           </CardContent>
         </Card>
       </div>

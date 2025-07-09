@@ -96,8 +96,8 @@ const CustomerRecentActivity: React.FC<CustomerRecentActivityProps> = ({ package
           </TableBody>
         </Table>
         {packages && packages.length === 0 && (
-          <div className="text-center py-4 text-gray-500">
-            No packages found. Your packages will appear here once they're registered.
+          <div className="text-center py-4 text-foreground/70">
+            <p className="font-medium">No packages found. Your packages will appear here once they're registered.</p>
           </div>
         )}
       </CardContent>

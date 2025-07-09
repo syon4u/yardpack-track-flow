@@ -67,7 +67,7 @@ const RecentActivity: React.FC = () => {
                     <p className="font-semibold text-sm truncate text-foreground">
                       {pkg.tracking_number}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">
+                     <p className="text-xs text-foreground/70 truncate font-medium">
                       {pkg.customer_name || 'Unknown Customer'}
                     </p>
                   </div>
@@ -79,7 +79,7 @@ const RecentActivity: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1 mt-2">
                   <Clock className="h-3 w-3 text-primary" />
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-foreground/60 font-medium">
                     {format(new Date(pkg.updated_at), 'MMM d, HH:mm')}
                   </span>
                 </div>
@@ -87,8 +87,8 @@ const RecentActivity: React.FC = () => {
             </div>
           ))
         ) : (
-          <div className="text-center py-6 text-muted-foreground">
-            <p className="text-sm">No recent activity</p>
+          <div className="text-center py-6 text-foreground/70">
+            <p className="text-sm font-medium">No recent activity</p>
           </div>
         )}
       </CardContent>
