@@ -48,15 +48,15 @@ const ActionAlerts: React.FC = () => {
     return (
       <Card className="vibrant-card glass-card border-0 backdrop-blur-sm bg-gradient-success animate-fade-in" style={{ animationDelay: '600ms' }}>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center gap-2 text-white">
-            <AlertTriangle className="h-5 w-5 animate-pulse" />
-            All Clear
-          </CardTitle>
+        <CardTitle className="text-lg font-semibold flex items-center gap-2 text-on-gradient">
+          <AlertTriangle className="h-5 w-5 animate-pulse" />
+          All Clear
+        </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-white font-medium">
-            No urgent actions required at this time. ✨
-          </p>
+        <p className="text-sm text-on-gradient font-medium">
+          No urgent actions required at this time. ✨
+        </p>
         </CardContent>
       </Card>
     );
@@ -65,7 +65,7 @@ const ActionAlerts: React.FC = () => {
   return (
     <Card className="vibrant-card glass-card border-0 backdrop-blur-sm bg-gradient-warm animate-fade-in" style={{ animationDelay: '700ms' }}>
       <CardHeader>
-        <CardTitle className="text-lg font-semibold flex items-center gap-2 text-white">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2 text-on-gradient">
           <AlertTriangle className="h-5 w-5 animate-pulse-glow" />
           Action Required
         </CardTitle>
@@ -79,19 +79,19 @@ const ActionAlerts: React.FC = () => {
           >
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-full bg-white/20 backdrop-blur-sm animate-float">
-                <alert.icon className="h-5 w-5 text-white" />
+                <alert.icon className="h-5 w-5 text-on-gradient" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm text-white">{alert.title}</span>
+                  <span className="font-semibold text-sm text-on-gradient">{alert.title}</span>
                   <Badge 
                     variant="secondary" 
-                    className="bg-white/30 text-white border-white/50 px-2 py-1 rounded-full font-semibold"
+                    className="bg-white/30 text-on-gradient border-white/50 px-2 py-1 rounded-full font-semibold"
                   >
                     {alert.count}
                   </Badge>
                 </div>
-                <p className="text-xs text-white font-medium">
+                <p className="text-xs text-on-gradient-muted font-medium">
                   {alert.description}
                 </p>
               </div>
@@ -100,7 +100,7 @@ const ActionAlerts: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={alert.action}
-              className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white border-white/20 transition-all duration-300"
+              className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-on-gradient border-white/20 transition-all duration-300"
             >
               View
               <ExternalLink className="h-3 w-3" />

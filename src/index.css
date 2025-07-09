@@ -315,12 +315,44 @@
   border: 1px solid hsl(var(--border)) !important;
 }
 
-/* Ensure proper contrast on colored backgrounds */
+/* Text visibility fixes for gradient backgrounds */
+.vibrant-card.glass-card .text-foreground,
+.vibrant-card .text-foreground {
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* Specific overrides for gradient cards */
+.bg-gradient-hero .text-foreground,
+.bg-gradient-warm .text-foreground,
+.bg-gradient-cool .text-foreground,
+.bg-gradient-success .text-foreground {
+  color: hsl(0 0% 100%) !important;
+}
+
 .bg-gradient-hero .text-muted-foreground,
 .bg-gradient-warm .text-muted-foreground,
 .bg-gradient-cool .text-muted-foreground,
 .bg-gradient-success .text-muted-foreground {
   color: hsl(0 0% 100% / 0.8) !important;
+}
+
+/* White text utility for gradient backgrounds */
+.text-on-gradient {
+  color: hsl(0 0% 100%) !important;
+}
+
+.text-on-gradient-muted {
+  color: hsl(0 0% 100% / 0.8) !important;
+}
+
+/* Badge overrides for gradient backgrounds */
+.bg-gradient-hero .badge-readable,
+.bg-gradient-warm .badge-readable,
+.bg-gradient-cool .badge-readable,
+.bg-gradient-success .badge-readable {
+  background: hsl(0 0% 100% / 0.2) !important;
+  color: hsl(0 0% 100%) !important;
+  border: 1px solid hsl(0 0% 100% / 0.3) !important;
 }
 
 /* Focus improvements */
