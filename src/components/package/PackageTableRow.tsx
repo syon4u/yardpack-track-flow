@@ -23,6 +23,7 @@ interface PackageTableRowProps {
   onViewDetails?: (packageId: string) => void;
   onRecordPickup?: (pkg: Package) => void;
   onStatusUpdate?: (packageId: string, status: PackageStatus) => void;
+  isColumnVisible?: (columnId: string) => boolean;
 }
 
 const PackageTableRow: React.FC<PackageTableRowProps> = ({
@@ -33,54 +34,85 @@ const PackageTableRow: React.FC<PackageTableRowProps> = ({
   onViewDetails,
   onRecordPickup,
   onStatusUpdate,
+  isColumnVisible,
 }) => {
+  // If no column visibility function is provided, show all columns
+  const showColumn = (columnId: string) => isColumnVisible ? isColumnVisible(columnId) : true;
   return (
     <TableRow>
-      <PackageTrackingCell 
-        trackingNumber={pkg.tracking_number}
-        externalTrackingNumber={pkg.external_tracking_number}
-      />
-      <PackageCustomerCell 
-        customerName={pkg.customer_name}
-        customerEmail={pkg.customer_email}
-      />
-      <PackageDescriptionCell 
-        description={pkg.description}
-        dimensions={pkg.dimensions}
-      />
-      <PackageStatusCell 
-        status={pkg.status}
-        userRole={userRole}
-        packageId={pkg.id}
-        onStatusUpdate={onStatusUpdate}
-      />
-      <PackageDateReceivedCell dateReceived={pkg.date_received} />
-      <PackageEstimatedDeliveryCell estimatedDelivery={pkg.estimated_delivery} />
-      <PackageValueCell packageValue={pkg.package_value} userRole={userRole} />
-      <PackageDutyCell dutyAmount={pkg.duty_amount} userRole={userRole} />
-      <PackageWeightCell weight={pkg.weight} userRole={userRole} />
-      <PackageCarrierCell 
-        carrier={pkg.carrier}
-        senderName={pkg.sender_name}
-        userRole={userRole}
-      />
-      <PackageMagayaCell 
-        packageId={pkg.id}
-        magayaShipmentId={pkg.magaya_shipment_id}
-        warehouseLocation={pkg.warehouse_location}
-        consolidationStatus={pkg.consolidation_status}
-        userRole={userRole}
-      />
-      <PackageTotalDueCell totalDue={pkg.total_due} />
-      <PackageInvoiceStatusCell invoices={pkg.invoices} />
-      <PackageActionsCell 
-        package={pkg}
-        userRole={userRole}
-        onUploadInvoice={onUploadInvoice}
-        onViewInvoice={onViewInvoice}
-        onViewDetails={onViewDetails}
-        onRecordPickup={onRecordPickup}
-      />
+      {showColumn('tracking') && (
+        <PackageTrackingCell 
+          trackingNumber={pkg.tracking_number}
+          externalTrackingNumber={pkg.external_tracking_number}
+        />
+      )}
+      {showColumn('customer') && (
+        <PackageCustomerCell 
+          customerName={pkg.customer_name}
+          customerEmail={pkg.customer_email}
+        />
+      )}
+      {showColumn('description') && (
+        <PackageDescriptionCell 
+          description={pkg.description}
+          dimensions={pkg.dimensions}
+        />
+      )}
+      {showColumn('status') && (
+        <PackageStatusCell 
+          status={pkg.status}
+          userRole={userRole}
+          packageId={pkg.id}
+          onStatusUpdate={onStatusUpdate}
+        />
+      )}
+      {showColumn('dateReceived') && (
+        <PackageDateReceivedCell dateReceived={pkg.date_received} />
+      )}
+      {showColumn('estimatedDelivery') && (
+        <PackageEstimatedDeliveryCell estimatedDelivery={pkg.estimated_delivery} />
+      )}
+      {userRole !== 'customer' && showColumn('packageValue') && (
+        <PackageValueCell packageValue={pkg.package_value} userRole={userRole} />
+      )}
+      {userRole !== 'customer' && showColumn('dutyAmount') && (
+        <PackageDutyCell dutyAmount={pkg.duty_amount} userRole={userRole} />
+      )}
+      {userRole !== 'customer' && showColumn('weight') && (
+        <PackageWeightCell weight={pkg.weight} userRole={userRole} />
+      )}
+      {userRole !== 'customer' && showColumn('carrier') && (
+        <PackageCarrierCell 
+          carrier={pkg.carrier}
+          senderName={pkg.sender_name}
+          userRole={userRole}
+        />
+      )}
+      {userRole !== 'customer' && showColumn('magayaStatus') && (
+        <PackageMagayaCell 
+          packageId={pkg.id}
+          magayaShipmentId={pkg.magaya_shipment_id}
+          warehouseLocation={pkg.warehouse_location}
+          consolidationStatus={pkg.consolidation_status}
+          userRole={userRole}
+        />
+      )}
+      {showColumn('totalDue') && (
+        <PackageTotalDueCell totalDue={pkg.total_due} />
+      )}
+      {showColumn('invoice') && (
+        <PackageInvoiceStatusCell invoices={pkg.invoices} />
+      )}
+      {showColumn('actions') && (
+        <PackageActionsCell 
+          package={pkg}
+          userRole={userRole}
+          onUploadInvoice={onUploadInvoice}
+          onViewInvoice={onViewInvoice}
+          onViewDetails={onViewDetails}
+          onRecordPickup={onRecordPickup}
+        />
+      )}
     </TableRow>
   );
 };
